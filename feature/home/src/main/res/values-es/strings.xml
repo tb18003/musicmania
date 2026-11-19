@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_home_greeting_morning">Buenos días</string>
+    <string name="feature_home_greeting_afternoon">Buenas tardes</string>
+    <string name="feature_home_greeting_evening">Buenas noches</string>
+    <string name="feature_home_default_name">melómano</string>
+    <string name="feature_home_settings">Ajustes</string>
+    <string name="feature_home_now_playing">Sonando ahora</string>
+    <string name="feature_home_paused">En pausa</string>
+    <string name="feature_home_last_four_weeks">Últimas 4 semanas</string>
+    <string name="feature_home_minutes">Minutos</string>
+    <string name="feature_home_streams">Reproducciones</string>
+    <string name="feature_home_daily_chart_description">Tiempo de escucha diario de las últimas cuatro semanas</string>
+    <string name="feature_home_top_artists">Tus artistas top</string>
+    <string name="feature_home_top_tracks">En bucle</string>
+    <string name="feature_home_see_all">Ver todo</string>
+    <string name="feature_home_recap_title">Tu Recap</string>
+    <string name="feature_home_recap_body">Tu resumen, en cualquier momento del año.</string>
+    <string name="feature_home_insights_title">Insights</string>
+    <string name="feature_home_insights_body">Tu reloj de escucha, rachas y hábitos.</string>
+    <string name="feature_home_import_title">Estadísticas de siempre</string>
+    <string name="feature_home_import_body">Importa tu historial de Spotify gratis.</string>
+</resources>
