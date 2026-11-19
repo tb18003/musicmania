@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Tu tiempo de escucha de hoy y tu artista top de la semana</string>
+    <string name="widget_today">Hoy</string>
+    <string name="widget_minutes">%1$d min</string>
+    <string name="widget_week_top">Artista top de la semana</string>
+    <string name="widget_week_minutes">%1$d min esta semana</string>
+</resources>

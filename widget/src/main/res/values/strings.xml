@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name" translatable="false">MusicMania</string>
+    <string name="widget_description">Today\'s listening time and this week\'s top artist</string>
+    <string name="widget_today">Today</string>
+    <string name="widget_minutes">%1$d min</string>
+    <string name="widget_week_top">Top artist this week</string>
+    <string name="widget_week_minutes">%1$d min this week</string>
+</resources>
