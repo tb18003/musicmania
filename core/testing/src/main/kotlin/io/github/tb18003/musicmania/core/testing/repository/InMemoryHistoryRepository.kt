@@ -6,6 +6,8 @@
 
 package io.github.tb18003.musicmania.core.testing.repository
 
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import io.github.tb18003.musicmania.core.common.result.DataResult
 import io.github.tb18003.musicmania.core.domain.repository.HistoryRepository
@@ -47,7 +49,8 @@ class InMemoryHistoryRepository(private val zone: ZoneId = ZoneOffset.UTC) : His
     }
 
     override fun pagedHistory(): Flow<PagingData<PlayEvent>> = events.map { list ->
-        PagingData.from(list.sortedByDescending { it.playedAt })
+        val complete = LoadState.NotLoading(endOfPaginationReached = true)
+        PagingData.from(list.sortedByDescending { it.playedAt }, LoadStates(complete, complete, complete))
     }
 
     override fun observeSummary(range: DateRange) = inRange(range).map { list ->

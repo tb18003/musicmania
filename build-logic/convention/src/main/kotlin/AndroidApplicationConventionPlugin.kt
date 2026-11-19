@@ -1,4 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.HasUnitTestBuilder
 import io.github.tb18003.musicmania.buildlogic.configureKotlinAndroid
 import io.github.tb18003.musicmania.buildlogic.configureStaticAnalysis
 import io.github.tb18003.musicmania.buildlogic.libs
@@ -17,6 +19,11 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
                 configureKotlinAndroid(this)
                 defaultConfig.targetSdk = libs.version("targetSdk").toInt()
                 buildFeatures.buildConfig = true
+            }
+            extensions.configure<ApplicationAndroidComponentsExtension> {
+                beforeVariants(selector().withBuildType("release")) { variant ->
+                    (variant as HasUnitTestBuilder).enableUnitTest = false
+                }
             }
             configureStaticAnalysis()
         }
