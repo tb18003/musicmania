@@ -43,4 +43,4 @@ interface StreamingHistoryImporter {
     fun import(sources: List<ImportSource>): Flow<ImportProgress>
 }
 
-class ImportException(val error: AppError) : Exception(error.toString())
+class ImportException(val error: AppError, cause: Throwable? = null) : Exception(error.toString(), cause)
