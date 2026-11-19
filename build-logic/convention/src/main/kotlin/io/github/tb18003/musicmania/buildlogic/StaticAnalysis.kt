@@ -1,7 +1,7 @@
 package io.github.tb18003.musicmania.buildlogic
 
 import com.diffplug.gradle.spotless.SpotlessExtension
-import io.gitlab.arturbosch.detekt.extensions.DetektExtension
+import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 
@@ -10,24 +10,15 @@ import org.gradle.kotlin.dsl.configure
  * held to the same quality bar without repeating configuration.
  */
 internal fun Project.configureStaticAnalysis() {
-    pluginManager.apply("io.gitlab.arturbosch.detekt")
+    pluginManager.apply("dev.detekt")
     pluginManager.apply("com.diffplug.spotless")
     pluginManager.apply("org.jetbrains.kotlinx.kover")
 
     extensions.configure<DetektExtension> {
-        buildUponDefaultConfig = true
-        parallel = true
+        buildUponDefaultConfig.set(true)
+        parallel.set(true)
         config.setFrom(rootProject.files("config/detekt/detekt.yml"))
-        baseline = file("detekt-baseline.xml")
-    }
-
-    // Detekt 1.23.x embeds Kotlin 2.0.x; keep its classpath on that version.
-    configurations.matching { it.name == "detekt" }.configureEach {
-        resolutionStrategy.eachDependency {
-            if (requested.group == "org.jetbrains.kotlin") {
-                useVersion(libs.version("detektKotlin"))
-            }
-        }
+        baseline.set(file("detekt-baseline.xml"))
     }
 
     extensions.configure<SpotlessExtension> {

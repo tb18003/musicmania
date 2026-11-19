@@ -1,22 +1,23 @@
 # Builds on Detekt's default config (buildUponDefaultConfig = true); only deviations live here.
+# Detekt 2 semantics: `allowed*` = largest value that still passes (1.x thresholds failed at >=).
 config:
   validation: true
 
 complexity:
   ComplexCondition:
-    threshold: 5
+    allowedConditions: 4
   LongParameterList:
-    functionThreshold: 8
-    constructorThreshold: 10
+    allowedFunctionParameters: 7
+    allowedConstructorParameters: 9
     ignoreDefaultParameters: true
     ignoreAnnotated: ['Composable']
   LongMethod:
-    threshold: 80
+    allowedLines: 80
     ignoreAnnotated: ['Composable']
   TooManyFunctions:
-    thresholdInFiles: 25
-    thresholdInClasses: 20
-    thresholdInInterfaces: 20
+    allowedFunctionsPerFile: 25
+    allowedFunctionsPerClass: 20
+    allowedFunctionsPerInterface: 20
     ignorePrivate: true
   CyclomaticComplexMethod:
     ignoreAnnotated: ['Composable']
@@ -37,7 +38,7 @@ style:
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreAnnotated: ['Composable', 'Preview']
     excludes: ['**/test/**', '**/androidTest/**', '**/designsystem/**', '**/*Demo*']
-  UnusedPrivateMember:
+  UnusedPrivateFunction:
     ignoreAnnotated: ['Preview']
   ReturnCount:
     max: 4
