@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_importer_back">Atrás</string>
+    <string name="feature_importer_title">Importar historial</string>
+    <string name="feature_importer_headline">Desbloquea tus estadísticas de siempre</string>
+    <string name="feature_importer_intro">La API de Spotify solo recuerda tus últimas 50 reproducciones. Tu exportación de datos contiene todas desde que creaste la cuenta.</string>
+    <string name="feature_importer_step1_title">Solicita tus datos</string>
+    <string name="feature_importer_step1_body">En la página de privacidad de Spotify, marca \"Historial de reproducción ampliado\" y solicítalo.</string>
+    <string name="feature_importer_open_privacy">Abrir página de privacidad</string>
+    <string name="feature_importer_step2_title">Espera el correo</string>
+    <string name="feature_importer_step2_body">Spotify prepara los archivos; puede tardar unos días (hasta 30).</string>
+    <string name="feature_importer_step3_title">Importa el .zip aquí</string>
+    <string name="feature_importer_step3_body">Elige el zip descargado o los archivos Streaming_History_Audio_*.json extraídos.</string>
+    <string name="feature_importer_pick">Elegir archivos</string>
+    <string name="feature_importer_privacy">Se procesa por completo en tu dispositivo. Las direcciones IP y ubicaciones de la exportación se ignoran y nunca se guardan.</string>
+    <string name="feature_importer_plays_read">reproducciones leídas</string>
+    <string name="feature_importer_cancel">Cancelar</string>
+    <string name="feature_importer_done">Importación completada</string>
+    <string name="feature_importer_result_new">Reproducciones nuevas</string>
+    <string name="feature_importer_result_duplicates">Ya estaban en tu historial</string>
+    <string name="feature_importer_result_skipped">Podcasts y otras entradas omitidas</string>
+    <string name="feature_importer_result_files">Archivos</string>
+    <string name="feature_importer_result_range">Periodo</string>
+    <string name="feature_importer_finish">Ver mis estadísticas</string>
+    <string name="feature_importer_more">Importar más archivos</string>
+    <string name="feature_importer_try_another">Probar con otro archivo</string>
+</resources>

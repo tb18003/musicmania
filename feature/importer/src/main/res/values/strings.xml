@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_importer_back">Back</string>
+    <string name="feature_importer_title">Import history</string>
+    <string name="feature_importer_headline">Unlock your lifetime stats</string>
+    <string name="feature_importer_intro">Spotify\'s API only remembers your last 50 plays. Your data export contains every stream since you created your account.</string>
+    <string name="feature_importer_step1_title">Request your data</string>
+    <string name="feature_importer_step1_body">On Spotify\'s privacy page, tick \"Extended streaming history\" and request it.</string>
+    <string name="feature_importer_open_privacy">Open privacy page</string>
+    <string name="feature_importer_step2_title">Wait for the email</string>
+    <string name="feature_importer_step2_body">Spotify prepares the files; it can take a few days (up to 30).</string>
+    <string name="feature_importer_step3_title">Import the .zip here</string>
+    <string name="feature_importer_step3_body">Pick the downloaded zip or the extracted Streaming_History_Audio_*.json files.</string>
+    <string name="feature_importer_pick">Choose files</string>
+    <string name="feature_importer_privacy">Processed entirely on your device. IP addresses and locations in the export are ignored and never stored.</string>
+    <string name="feature_importer_plays_read">plays read</string>
+    <string name="feature_importer_cancel">Cancel</string>
+    <string name="feature_importer_done">Import complete</string>
+    <string name="feature_importer_result_new">New plays</string>
+    <string name="feature_importer_result_duplicates">Already in your history</string>
+    <string name="feature_importer_result_skipped">Podcasts and other entries skipped</string>
+    <string name="feature_importer_result_files">Files</string>
+    <string name="feature_importer_result_range">Period</string>
+    <string name="feature_importer_finish">See my stats</string>
+    <string name="feature_importer_more">Import more files</string>
+    <string name="feature_importer_try_another">Try another file</string>
+</resources>
