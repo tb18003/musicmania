@@ -24,8 +24,10 @@ internal fun Request.withBearer(token: String): Request = newBuilder().header(AU
  * a misconfigured client or redirect can never leak the token to a third party
  * (e.g. the image CDN).
  */
-class AuthInterceptor @Inject constructor(private val coordinator: TokenRefreshCoordinator, private val allowedHost: AllowedApiHost) :
-    Interceptor {
+class AuthInterceptor @Inject constructor(
+    private val coordinator: TokenRefreshCoordinator,
+    private val allowedHost: AllowedApiHost,
+) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         if (!allowedHost.matches(request.url)) return chain.proceed(request)
@@ -35,8 +37,10 @@ class AuthInterceptor @Inject constructor(private val coordinator: TokenRefreshC
 }
 
 /** Reactive refresh on 401, retried at most once per request. */
-class TokenAuthenticator @Inject constructor(private val coordinator: TokenRefreshCoordinator, private val allowedHost: AllowedApiHost) :
-    Authenticator {
+class TokenAuthenticator @Inject constructor(
+    private val coordinator: TokenRefreshCoordinator,
+    private val allowedHost: AllowedApiHost,
+) : Authenticator {
     override fun authenticate(route: Route?, response: Response): Request? {
         val request = response.request
         if (!allowedHost.matches(request.url) || response.priorResponse != null) return null

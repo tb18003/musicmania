@@ -31,7 +31,10 @@ import javax.inject.Inject
 sealed interface ImportUiState {
     data object Idle : ImportUiState
 
-    data class Running(val currentFile: String, val playsRead: Int) : ImportUiState
+    data class Running(
+        val currentFile: String,
+        val playsRead: Int,
+    ) : ImportUiState
 
     data class Done(val result: ImportResult) : ImportUiState
 
@@ -39,7 +42,10 @@ sealed interface ImportUiState {
 }
 
 /** Adapts a Storage Access Framework [Uri] to the domain's [ImportSource]. */
-class UriImportSource(private val resolver: ContentResolver, private val uri: Uri) : ImportSource {
+class UriImportSource(
+    private val resolver: ContentResolver,
+    private val uri: Uri,
+) : ImportSource {
     override val displayName: String by lazy {
         resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
             if (cursor.moveToFirst()) cursor.getString(0) else null

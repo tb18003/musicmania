@@ -57,7 +57,11 @@ interface WidgetEntryPoint {
     fun clock(): Clock
 }
 
-internal data class WidgetData(val todayMinutes: Long, val weekTopArtist: String?, val weekMinutes: Long)
+internal data class WidgetData(
+    val todayMinutes: Long,
+    val weekTopArtist: String?,
+    val weekMinutes: Long,
+)
 
 /** Home-screen widget: today's minutes and this week's top artist. */
 class ListeningWidget : GlanceAppWidget() {

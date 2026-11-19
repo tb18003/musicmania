@@ -76,7 +76,11 @@ fun AuthRoute(viewModel: AuthViewModel = hiltViewModel()) {
     )
 }
 
-private data class Highlight(val icon: ImageVector, val title: Int, val body: Int)
+private data class Highlight(
+    val icon: ImageVector,
+    val title: Int,
+    val body: Int,
+)
 
 private val highlights = listOf(
     Highlight(Icons.Rounded.AutoGraph, R.string.feature_auth_highlight_tops_title, R.string.feature_auth_highlight_tops_body),

@@ -20,19 +20,31 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /** Metadata (from Spotify, may be null when offline or unknown) plus personal stats. */
-data class ItemDetail<T>(val metadata: T?, val stats: ItemStats)
+data class ItemDetail<T>(
+    val metadata: T?,
+    val stats: ItemStats,
+)
 
-class ObserveTrackDetailUseCase @Inject constructor(private val catalog: CatalogRepository, private val history: HistoryRepository) {
+class ObserveTrackDetailUseCase @Inject constructor(
+    private val catalog: CatalogRepository,
+    private val history: HistoryRepository,
+) {
     operator fun invoke(trackId: String?, trackName: String, artistName: String): Flow<ItemDetail<Track>> =
         combine(metadata(trackId) { catalog.getTrack(it) }, history.observeTrackStats(trackName, artistName), ::ItemDetail)
 }
 
-class ObserveArtistDetailUseCase @Inject constructor(private val catalog: CatalogRepository, private val history: HistoryRepository) {
+class ObserveArtistDetailUseCase @Inject constructor(
+    private val catalog: CatalogRepository,
+    private val history: HistoryRepository,
+) {
     operator fun invoke(artistId: String?, artistName: String): Flow<ItemDetail<Artist>> =
         combine(metadata(artistId) { catalog.getArtist(it) }, history.observeArtistStats(artistName), ::ItemDetail)
 }
 
-class ObserveAlbumDetailUseCase @Inject constructor(private val catalog: CatalogRepository, private val history: HistoryRepository) {
+class ObserveAlbumDetailUseCase @Inject constructor(
+    private val catalog: CatalogRepository,
+    private val history: HistoryRepository,
+) {
     operator fun invoke(albumId: String?, albumName: String, artistName: String): Flow<ItemDetail<Album>> =
         combine(metadata(albumId) { catalog.getAlbum(it) }, history.observeAlbumStats(albumName, artistName), ::ItemDetail)
 }

@@ -49,7 +49,10 @@ internal class SpotifyAuthGateway @Inject constructor(private val manager: Spoti
 }
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(private val gateway: AuthGateway, private val sessionRepository: SessionRepository) : ViewModel() {
+class AuthViewModel @Inject constructor(
+    private val gateway: AuthGateway,
+    private val sessionRepository: SessionRepository,
+) : ViewModel() {
     private val local = MutableStateFlow(AuthUiState(isConfigured = gateway.isConfigured))
 
     val uiState: StateFlow<AuthUiState> = combine(local, sessionRepository.session) { state, session ->

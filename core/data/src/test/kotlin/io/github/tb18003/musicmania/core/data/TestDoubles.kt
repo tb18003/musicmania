@@ -39,7 +39,10 @@ class InMemoryPreferencesDataStore : DataStore<Preferences> {
         transform(state.value).also { state.value = it }
 }
 
-class MutableClock(var now: Instant, private val zone: ZoneId = ZoneOffset.UTC) : Clock() {
+class MutableClock(
+    var now: Instant,
+    private val zone: ZoneId = ZoneOffset.UTC,
+) : Clock() {
     override fun getZone(): ZoneId = zone
 
     override fun withZone(zone: ZoneId): Clock = MutableClock(now, zone)

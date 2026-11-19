@@ -133,8 +133,11 @@ internal class DefaultStreamingHistoryImporter @Inject constructor(
     }
 
     /** Reads entries "through" the zip stream while enforcing size limits. */
-    private class NonClosingBoundedStream(input: InputStream, private val limits: ImportLimits, private val counters: Counters) :
-        FilterInputStream(input) {
+    private class NonClosingBoundedStream(
+        input: InputStream,
+        private val limits: ImportLimits,
+        private val counters: Counters,
+    ) : FilterInputStream(input) {
         private var count = 0L
 
         override fun read(): Int = super.read().also { if (it >= 0) account(1) }

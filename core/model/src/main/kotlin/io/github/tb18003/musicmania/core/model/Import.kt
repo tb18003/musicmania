@@ -20,7 +20,11 @@ data class ImportResult(
 }
 
 sealed interface ImportProgress {
-    data class Running(val currentFile: String, val filesProcessed: Int, val eventsRead: Int) : ImportProgress
+    data class Running(
+        val currentFile: String,
+        val filesProcessed: Int,
+        val eventsRead: Int,
+    ) : ImportProgress
 
     data class Completed(val result: ImportResult) : ImportProgress
 }

@@ -15,10 +15,18 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
-data class ImageDto(val url: String, val width: Int? = null, val height: Int? = null)
+data class ImageDto(
+    val url: String,
+    val width: Int? = null,
+    val height: Int? = null,
+)
 
 @Serializable
-data class SimplifiedArtistDto(val id: String? = null, val name: String, val uri: String? = null)
+data class SimplifiedArtistDto(
+    val id: String? = null,
+    val name: String,
+    val uri: String? = null,
+)
 
 @Serializable
 data class SimplifiedAlbumDto(
@@ -71,7 +79,10 @@ data class PagingDto<T>(
 )
 
 @Serializable
-data class CursorsDto(val after: String? = null, val before: String? = null)
+data class CursorsDto(
+    val after: String? = null,
+    val before: String? = null,
+)
 
 @Serializable
 data class CursorPagingDto<T>(
@@ -82,7 +93,10 @@ data class CursorPagingDto<T>(
 )
 
 @Serializable
-data class PlayHistoryDto(val track: TrackDto, @SerialName("played_at") val playedAt: String)
+data class PlayHistoryDto(
+    val track: TrackDto,
+    @SerialName("played_at") val playedAt: String,
+)
 
 @Serializable
 data class CurrentlyPlayingDto(
@@ -93,13 +107,25 @@ data class CurrentlyPlayingDto(
 )
 
 @Serializable
-data class UserDto(val id: String, @SerialName("display_name") val displayName: String? = null, val images: List<ImageDto> = emptyList())
+data class UserDto(
+    val id: String,
+    @SerialName("display_name") val displayName: String? = null,
+    val images: List<ImageDto> = emptyList(),
+)
 
 @Serializable
-data class CreatePlaylistRequest(val name: String, val description: String, val public: Boolean = false)
+data class CreatePlaylistRequest(
+    val name: String,
+    val description: String,
+    val public: Boolean = false,
+)
 
 @Serializable
-data class PlaylistDto(val id: String, val uri: String, val name: String? = null)
+data class PlaylistDto(
+    val id: String,
+    val uri: String,
+    val name: String? = null,
+)
 
 @Serializable
 data class AddItemsRequest(val uris: List<String>)

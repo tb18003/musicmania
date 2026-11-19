@@ -23,7 +23,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class MainUiState(val session: SessionState = SessionState.Loading, val preferences: UserPreferences = UserPreferences())
+data class MainUiState(
+    val session: SessionState = SessionState.Loading,
+    val preferences: UserPreferences = UserPreferences(),
+)
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(

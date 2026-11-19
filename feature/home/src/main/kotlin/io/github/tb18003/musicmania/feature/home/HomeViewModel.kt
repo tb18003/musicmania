@@ -94,7 +94,10 @@ class HomeViewModel @Inject constructor(
 
     fun dismissError() = refreshState.update { it.copy(error = null) }
 
-    private data class RefreshState(val isRefreshing: Boolean = false, val error: AppError? = null)
+    private data class RefreshState(
+        val isRefreshing: Boolean = false,
+        val error: AppError? = null,
+    )
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L
