@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_detail_back">Atrás</string>
+    <string name="feature_detail_streams">Tus reproducciones</string>
+    <string name="feature_detail_minutes">Minutos</string>
+    <string name="feature_detail_first_listen">Primera escucha</string>
+    <string name="feature_detail_last_listen">Última escucha</string>
+    <string name="feature_detail_monthly">Reproducciones por mes</string>
+    <string name="feature_detail_genres">Géneros</string>
+    <string name="feature_detail_no_plays">Aún no hay reproducciones. Aparecerán tras la próxima sincronización o al importar tu historial.</string>
+    <string name="feature_detail_open_spotify">Abrir Spotify</string>
+</resources>

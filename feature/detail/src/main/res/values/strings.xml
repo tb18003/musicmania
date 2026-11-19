@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_detail_back">Back</string>
+    <string name="feature_detail_streams">Your streams</string>
+    <string name="feature_detail_minutes">Minutes</string>
+    <string name="feature_detail_first_listen">First listen</string>
+    <string name="feature_detail_last_listen">Last listen</string>
+    <string name="feature_detail_monthly">Streams per month</string>
+    <string name="feature_detail_genres">Genres</string>
+    <string name="feature_detail_no_plays">No plays recorded yet. Your plays appear here after the next sync or once you import your history.</string>
+    <string name="feature_detail_open_spotify">Open Spotify</string>
+</resources>
