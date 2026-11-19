@@ -30,4 +30,4 @@ KSP ≥ 2.3.6 and Hilt ≥ 2.59.2). No opt-out flags (`android.builtInKotlin`, `
 + Simpler builds, one fewer plugin to keep in lock-step with AGP, ready for AGP 10.
 + Kotlin 2.4 compiler and current Hilt/KSP.
 − Detekt 1.23.8 triggers Gradle deprecations (`ReportingExtension.file`, `Configuration.setVisible`)
-  removed in Gradle 10/11 ⇒ follow-up: migrate to Detekt 2 (`dev.detekt`) in its own PR.
+  removed in Gradle 10/11 ⇒ resolved by the migration to Detekt 2 (ADR 0008).
