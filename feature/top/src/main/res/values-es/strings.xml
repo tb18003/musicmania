@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_top_title">Top</string>
+    <string name="feature_top_tab_tracks">Canciones</string>
+    <string name="feature_top_tab_artists">Artistas</string>
+    <string name="feature_top_tab_albums">Álbumes</string>
+    <string name="feature_top_tab_genres">Géneros</string>
+    <string name="feature_top_empty_title">Aún no hay nada</string>
+    <string name="feature_top_empty_message">Escucha algo de música o importa tu historial de Spotify para ver tus rankings.</string>
+    <string name="feature_top_create_playlist">Crear playlist</string>
+    <string name="feature_top_playlist_dialog_body">Se añadirá a tu biblioteca de Spotify una playlist privada con estas canciones.</string>
+    <string name="feature_top_playlist_name">Nombre de la playlist</string>
+    <string name="feature_top_playlist_default_name">Mis canciones top · %1$s</string>
+    <string name="feature_top_playlist_description">Creada con MusicMania</string>
+    <string name="feature_top_create">Crear</string>
+    <string name="feature_top_playlist_created">Playlist creada en tu biblioteca</string>
+    <string name="feature_top_open">Abrir</string>
+</resources>
