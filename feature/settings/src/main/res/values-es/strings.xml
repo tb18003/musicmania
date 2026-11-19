@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_settings_back">Atrás</string>
+    <string name="feature_settings_title">Ajustes</string>
+    <string name="feature_settings_listener">Oyente</string>
+    <string name="feature_settings_connected">Conectado a Spotify</string>
+    <string name="feature_settings_demo_mode">Modo demo · datos de ejemplo</string>
+    <string name="feature_settings_appearance">Apariencia</string>
+    <string name="feature_settings_theme">Tema</string>
+    <string name="feature_settings_theme_system">Sistema</string>
+    <string name="feature_settings_theme_light">Claro</string>
+    <string name="feature_settings_theme_dark">Oscuro</string>
+    <string name="feature_settings_dynamic_color">Color dinámico</string>
+    <string name="feature_settings_dynamic_color_body">Usa los colores de tu fondo de pantalla (Material You)</string>
+    <string name="feature_settings_reduce_motion">Reducir movimiento</string>
+    <string name="feature_settings_reduce_motion_body">Desactiva las animaciones decorativas</string>
+    <string name="feature_settings_data">Tus datos</string>
+    <string name="feature_settings_sync_now">Sincronizar ahora</string>
+    <string name="feature_settings_last_sync">Última sincronización %1$s</string>
+    <string name="feature_settings_never_synced">Aún sin sincronizar</string>
+    <string name="feature_settings_import">Importar historial</string>
+    <string name="feature_settings_import_body">Trae años de reproducciones desde tu exportación de Spotify</string>
+    <string name="feature_settings_export">Exportar mi historial</string>
+    <string name="feature_settings_export_body">%1$s reproducciones en un archivo JSON</string>
+    <string name="feature_settings_exported">%1$d reproducciones exportadas</string>
+    <string name="feature_settings_export_failed">La exportación ha fallado</string>
+    <string name="feature_settings_delete">Borrar datos locales</string>
+    <string name="feature_settings_delete_body">Elimina todas las reproducciones y rankings guardados en este dispositivo</string>
+    <string name="feature_settings_delete_confirm">Esto borra para siempre tu historial local, incluidos los datos importados. Tu cuenta de Spotify no se ve afectada.</string>
+    <string name="feature_settings_deleted">Datos locales borrados</string>
+    <string name="feature_settings_about">Acerca de</string>
+    <string name="feature_settings_source">Código fuente</string>
+    <string name="feature_settings_license">Licencia</string>
+    <string name="feature_settings_license_body">GNU GPL v3.0 o posterior</string>
+    <string name="feature_settings_oss">Bibliotecas de código abierto</string>
+    <string name="feature_settings_oss_body">Software que hace posible MusicMania</string>
+    <string name="feature_settings_sign_out">Cerrar sesión</string>
+    <string name="feature_settings_sign_out_body">Desconectar y borrar los datos de este dispositivo</string>
+    <string name="feature_settings_sign_out_confirm">Se cerrará la sesión y se borrarán todos los datos locales de este dispositivo.</string>
+    <string name="feature_settings_confirm">Confirmar</string>
+    <string name="feature_settings_disclaimer">MusicMania es un proyecto independiente de código abierto, sin relación ni respaldo de Spotify AB. Spotify es una marca registrada de Spotify AB.</string>
+</resources>
