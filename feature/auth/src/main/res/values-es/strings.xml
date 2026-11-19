@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_auth_headline_1">Tu música,</string>
+    <string name="feature_auth_headline_2">bellamente</string>
+    <string name="feature_auth_headline_3">descifrada.</string>
+    <string name="feature_auth_highlight_tops_title">Tops en movimiento</string>
+    <string name="feature_auth_highlight_tops_body">Canciones, artistas, álbumes y géneros favoritos con cambios de posición en vivo.</string>
+    <string name="feature_auth_highlight_history_title">Todo tu historial</string>
+    <string name="feature_auth_highlight_history_body">Importa tus datos de Spotify para tener estadísticas de siempre, gratis.</string>
+    <string name="feature_auth_highlight_privacy_title">Privada por diseño</string>
+    <string name="feature_auth_highlight_privacy_body">Todo se calcula y guarda en tu dispositivo. Sin servidores ni rastreo.</string>
+    <string name="feature_auth_connect">Conectar con Spotify</string>
+    <string name="feature_auth_demo">Explorar con datos de demo</string>
+    <string name="feature_auth_session_expired">Tu sesión ha caducado. Conéctate de nuevo para mantener tus estadísticas al día.</string>
+    <string name="feature_auth_not_configured">Esta compilación no tiene credenciales de Spotify. Añade SPOTIFY_CLIENT_ID a local.properties o explora la demo.</string>
+    <string name="feature_auth_disclaimer">Sin relación con Spotify. Inicias sesión en la página de Spotify; MusicMania nunca ve tu contraseña.</string>
+</resources>
