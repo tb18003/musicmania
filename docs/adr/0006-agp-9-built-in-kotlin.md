@@ -1,7 +1,7 @@
 # ADR 0006 — AGP 9 with built-in Kotlin and the new DSL
 
 - Status: Accepted · Date: 2026-11-19
-- Supersedes the toolchain versions listed in `CLAUDE.md` §4 (kept unchanged on purpose).
+- `CLAUDE.md` §4 updated to the new toolchain.
 
 ## Context
 The project started on AGP 8.13 / Gradle 8.13 / Kotlin 2.2 for stability. AGP 9 makes built-in
