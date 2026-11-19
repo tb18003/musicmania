@@ -1,0 +1,19 @@
+# Copy this file to `local.properties` (git-ignored) and fill in your values.
+# NEVER commit local.properties.
+
+# Android SDK location (Android Studio writes this automatically)
+sdk.dir=/path/to/Android/Sdk
+
+# Spotify app credentials — https://developer.spotify.com/dashboard
+# The Client ID is a public identifier (PKCE flow, no client secret is used or needed).
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+
+# Must be an HTTPS URL registered in the Spotify dashboard AND verified as an
+# Android App Link (see docs/setup/spotify-app-links.md).
+SPOTIFY_REDIRECT_URI=https://example.github.io/musicmania/callback
+
+# Optional release signing (alternatively use env vars with the same names)
+# MUSICMANIA_KEYSTORE_PATH=/absolute/path/to/release.jks
+# MUSICMANIA_KEYSTORE_PASSWORD=
+# MUSICMANIA_KEY_ALIAS=
+# MUSICMANIA_KEY_PASSWORD=
