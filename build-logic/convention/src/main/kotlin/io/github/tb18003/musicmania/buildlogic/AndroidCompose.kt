@@ -13,13 +13,18 @@ internal fun Project.configureAndroidCompose(commonExtension: CommonExtension) {
     dependencies {
         val bom = libs.lib("androidx-compose-bom")
         add("implementation", platform(bom))
-        add("androidTestImplementation", platform(bom))
         add("testImplementation", platform(bom))
         add("implementation", libs.lib("androidx-compose-ui-tooling-preview"))
         add("debugImplementation", libs.lib("androidx-compose-ui-tooling"))
         add("debugImplementation", libs.lib("androidx-compose-ui-test-manifest"))
         add("testImplementation", libs.lib("androidx-compose-ui-test-junit4"))
         add("testImplementation", libs.lib("robolectric"))
+    }
+    if (hasAndroidTests()) {
+        dependencies {
+            add("androidTestImplementation", platform(libs.lib("androidx-compose-bom")))
+            add("androidTestImplementation", libs.lib("androidx-compose-ui-test-junit4"))
+        }
     }
 
     extensions.configure<ComposeCompilerGradlePluginExtension> {
