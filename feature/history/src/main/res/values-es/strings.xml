@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_history_title">Historial</string>
+    <string name="feature_history_last_sync">Sincronizado %1$s</string>
+    <string name="feature_history_never_synced">Aún sin sincronizar</string>
+    <string name="feature_history_sync_now">Sincronizar ahora</string>
+    <string name="feature_history_today">Hoy</string>
+    <string name="feature_history_yesterday">Ayer</string>
+    <string name="feature_history_empty_title">Tu historial empieza ahora</string>
+    <string name="feature_history_empty_message">MusicMania registra tus reproducciones en segundo plano desde ahora. Importa tus datos de Spotify para traer tus años anteriores.</string>
+    <string name="feature_history_import">Importar historial</string>
+</resources>
