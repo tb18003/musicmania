@@ -17,6 +17,9 @@ fun VersionCatalog.version(alias: String): String = findVersion(alias).get().req
 
 fun VersionCatalog.pluginId(alias: String): String = findPlugin(alias).get().get().pluginId
 
+/** True when the module has JVM unit tests (`src/test`). */
+fun Project.hasUnitTests(): Boolean = file("src/test").exists()
+
 /** Builds a stable Android namespace from the Gradle path, e.g. `:core:network` -> `...core.network`. */
 fun Project.musicManiaNamespace(): String =
     "io.github.tb18003.musicmania" + path.replace(':', '.').replace('-', '_')

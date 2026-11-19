@@ -45,7 +45,11 @@ data class Ranked<T>(
 )
 
 /** A ranked list as returned by the API plus the previous snapshot used for movement arrows. */
-data class TopList<T>(val items: List<T>, val previousRanks: Map<String, Int>?, val fetchedAt: Instant?)
+data class TopList<T>(
+    val items: List<T>,
+    val previousRanks: Map<String, Int>?,
+    val fetchedAt: Instant?,
+)
 
 data class Genre(
     val name: String,
@@ -54,4 +58,8 @@ data class Genre(
     val artistCount: Int,
 )
 
-data class TopAlbum(val album: AlbumSummary, val artistName: String, val score: Double)
+data class TopAlbum(
+    val album: AlbumSummary,
+    val artistName: String,
+    val score: Double,
+)

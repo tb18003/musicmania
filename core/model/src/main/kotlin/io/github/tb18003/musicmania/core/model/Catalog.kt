@@ -10,9 +10,17 @@ package io.github.tb18003.musicmania.core.model
  * Catalog entities. Identifiers are nullable because tracks coming from an imported
  * streaming-history file (basic format) only carry names, never Spotify IDs.
  */
-data class ArtistSummary(val id: String?, val name: String)
+data class ArtistSummary(
+    val id: String?,
+    val name: String,
+)
 
-data class AlbumSummary(val id: String?, val name: String, val imageUrl: String?, val releaseDate: String? = null)
+data class AlbumSummary(
+    val id: String?,
+    val name: String,
+    val imageUrl: String?,
+    val releaseDate: String? = null,
+)
 
 data class Track(
     val id: String?,
@@ -45,4 +53,8 @@ data class Album(
     val spotifyUri: String? = null,
 )
 
-data class UserProfile(val id: String, val displayName: String?, val imageUrl: String?)
+data class UserProfile(
+    val id: String,
+    val displayName: String?,
+    val imageUrl: String?,
+)

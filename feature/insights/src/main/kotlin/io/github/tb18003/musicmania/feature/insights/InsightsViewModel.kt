@@ -33,8 +33,10 @@ data class InsightsUiState(
 }
 
 @HiltViewModel
-class InsightsViewModel @Inject constructor(private val savedStateHandle: SavedStateHandle, getInsights: GetInsightsUseCase) :
-    ViewModel() {
+class InsightsViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    getInsights: GetInsightsUseCase,
+) : ViewModel() {
     private val range = savedStateHandle.getStateFlow(KEY_RANGE, TimeRange.SIX_MONTHS)
 
     val uiState: StateFlow<InsightsUiState> = range

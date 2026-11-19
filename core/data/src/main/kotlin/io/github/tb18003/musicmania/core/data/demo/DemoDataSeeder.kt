@@ -48,7 +48,10 @@ internal object DemoCatalog {
         "Mirage", "Weightless", "Polaroid", "Wavelength", "Sunday Drive", "Fever", "Comet", "Late Night", "Blue Hour",
     )
 
-    data class Seed(val artists: List<ArtistEntity>, val tracks: List<TrackEntity>)
+    data class Seed(
+        val artists: List<ArtistEntity>,
+        val tracks: List<TrackEntity>,
+    )
 
     fun build(random: Random = Random(SEED)): Seed {
         val artists = artistNames.mapIndexed { i, name ->

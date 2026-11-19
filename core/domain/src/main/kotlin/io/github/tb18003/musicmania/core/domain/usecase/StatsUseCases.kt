@@ -27,10 +27,17 @@ import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
 
-data class ListeningOverview(val comparison: PeriodComparison, val daily: List<DailyListening>, val hasHistory: Boolean)
+data class ListeningOverview(
+    val comparison: PeriodComparison,
+    val daily: List<DailyListening>,
+    val hasHistory: Boolean,
+)
 
 /** Totals for a period, compared with the immediately preceding period of equal length. */
-class GetListeningOverviewUseCase @Inject constructor(private val history: HistoryRepository, private val clock: Clock) {
+class GetListeningOverviewUseCase @Inject constructor(
+    private val history: HistoryRepository,
+    private val clock: Clock,
+) {
     operator fun invoke(range: TimeRange): Flow<ListeningOverview> {
         val window = range.toDateRange(clock)
         return combine(
@@ -54,7 +61,10 @@ data class Insights(
     val comparison: PeriodComparison,
 )
 
-class GetInsightsUseCase @Inject constructor(private val history: HistoryRepository, private val clock: Clock) {
+class GetInsightsUseCase @Inject constructor(
+    private val history: HistoryRepository,
+    private val clock: Clock,
+) {
     operator fun invoke(range: TimeRange): Flow<Insights> {
         val window = range.toDateRange(clock)
         val lifetime = TimeRange.LIFETIME.toDateRange(clock)
@@ -84,7 +94,10 @@ class GetInsightsUseCase @Inject constructor(private val history: HistoryReposit
 }
 
 /** "Wrapped, any time": everything a story-style recap needs for an arbitrary window. */
-class BuildRecapUseCase @Inject constructor(private val history: HistoryRepository, private val clock: Clock) {
+class BuildRecapUseCase @Inject constructor(
+    private val history: HistoryRepository,
+    private val clock: Clock,
+) {
     operator fun invoke(range: DateRange): Flow<Recap> {
         val tops = combine(
             history.observeTopArtists(range, RECAP_TOP),

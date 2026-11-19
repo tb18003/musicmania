@@ -7,12 +7,8 @@ import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradlePluginExtension
 
 /** Enables Jetpack Compose with the shared BOM, tooling and test dependencies. */
-internal fun Project.configureAndroidCompose(commonExtension: CommonExtension<*, *, *, *, *, *>) {
-    commonExtension.apply {
-        buildFeatures {
-            compose = true
-        }
-    }
+internal fun Project.configureAndroidCompose(commonExtension: CommonExtension) {
+    commonExtension.buildFeatures.compose = true
 
     dependencies {
         val bom = libs.lib("androidx-compose-bom")

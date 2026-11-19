@@ -103,16 +103,17 @@ One-shot events (snackbars) use a `Channel` exposed as `Flow` **with a single co
 
 ## 4. Tech stack
 
-Kotlin 2.2.21 · AGP 8.13.2 · Gradle 8.13 (checksum-pinned wrapper) · JDK 21 to run Gradle,
+Kotlin 2.4.21 · AGP 9.5.1 (built-in Kotlin, new DSL) · Gradle 9.9.1 (checksum-pinned wrapper) · JDK 21 to run Gradle,
 bytecode target 17 · compileSdk/targetSdk 36 · minSdk 26 · Compose BOM 2025.12.00 + Material 3
-· Navigation Compose (type-safe `@Serializable` routes) · Hilt 2.57 + KSP · Coroutines/Flow
+· Navigation Compose (type-safe `@Serializable` routes) · Hilt 2.60 + KSP 2.3 · Coroutines/Flow
 · Retrofit 3 + OkHttp 4 + kotlinx.serialization · Room 2.8 + Paging 3 · DataStore · Tink ·
 AppAuth · Coil 3 · Palette · WorkManager · Glance · SplashScreen.
 All versions live in `gradle/libs.versions.toml`. Shared build logic lives in
 `build-logic/convention` (convention plugins `musicmania.*`).
 
-> Known follow-up: AGP 9.x is available; migrating (built-in Kotlin, new DSL) is a planned
-> dedicated PR. Do not mix it into feature work.
+> AGP 9 uses built-in Kotlin: never apply `org.jetbrains.kotlin.android` and never add the
+> `android.builtInKotlin`/`android.newDsl` opt-out flags (see ADR 0006).
+> Known follow-up: Detekt 1.23 uses Gradle APIs removed in Gradle 10 ⇒ migrate to Detekt 2 in its own PR.
 
 ## 5. Commands
 

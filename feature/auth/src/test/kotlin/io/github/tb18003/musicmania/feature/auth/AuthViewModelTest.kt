@@ -28,8 +28,10 @@ class AuthViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private class FakeGateway(var result: DataResult<Unit> = DataResult.Success(Unit), override val isConfigured: Boolean = true) :
-        AuthGateway {
+    private class FakeGateway(
+        var result: DataResult<Unit> = DataResult.Success(Unit),
+        override val isConfigured: Boolean = true,
+    ) : AuthGateway {
         override fun createAuthorizationIntent() = Intent("auth")
 
         override suspend fun handleAuthorizationResult(data: Intent?) = result

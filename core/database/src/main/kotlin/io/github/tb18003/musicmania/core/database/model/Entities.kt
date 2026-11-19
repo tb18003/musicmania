@@ -13,7 +13,10 @@ import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ArtistRef(val id: String?, val name: String)
+data class ArtistRef(
+    val id: String?,
+    val name: String,
+)
 
 @Entity(tableName = "tracks")
 data class TrackEntity(
@@ -30,7 +33,13 @@ data class TrackEntity(
 )
 
 @Entity(tableName = "artists", indices = [Index("name")])
-data class ArtistEntity(@PrimaryKey val id: String, val name: String, val imageUrl: String?, val genres: List<String>, val uri: String?)
+data class ArtistEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val imageUrl: String?,
+    val genres: List<String>,
+    val uri: String?,
+)
 
 @Entity(tableName = "albums")
 data class AlbumEntity(
@@ -106,8 +115,19 @@ data class PlayEventEntity(
     }
 }
 
-data class RankedTrackRow(@Embedded val track: TrackEntity, val position: Int, val fetchedAt: Long)
+data class RankedTrackRow(
+    @Embedded val track: TrackEntity,
+    val position: Int,
+    val fetchedAt: Long,
+)
 
-data class RankedArtistRow(@Embedded val artist: ArtistEntity, val position: Int, val fetchedAt: Long)
+data class RankedArtistRow(
+    @Embedded val artist: ArtistEntity,
+    val position: Int,
+    val fetchedAt: Long,
+)
 
-data class SnapshotRankRow(val itemId: String, val position: Int)
+data class SnapshotRankRow(
+    val itemId: String,
+    val position: Int,
+)

@@ -32,4 +32,7 @@ data class UserPreferences(
     val reduceMotion: Boolean = false,
 )
 
-data class SyncStatus(val lastSuccessfulSync: Instant?, val isRunning: Boolean)
+data class SyncStatus(
+    val lastSuccessfulSync: Instant?,
+    val isRunning: Boolean,
+)

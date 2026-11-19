@@ -8,7 +8,12 @@ package io.github.tb18003.musicmania.core.model
 
 import java.time.Instant
 
-data class NowPlaying(val track: Track, val progressMs: Long, val isPlaying: Boolean, val fetchedAt: Instant)
+data class NowPlaying(
+    val track: Track,
+    val progressMs: Long,
+    val isPlaying: Boolean,
+    val fetchedAt: Instant,
+)
 
 enum class PlaySource { SYNC, IMPORT, DEMO }
 

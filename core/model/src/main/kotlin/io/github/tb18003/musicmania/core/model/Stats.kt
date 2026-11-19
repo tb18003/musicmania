@@ -12,7 +12,10 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 /** Half-open interval `[start, endExclusive)`. */
-data class DateRange(val start: Instant, val endExclusive: Instant) {
+data class DateRange(
+    val start: Instant,
+    val endExclusive: Instant,
+) {
     init {
         require(!endExclusive.isBefore(start)) { "endExclusive must not be before start" }
     }
@@ -23,7 +26,12 @@ data class DateRange(val start: Instant, val endExclusive: Instant) {
     fun previous(): DateRange = DateRange(start.minusMillis(lengthMs), start)
 }
 
-data class ListeningSummary(val listenedMs: Long, val streams: Int, val uniqueTracks: Int, val uniqueArtists: Int) {
+data class ListeningSummary(
+    val listenedMs: Long,
+    val streams: Int,
+    val uniqueTracks: Int,
+    val uniqueArtists: Int,
+) {
     val minutes: Long get() = listenedMs / 60_000
 
     companion object {
@@ -41,13 +49,32 @@ data class TrackPlayCount(
     val listenedMs: Long,
 )
 
-data class ArtistPlayCount(val artistName: String, val imageUrl: String?, val streams: Int, val listenedMs: Long)
+data class ArtistPlayCount(
+    val artistName: String,
+    val imageUrl: String?,
+    val streams: Int,
+    val listenedMs: Long,
+)
 
-data class AlbumPlayCount(val albumName: String, val artistName: String, val imageUrl: String?, val streams: Int, val listenedMs: Long)
+data class AlbumPlayCount(
+    val albumName: String,
+    val artistName: String,
+    val imageUrl: String?,
+    val streams: Int,
+    val listenedMs: Long,
+)
 
-data class DailyListening(val date: LocalDate, val listenedMs: Long, val streams: Int)
+data class DailyListening(
+    val date: LocalDate,
+    val listenedMs: Long,
+    val streams: Int,
+)
 
-data class WeekdayHourCell(val dayOfWeek: DayOfWeek, val hour: Int, val listenedMs: Long)
+data class WeekdayHourCell(
+    val dayOfWeek: DayOfWeek,
+    val hour: Int,
+    val listenedMs: Long,
+)
 
 /** 24 buckets, index = local hour of day. */
 data class ListeningClock(val msByHour: List<Long>) {
@@ -63,7 +90,11 @@ data class ListeningClock(val msByHour: List<Long>) {
     }
 }
 
-data class Streaks(val current: Int, val longest: Int, val longestEndedOn: LocalDate?)
+data class Streaks(
+    val current: Int,
+    val longest: Int,
+    val longestEndedOn: LocalDate?,
+)
 
 data class PlaybackHabits(
     /** Fraction 0..1 of plays that were skipped, null when the data source does not report it. */
@@ -72,9 +103,15 @@ data class PlaybackHabits(
     val platforms: List<PlatformShare>,
 )
 
-data class PlatformShare(val platform: String, val listenedMs: Long)
+data class PlatformShare(
+    val platform: String,
+    val listenedMs: Long,
+)
 
-data class PeriodComparison(val current: ListeningSummary, val previous: ListeningSummary) {
+data class PeriodComparison(
+    val current: ListeningSummary,
+    val previous: ListeningSummary,
+) {
     /** Relative change of listening time, null when there is no previous data. */
     val listenedChange: Double?
         get() = if (previous.listenedMs == 0L) null else (current.listenedMs - previous.listenedMs).toDouble() / previous.listenedMs
@@ -82,12 +119,19 @@ data class PeriodComparison(val current: ListeningSummary, val previous: Listeni
 
 enum class MilestoneType { MINUTES, STREAMS, ARTISTS, STREAK_DAYS }
 
-data class Milestone(val type: MilestoneType, val threshold: Long, val value: Long) {
+data class Milestone(
+    val type: MilestoneType,
+    val threshold: Long,
+    val value: Long,
+) {
     val achieved: Boolean get() = value >= threshold
     val progress: Float get() = (value.toFloat() / threshold).coerceIn(0f, 1f)
 }
 
-data class MonthlyCount(val month: YearMonth, val streams: Int)
+data class MonthlyCount(
+    val month: YearMonth,
+    val streams: Int,
+)
 
 /** Personal statistics for a single track, artist or album. */
 data class ItemStats(
