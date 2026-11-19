@@ -81,7 +81,7 @@ jobs:
           retention-days: 7
 
   instrumented:
-    name: Instrumented tests (Gradle Managed Device)
+    name: Instrumented tests (emulator)
     # An emulator run costs ~10 runner minutes: only on demand and for release PRs to master.
     # Run locally with ./gradlew connectedDebugAndroidTest before opening a PR.
     if: github.event_name == 'workflow_dispatch' || github.base_ref == 'master'
@@ -107,11 +107,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Run instrumented tests on pixel6Api34 (ATD image)
-        run: >
-          ./gradlew pixel6Api34DebugAndroidTest
-          -Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect
-          -Pandroid.experimental.testOptions.managedDevices.setupTimeoutMinutes=20
+      # Build everything first so Gradle and the emulator never compete for the runner's memory.
+      - name: Build app and test APKs
+        run: ./gradlew assembleDebug assembleDebugAndroidTest
+
+      # A single emulator for all modules. Gradle Managed Devices created one snapshot per module
+      # in parallel, and the emulator died silently on the 2-core / 7 GB runner.
+      - name: Run instrumented tests on an API 34 emulator (ATD image)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: aosp_atd
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: ./gradlew connectedDebugAndroidTest
 
       - name: Upload reports
         if: always()
