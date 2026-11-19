@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_insights_title">Insights</string>
+    <string name="feature_insights_clock">Reloj de escucha</string>
+    <string name="feature_insights_you_are">Eres un</string>
+    <string name="feature_insights_peak_hour">Escuchas más alrededor de las %1$s</string>
+    <string name="feature_insights_clock_description">Tiempo de escucha por hora del día. Pico a las %1$d horas.</string>
+    <string name="feature_insights_heatmap">Cuándo escuchas</string>
+    <string name="feature_insights_weekday_initials">L,M,X,J,V,S,D</string>
+    <string name="feature_insights_current_streak">días seguidos</string>
+    <string name="feature_insights_longest_streak">Mejor racha: %1$d días</string>
+    <string name="feature_insights_vs_previous">vs periodo anterior</string>
+    <string name="feature_insights_minutes">minutos</string>
+    <string name="feature_insights_habits">Hábitos</string>
+    <string name="feature_insights_skip_rate">Saltadas</string>
+    <string name="feature_insights_shuffle_rate">En aleatorio</string>
+    <string name="feature_insights_platforms">Dónde escuchas</string>
+    <string name="feature_insights_habits_unavailable">Los datos de saltos, aleatorio y dispositivos vienen de la importación del historial ampliado.</string>
+    <string name="feature_insights_milestones">Logros</string>
+    <string name="feature_insights_milestone_minutes">minutos escuchados</string>
+    <string name="feature_insights_milestone_streams">reproducciones</string>
+    <string name="feature_insights_milestone_artists">artistas descubiertos</string>
+    <string name="feature_insights_milestone_streak">días seguidos</string>
+    <string name="feature_insights_empty_title">Aún no hay suficientes datos</string>
+    <string name="feature_insights_empty_message">Los insights necesitan historial. Sigue escuchando o importa tus datos de Spotify para verlos al instante.</string>
+    <string name="feature_insights_import">Importar historial</string>
+</resources>

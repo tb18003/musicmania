@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_insights_title">Insights</string>
+    <string name="feature_insights_clock">Listening clock</string>
+    <string name="feature_insights_you_are">You\'re a</string>
+    <string name="feature_insights_peak_hour">You listen most around %1$s</string>
+    <string name="feature_insights_clock_description">Listening time per hour of the day. Peak at %1$d hours.</string>
+    <string name="feature_insights_heatmap">When you listen</string>
+    <string name="feature_insights_weekday_initials">M,T,W,T,F,S,S</string>
+    <string name="feature_insights_current_streak">day streak</string>
+    <string name="feature_insights_longest_streak">Longest: %1$d days</string>
+    <string name="feature_insights_vs_previous">vs previous period</string>
+    <string name="feature_insights_minutes">minutes</string>
+    <string name="feature_insights_habits">Habits</string>
+    <string name="feature_insights_skip_rate">Skipped</string>
+    <string name="feature_insights_shuffle_rate">On shuffle</string>
+    <string name="feature_insights_platforms">Where you listen</string>
+    <string name="feature_insights_habits_unavailable">Skip, shuffle and device data come from the Extended Streaming History import.</string>
+    <string name="feature_insights_milestones">Milestones</string>
+    <string name="feature_insights_milestone_minutes">minutes listened</string>
+    <string name="feature_insights_milestone_streams">streams</string>
+    <string name="feature_insights_milestone_artists">artists discovered</string>
+    <string name="feature_insights_milestone_streak">day streak</string>
+    <string name="feature_insights_empty_title">Not enough data yet</string>
+    <string name="feature_insights_empty_message">Insights need listening history. Keep listening, or import your Spotify data for instant lifetime insights.</string>
+    <string name="feature_insights_import">Import history</string>
+</resources>
