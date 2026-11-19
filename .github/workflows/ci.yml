@@ -59,7 +59,7 @@ jobs:
         run: ./gradlew lintDebug
 
       - name: Assemble
-        run: ./gradlew assembleDebug assembleRelease
+        run: ./gradlew assembleDebug assembleRelease :baselineprofile:assemble
 
       - name: Coverage report
         run: ./gradlew koverXmlReport

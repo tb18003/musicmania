@@ -26,6 +26,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 rootProject.name = "MusicMania"
 
 include(":app")
+include(":baselineprofile")
 
 include(":core:common")
 include(":core:model")

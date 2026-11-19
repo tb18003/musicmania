@@ -91,6 +91,17 @@ end-to-end demo journey) run on a device or on a Gradle Managed Device:
 ./gradlew pixel6Api34DebugAndroidTest    # on a managed emulator (downloads an ATD image)
 ```
 
+## Performance
+
+Release builds ship a committed **Baseline Profile** (see [ADR 0007](docs/adr/0007-baseline-profile.md)).
+Regenerate it after significant UI changes and measure cold start with Macrobenchmark:
+
+```bash
+./gradlew :app:generateReleaseBaselineProfile                                    # managed device
+./gradlew :app:generateReleaseBaselineProfile -Pmusicmania.baselineprofile.connected  # running device, API 33+
+./gradlew :baselineprofile:connectedBenchmarkReleaseAndroidTest   -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark
+```
+
 ## Security
 
 Tokens are encrypted with Google Tink (AES-256-GCM) under an Android Keystore key, never

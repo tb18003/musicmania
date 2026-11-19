@@ -66,6 +66,10 @@ gradlePlugin {
             id = libs.plugins.musicmania.android.roborazzi.get().pluginId
             implementationClass = "AndroidRoborazziConventionPlugin"
         }
+        register("androidTest") {
+            id = libs.plugins.musicmania.android.test.get().pluginId
+            implementationClass = "AndroidTestConventionPlugin"
+        }
         register("hilt") {
             id = libs.plugins.musicmania.hilt.get().pluginId
             implementationClass = "HiltConventionPlugin"
