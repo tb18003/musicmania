@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="mm_background">#FF0A0A0F</color>
+    <color name="mm_volt">#FFC8FF4D</color>
+    <color name="mm_aqua">#FF4DE8FF</color>
+    <color name="mm_violet">#FF8B7CFF</color>
+</resources>

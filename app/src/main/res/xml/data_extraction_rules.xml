@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ backup rules: never back up OAuth tokens or the encryption keyset. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/secure_session.preferences_pb" />
+        <exclude domain="sharedpref" path="musicmania_tink_keyset.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/secure_session.preferences_pb" />
+        <exclude domain="sharedpref" path="musicmania_tink_keyset.xml" />
+    </device-transfer>
+</data-extraction-rules>

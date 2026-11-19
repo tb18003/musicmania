@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MusicMania" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/mm_background</item>
+    </style>
+
+    <!-- Android 12+ splash screen API (backported by core-splashscreen). -->
+    <style name="Theme.MusicMania.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/mm_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.MusicMania</item>
+    </style>
+</resources>

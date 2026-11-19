@@ -1,0 +1,113 @@
+import java.net.URI
+import java.util.Properties
+
+plugins {
+    alias(libs.plugins.musicmania.android.application)
+    alias(libs.plugins.musicmania.android.application.compose)
+    alias(libs.plugins.musicmania.hilt)
+    alias(libs.plugins.kotlin.serialization)
+}
+
+/*
+ * Secrets never live in the repository. They are read from (in order):
+ *  1. environment variables (CI), 2. the git-ignored local.properties.
+ * See local.properties.example and docs/setup/spotify-app-links.md.
+ */
+val localProperties = Properties().apply {
+    providers.fileContents(rootProject.layout.projectDirectory.file("local.properties")).asText.orNull?.let { load(it.reader()) }
+}
+
+fun secret(name: String, default: String = ""): String =
+    providers.environmentVariable(name).orNull ?: localProperties.getProperty(name) ?: default
+
+val spotifyClientId = secret("SPOTIFY_CLIENT_ID")
+val spotifyRedirectUri = secret("SPOTIFY_REDIRECT_URI", "https://example.invalid/musicmania/callback")
+val redirect: URI = URI(spotifyRedirectUri)
+
+require(spotifyClientId.matches(Regex("[A-Za-z0-9]*"))) { "SPOTIFY_CLIENT_ID must be alphanumeric" }
+require(redirect.scheme == "https") { "SPOTIFY_REDIRECT_URI must be an https:// App Link (Spotify rejects custom schemes)" }
+
+android {
+    namespace = "io.github.tb18003.musicmania"
+
+    defaultConfig {
+        applicationId = "io.github.tb18003.musicmania"
+        versionCode = 1
+        versionName = "0.1.0"
+
+        buildConfigField("String", "SPOTIFY_CLIENT_ID", "\"$spotifyClientId\"")
+        buildConfigField("String", "SPOTIFY_REDIRECT_URI", "\"$spotifyRedirectUri\"")
+        // Used by the verified App Link intent filter that receives the OAuth redirect.
+        manifestPlaceholders["redirectHost"] = redirect.host
+        manifestPlaceholders["redirectPath"] = redirect.path.ifEmpty { "/" }
+        // Required by AppAuth's manifest; our manifest replaces its custom-scheme receiver.
+        manifestPlaceholders["appAuthRedirectScheme"] = "io.github.tb18003.musicmania.unused"
+    }
+
+    signingConfigs {
+        val keystorePath = secret("MUSICMANIA_KEYSTORE_PATH")
+        if (keystorePath.isNotBlank()) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = secret("MUSICMANIA_KEYSTORE_PASSWORD")
+                keyAlias = secret("MUSICMANIA_KEY_ALIAS")
+                keyPassword = secret("MUSICMANIA_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("release")
+        }
+    }
+
+    packaging {
+        resources.excludes += "/META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+    }
+}
+
+dependencies {
+    implementation(projects.core.common)
+    implementation(projects.core.model)
+    implementation(projects.core.domain)
+    implementation(projects.core.data)
+    implementation(projects.core.network)
+    implementation(projects.core.designsystem)
+    implementation(projects.core.ui)
+    implementation(projects.sync.work)
+    implementation(projects.widget)
+
+    implementation(projects.feature.auth)
+    implementation(projects.feature.home)
+    implementation(projects.feature.top)
+    implementation(projects.feature.history)
+    implementation(projects.feature.detail)
+    implementation(projects.feature.insights)
+    implementation(projects.feature.recap)
+    implementation(projects.feature.importer)
+    implementation(projects.feature.settings)
+
+    // The manifest replaces AppAuth's redirect receiver, so the class must be on this classpath.
+    implementation(libs.appauth)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+    implementation(libs.okhttp.core)
+    implementation(libs.kotlinx.serialization.json)
+
+    testImplementation(projects.core.testing)
+    testImplementation(libs.konsist)
+}

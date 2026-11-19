@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Equaliser bars inside the adaptive-icon safe zone (66dp of 108dp). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M38,48 L38,62"
+        android:strokeWidth="8"
+        android:strokeColor="@color/mm_violet"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M49.3,38 L49.3,72"
+        android:strokeWidth="8"
+        android:strokeColor="@color/mm_aqua"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M60.6,43 L60.6,67"
+        android:strokeWidth="8"
+        android:strokeColor="@color/mm_volt"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M71.9,34 L71.9,76"
+        android:strokeWidth="8"
+        android:strokeColor="@color/mm_volt"
+        android:strokeLineCap="round" />
+</vector>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and lower backup rules (same exclusions as data_extraction_rules.xml). -->
+<full-backup-content>
+    <exclude domain="file" path="datastore/secure_session.preferences_pb" />
+    <exclude domain="sharedpref" path="musicmania_tink_keyset.xml" />
+</full-backup-content>
