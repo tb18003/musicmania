@@ -3,9 +3,10 @@ updates:
   - package-ecosystem: gradle
     directory: /
     target-branch: develop
+    # Every update PR runs the full CI: batch them monthly to save runner minutes.
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
+      interval: monthly
+    open-pull-requests-limit: 5
     groups:
       androidx:
         patterns: ["androidx.*"]
