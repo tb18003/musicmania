@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_range_four_weeks">4 semanas</string>
+    <string name="core_ui_range_six_months">6 meses</string>
+    <string name="core_ui_range_one_year">1 año</string>
+    <string name="core_ui_range_lifetime">Siempre</string>
+
+    <string name="core_ui_movement_up">Sube %1$d puestos</string>
+    <string name="core_ui_movement_down">Baja %1$d puestos</string>
+    <string name="core_ui_movement_new">Nueva entrada</string>
+    <string name="core_ui_movement_new_short">NUEVO</string>
+
+    <string name="core_ui_retry">Reintentar</string>
+    <string name="core_ui_error_title">Algo ha salido mal</string>
+    <string name="core_ui_error_network">Parece que no tienes conexión. Mostrando lo guardado en tu dispositivo.</string>
+    <string name="core_ui_error_unauthorized">Tu sesión de Spotify ha caducado. Vuelve a iniciar sesión.</string>
+    <string name="core_ui_error_forbidden">Spotify ha denegado el acceso. En modo desarrollo tu cuenta debe estar en la lista de usuarios de la app (máx. 5) y el propietario necesita Premium.</string>
+    <string name="core_ui_error_not_found">No lo hemos encontrado en Spotify.</string>
+    <string name="core_ui_error_rate_limited">Spotify está limitando las peticiones. Inténtalo en un minuto.</string>
+    <string name="core_ui_error_server">Spotify tiene problemas. Inténtalo más tarde.</string>
+    <string name="core_ui_error_invalid_data">Ese archivo no parece una exportación del historial de Spotify.</string>
+    <string name="core_ui_error_storage">No se ha podido leer o escribir el archivo.</string>
+    <string name="core_ui_error_unknown">Error inesperado. Inténtalo de nuevo.</string>
+
+    <string name="core_ui_personality_early_bird">Madrugador</string>
+    <string name="core_ui_personality_daytime">Ritmo diurno</string>
+    <string name="core_ui_personality_evening">Alma de tarde</string>
+    <string name="core_ui_personality_night_owl">Búho nocturno</string>
+
+    <string name="core_ui_minutes_suffix"> min</string>
+    <plurals name="core_ui_streams">
+        <item quantity="one">%1$s reproducción</item>
+        <item quantity="many">%1$s reproducciones</item>
+        <item quantity="other">%1$s reproducciones</item>
+    </plurals>
+</resources>

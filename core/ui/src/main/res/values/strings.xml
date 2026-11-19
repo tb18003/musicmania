@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="core_ui_range_four_weeks">4 weeks</string>
+    <string name="core_ui_range_six_months">6 months</string>
+    <string name="core_ui_range_one_year">1 year</string>
+    <string name="core_ui_range_lifetime">All time</string>
+
+    <string name="core_ui_movement_up">Up %1$d places</string>
+    <string name="core_ui_movement_down">Down %1$d places</string>
+    <string name="core_ui_movement_new">New entry</string>
+    <string name="core_ui_movement_new_short">NEW</string>
+
+    <string name="core_ui_retry">Try again</string>
+    <string name="core_ui_error_title">Something went wrong</string>
+    <string name="core_ui_error_network">You seem to be offline. Showing what is saved on your device.</string>
+    <string name="core_ui_error_unauthorized">Your Spotify session expired. Please sign in again.</string>
+    <string name="core_ui_error_forbidden">Spotify denied access. In Development Mode your account must be on the app\'s user list (max. 5) and the app owner needs Premium.</string>
+    <string name="core_ui_error_not_found">We couldn\'t find that on Spotify.</string>
+    <string name="core_ui_error_rate_limited">Spotify is limiting requests right now. Try again in a minute.</string>
+    <string name="core_ui_error_server">Spotify is having trouble. Try again later.</string>
+    <string name="core_ui_error_invalid_data">That file doesn\'t look like a Spotify streaming history export.</string>
+    <string name="core_ui_error_storage">The file couldn\'t be read or written.</string>
+    <string name="core_ui_error_unknown">Unexpected error. Please try again.</string>
+
+    <string name="core_ui_personality_early_bird">Early bird</string>
+    <string name="core_ui_personality_daytime">Daytime cruiser</string>
+    <string name="core_ui_personality_evening">Evening drifter</string>
+    <string name="core_ui_personality_night_owl">Night owl</string>
+
+    <string name="core_ui_minutes_suffix"> min</string>
+    <plurals name="core_ui_streams">
+        <item quantity="one">%1$s stream</item>
+        <item quantity="other">%1$s streams</item>
+    </plurals>
+</resources>
