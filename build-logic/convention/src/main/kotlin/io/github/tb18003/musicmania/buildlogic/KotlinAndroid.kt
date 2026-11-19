@@ -14,45 +14,42 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 private val JAVA_VERSION = JavaVersion.VERSION_17
 
 /** Shared Android + Kotlin configuration for every Android module (app and libraries). */
-internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension<*, *, *, *, *, *>) {
+internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
     commonExtension.apply {
         compileSdk = libs.version("compileSdk").toInt()
 
-        defaultConfig {
+        defaultConfig.apply {
             minSdk = libs.version("minSdk").toInt()
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             vectorDrawables.useSupportLibrary = true
         }
 
-        compileOptions {
+        compileOptions.apply {
             sourceCompatibility = JAVA_VERSION
             targetCompatibility = JAVA_VERSION
         }
 
-        testOptions {
-            unitTests {
-                isIncludeAndroidResources = true
-                isReturnDefaultValues = false
-            }
+        testOptions.unitTests.apply {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = false
         }
 
-        lint {
+        lint.apply {
             abortOnError = true
             checkDependencies = false
             warningsAsErrors = false
             disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion", "OldTargetApi")
         }
 
-        packaging {
-            resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/LICENSE*")
-        }
+        packaging.resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "/META-INF/LICENSE*")
     }
 
     configureKotlin<KotlinAndroidProjectExtension>()
 
     dependencies {
         add("testImplementation", libs.lib("junit4"))
-        add("testImplementation", libs.lib("kotlin-test"))
+        // Built-in Kotlin does not infer the kotlin-test JUnit variant, so request it explicitly.
+        add("testImplementation", libs.lib("kotlin-test-junit"))
         add("testImplementation", libs.lib("kotlinx-coroutines-test"))
         add("testImplementation", libs.lib("turbine"))
     }
