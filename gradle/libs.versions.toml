@@ -3,7 +3,7 @@
 agp = "9.5.1"
 kotlin = "2.4.21"
 ksp = "2.3.14"
-compileSdk = "36"
+compileSdk = "37"
 minSdk = "26"
 targetSdk = "36"
 javaTarget = "17"
