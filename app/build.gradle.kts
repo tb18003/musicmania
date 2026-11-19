@@ -126,6 +126,13 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.kotlinx.serialization.json)
 
+    // AGP pins the androidTest runtime classpath to the app's resolved versions; androidx.test
+    // needs concurrent-futures 1.2, so align the app instead of letting the pin conflict.
+    constraints {
+        implementation(libs.androidx.concurrent.futures)
+        implementation(libs.androidx.concurrent.futures.ktx)
+    }
+
     testImplementation(projects.core.testing)
     testImplementation(libs.konsist)
 }

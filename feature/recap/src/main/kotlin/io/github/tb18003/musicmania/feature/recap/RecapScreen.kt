@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -62,7 +63,6 @@ import io.github.tb18003.musicmania.core.model.Recap
 import io.github.tb18003.musicmania.core.ui.EmptyState
 import kotlinx.coroutines.launch
 import java.time.format.TextStyle
-import java.util.Locale
 import kotlin.math.absoluteValue
 
 @Composable
@@ -111,11 +111,15 @@ fun RecapScreen(
 }
 
 @Composable
-private fun periodTitle(state: RecapUiState): String = when {
-    state.periodLabelMonth != null -> state.periodLabelMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
-        .replaceFirstChar { it.titlecase(Locale.getDefault()) } + " " + state.periodLabelMonth.year
-    state.periodLabelYear != 0 -> state.periodLabelYear.toString()
-    else -> stringResource(R.string.feature_recap_period_last_30)
+private fun periodTitle(state: RecapUiState): String {
+    // Read through LocalConfiguration so the title recomposes when the app language changes.
+    val locale = LocalConfiguration.current.locales[0]
+    return when {
+        state.periodLabelMonth != null -> state.periodLabelMonth.month.getDisplayName(TextStyle.FULL_STANDALONE, locale)
+            .replaceFirstChar { it.titlecase(locale) } + " " + state.periodLabelMonth.year
+        state.periodLabelYear != 0 -> state.periodLabelYear.toString()
+        else -> stringResource(R.string.feature_recap_period_last_30)
+    }
 }
 
 /**
