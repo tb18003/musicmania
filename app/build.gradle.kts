@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.musicmania.android.application.compose)
     alias(libs.plugins.musicmania.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.baselineprofile)
 }
 
 /*
@@ -70,6 +71,20 @@ android {
     }
 }
 
+// The baseline profile plugin adds `nonMinifiedRelease` (profile generation) and `benchmarkRelease`
+// (macrobenchmarks) build types. They are local, never-distributed artifacts: without a release
+// keystore they fall back to the debug key so they can be installed on a test device.
+android.buildTypes.matching { it.name in setOf("nonMinifiedRelease", "benchmarkRelease") }.configureEach {
+    if (signingConfig == null) signingConfig = android.signingConfigs.getByName("debug")
+}
+
+baselineProfile {
+    // Profiles are generated on demand and committed (src/release/generated/baselineProfiles).
+    automaticGenerationDuringBuild = false
+    // Also generate a startup profile so R8 lays out startup classes in the primary DEX.
+    dexLayoutOptimization = true
+}
+
 dependencies {
     implementation(projects.core.common)
     implementation(projects.core.model)
@@ -95,6 +110,9 @@ dependencies {
     implementation(libs.appauth)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.core.splashscreen)
+    // Installs the bundled Baseline Profile on devices that don't get it from Play.
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(projects.baselineprofile)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

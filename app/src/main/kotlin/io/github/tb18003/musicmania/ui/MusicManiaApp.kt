@@ -32,7 +32,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -49,6 +52,8 @@ import io.github.tb18003.musicmania.navigation.navigateToTopLevel
 @Composable
 fun MusicManiaApp(session: SessionState) {
     AnimatedContent(
+        // Exposes test tags to UiAutomator (baseline profile generator, macrobenchmarks).
+        modifier = Modifier.semantics { testTagsAsResourceId = true },
         targetState = when {
             session == SessionState.Loading -> AppStage.LOADING
             session.hasData -> AppStage.MAIN
@@ -88,6 +93,7 @@ private fun MainScaffold() {
                     TopLevelDestination.entries.forEach { destination ->
                         val selected = currentDestination.isOn(destination)
                         NavigationBarItem(
+                            modifier = Modifier.testTag("nav_${destination.name.lowercase()}"),
                             selected = selected,
                             onClick = { navController.navigateToTopLevel(destination) },
                             icon = { Icon(if (selected) destination.selectedIcon else destination.unselectedIcon, null) },

@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -146,7 +147,11 @@ fun AuthScreen(state: AuthUiState, onConnect: () -> Unit, onDemo: () -> Unit, mo
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
-            TextButton(onClick = onDemo, enabled = !state.isLoading, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            TextButton(
+                onClick = onDemo,
+                enabled = !state.isLoading,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag(DEMO_BUTTON_TAG),
+            ) {
                 Text(stringResource(R.string.feature_auth_demo))
             }
             Text(
@@ -233,6 +238,9 @@ private const val HEADLINE_DELAY = 150
 private const val LINE_DELAY = 140
 private const val LINE_OFFSET_PX = 60f
 private const val AUTO_ADVANCE_MS = 3_500L
+
+/** Stable id for UI automation (the baseline profile generator taps it). */
+const val DEMO_BUTTON_TAG = "auth_demo"
 
 @Preview
 @Composable

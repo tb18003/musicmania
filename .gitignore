@@ -33,5 +33,7 @@ Thumbs.db
 *.log
 *.hprof
 release/
+# ...except the committed Baseline Profile sources of the release variant.
+!/app/src/release/
 *.apk
 *.aab
