@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest an idea for MusicMania
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What would you like to see or do, and why?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+  - type: checkboxes
+    id: api
+    attributes:
+      label: Spotify API
+      options:
+        - label: I checked that the data needed is available to Development Mode apps (see CLAUDE.md §2)
