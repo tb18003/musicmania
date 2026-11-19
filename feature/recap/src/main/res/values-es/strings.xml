@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_recap_close">Cerrar</string>
+    <string name="feature_recap_period_last_30">Últimos 30 días</string>
+    <string name="feature_recap_period_this_month">Este mes</string>
+    <string name="feature_recap_period_last_month">Mes pasado</string>
+    <string name="feature_recap_period_this_year">Este año</string>
+    <string name="feature_recap_period_last_year">Año pasado</string>
+    <string name="feature_recap_intro_kicker">Tu resumen</string>
+    <string name="feature_recap_intro_body">Echemos la vista atrás a la banda sonora de tus días.</string>
+    <string name="feature_recap_minutes_kicker">Has escuchado</string>
+    <string name="feature_recap_minutes_unit">minutos</string>
+    <string name="feature_recap_minutes_days">Son %1$.1f días enteros de música.</string>
+    <string name="feature_recap_streams">%1$s reproducciones de %2$s canciones distintas.</string>
+    <string name="feature_recap_top_artist_kicker">Tu artista top</string>
+    <string name="feature_recap_top_artist_body">%1$d reproducciones · %2$d minutos juntos</string>
+    <string name="feature_recap_top_tracks_kicker">Tus canciones top</string>
+    <string name="feature_recap_personality_kicker">Tu personalidad musical</string>
+    <string name="feature_recap_discoveries_kicker">Nuevos horizontes</string>
+    <string name="feature_recap_new_artists">artistas descubiertos por primera vez</string>
+    <string name="feature_recap_streak">días en tu racha más larga</string>
+    <string name="feature_recap_share">Compartir</string>
+    <string name="feature_recap_empty_title">Sin reproducciones en este periodo</string>
+    <string name="feature_recap_empty_message">Elige otro periodo o importa tu historial de Spotify para desbloquear resúmenes de años pasados.</string>
+    <string name="feature_recap_import">Importar historial</string>
+</resources>
