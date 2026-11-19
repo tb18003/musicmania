@@ -7,20 +7,31 @@
 package io.github.tb18003.musicmania.architecture
 
 import com.lemonappdev.konsist.api.Konsist
+import com.lemonappdev.konsist.api.container.KoScope
 import com.lemonappdev.konsist.api.ext.list.withNameEndingWith
 import com.lemonappdev.konsist.api.verify.assertTrue
 import org.junit.Test
+import java.io.File
+import kotlin.test.assertTrue as assertThat
 
 /**
  * Executable architecture rules (see CLAUDE.md §3). A failing test here means a change
  * broke a layering rule — fix the dependency, don't relax the test.
  */
 class ArchitectureTest {
-    private val production = Konsist.scopeFromProduction()
+    private val production = moduleSources()
     private val base = "io.github.tb18003.musicmania"
     private val featureRoot = "$base.feature"
 
     private val featureFiles = production.files.filter { it.packagee?.name?.startsWith("$featureRoot.") == true }
+
+    @Test
+    fun `scope covers the sources of every layer`() {
+        val packages = production.files.mapNotNull { it.packagee?.name }.toSet()
+        listOf("$base.core.domain", "$base.core.data", "$featureRoot.top", "$base.widget").forEach { prefix ->
+            assertThat(packages.any { it.startsWith(prefix) }, "No sources scanned under $prefix")
+        }
+    }
 
     @Test
     fun `features do not depend on other features`() {
@@ -72,5 +83,25 @@ class ArchitectureTest {
         production.classes()
             .filter { it.resideInPackage("$base.core.data..") && it.name.endsWith("Repository") }
             .assertTrue { it.hasInternalModifier }
+    }
+
+    private companion object {
+        private const val MODULE_SOURCES_DEPTH = 4 // e.g. core/data/src/main
+
+        /**
+         * Production sources of every module (`<module>/src/main`). Unlike `scopeFromProduction()`
+         * this never walks `build/` folders, which other Gradle tasks rewrite while tests run in
+         * parallel (a directory vanishing mid-walk made the scan fail intermittently).
+         */
+        fun moduleSources(): KoScope {
+            // Android unit tests run with the module directory (app/) as working directory.
+            val root = File(System.getProperty("user.dir")).parentFile
+            return root.walkTopDown()
+                .maxDepth(MODULE_SOURCES_DEPTH)
+                .onEnter { it == root || (it.name != "build" && it.name != "build-logic" && !it.name.startsWith(".")) }
+                .filter { it.name == "main" && it.parentFile.name == "src" }
+                .map { Konsist.scopeFromDirectory(it.relativeTo(root).invariantSeparatorsPath) }
+                .reduce(KoScope::plus)
+        }
     }
 }
