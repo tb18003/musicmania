@@ -83,6 +83,14 @@ app → feature:* → core:domain ← core:data → core:network / core:database
 Unit, integration (Room/MockWebServer/Robolectric), architecture (Konsist) and screenshot
 (Roborazzi) tests run in CI on every pull request.
 
+Instrumented tests (Android Keystore + Tink, Room schema, OAuth App Link resolution and an
+end-to-end demo journey) run on a device or on a Gradle Managed Device:
+
+```bash
+./gradlew connectedDebugAndroidTest      # on a connected device or running emulator
+./gradlew pixel6Api34DebugAndroidTest    # on a managed emulator (downloads an ATD image)
+```
+
 ## Security
 
 Tokens are encrypted with Google Tink (AES-256-GCM) under an Android Keystore key, never

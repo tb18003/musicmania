@@ -13,6 +13,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.withInfiniteAnimationFrameMillis
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -33,11 +34,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,11 +67,16 @@ internal fun NowPlayingCard(nowPlaying: NowPlaying, onClick: () -> Unit, modifie
     val track = nowPlaying.track
     val colors = rememberArtworkColors(track.album.imageUrl, track.name)
     var progressMs by remember(nowPlaying) { mutableLongStateOf(nowPlaying.progressMs) }
+    // The bar reads progressMs while drawing; the label only recomposes when the second changes.
+    val elapsedSeconds by remember(nowPlaying) { derivedStateOf { progressMs / MILLIS_PER_SECOND } }
     LaunchedEffect(nowPlaying) {
         if (!nowPlaying.isPlaying) return@LaunchedEffect
-        val start = withFrameMillis { it }
-        while (true) {
-            withFrameMillis { frame -> progressMs = (nowPlaying.progressMs + frame - start).coerceAtMost(track.durationMs) }
+        // Infinite-animation frames honour InfiniteAnimationPolicy (paused in UI tests).
+        val start = withInfiniteAnimationFrameMillis { it }
+        while (progressMs < track.durationMs) {
+            withInfiniteAnimationFrameMillis { frame ->
+                progressMs = (nowPlaying.progressMs + frame - start).coerceAtMost(track.durationMs)
+            }
         }
     }
     val breathing = rememberInfiniteTransition(label = "breathe")
@@ -144,7 +150,7 @@ internal fun NowPlayingCard(nowPlaying: NowPlaying, onClick: () -> Unit, modifie
                 )
                 Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                     Text(
-                        Formatters.trackDuration(progressMs),
+                        Formatters.trackDuration(elapsedSeconds * MILLIS_PER_SECOND),
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.7f),
                     )
@@ -162,3 +168,4 @@ internal fun NowPlayingCard(nowPlaying: NowPlaying, onClick: () -> Unit, modifie
 
 private const val BREATHE_SCALE = 1.05f
 private const val BREATHE_MS = 1_600
+private const val MILLIS_PER_SECOND = 1_000L

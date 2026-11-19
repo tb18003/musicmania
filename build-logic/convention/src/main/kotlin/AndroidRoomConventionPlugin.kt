@@ -1,5 +1,6 @@
 import androidx.room.gradle.RoomExtension
 import com.google.devtools.ksp.gradle.KspExtension
+import io.github.tb18003.musicmania.buildlogic.hasAndroidTests
 import io.github.tb18003.musicmania.buildlogic.lib
 import io.github.tb18003.musicmania.buildlogic.libs
 import org.gradle.api.Plugin
@@ -19,6 +20,9 @@ class AndroidRoomConventionPlugin : Plugin<Project> {
             extensions.configure<RoomExtension> {
                 // Exported schemas are committed so migrations can be reviewed and tested.
                 schemaDirectory("$projectDir/schemas")
+            }
+            if (hasAndroidTests()) {
+                dependencies { add("androidTestImplementation", libs.lib("androidx-room-testing")) }
             }
             dependencies {
                 add("implementation", libs.lib("androidx-room-runtime"))

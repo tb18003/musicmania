@@ -1,8 +1,10 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasUnitTestBuilder
 import io.github.tb18003.musicmania.buildlogic.configureKotlinAndroid
 import io.github.tb18003.musicmania.buildlogic.configureStaticAnalysis
+import io.github.tb18003.musicmania.buildlogic.hasAndroidTests
 import io.github.tb18003.musicmania.buildlogic.hasUnitTests
 import io.github.tb18003.musicmania.buildlogic.libs
 import io.github.tb18003.musicmania.buildlogic.version
@@ -24,6 +26,7 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
             extensions.configure<ApplicationAndroidComponentsExtension> {
                 beforeVariants { variant ->
                     (variant as HasUnitTestBuilder).enableUnitTest = variant.buildType != "release" && hasUnitTests()
+                    (variant as HasAndroidTestBuilder).enableAndroidTest = variant.buildType == "debug" && hasAndroidTests()
                 }
             }
             configureStaticAnalysis()

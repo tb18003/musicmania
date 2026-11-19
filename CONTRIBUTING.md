@@ -35,6 +35,9 @@ e.g. `feat(insights): add weekday heatmap`. Keep commits small; each one must bu
 - Add or update tests for every behaviour change (bug fixes start with a failing test).
 - UI strings go to `values/strings.xml` **and** `values-es/strings.xml`.
 - Update screenshots when UI changes intentionally: `./gradlew recordRoborazziDebug`.
+- Touching crypto, storage, the manifest or navigation? Also run the instrumented tests:
+  `./gradlew connectedDebugAndroidTest` (or `pixel6Api34DebugAndroidTest`). They live in
+  `src/androidTest` and run with the Test Orchestrator, so each test starts on cleared app data.
 - Explain any new dependency (purpose, licence compatible with GPL-3.0, maintenance).
 - Fill in the PR template checklist.
 

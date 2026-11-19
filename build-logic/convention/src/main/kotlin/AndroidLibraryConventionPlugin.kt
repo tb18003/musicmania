@@ -1,8 +1,10 @@
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.variant.HasAndroidTestBuilder
 import com.android.build.api.variant.HasUnitTestBuilder
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import io.github.tb18003.musicmania.buildlogic.configureKotlinAndroid
 import io.github.tb18003.musicmania.buildlogic.configureStaticAnalysis
+import io.github.tb18003.musicmania.buildlogic.hasAndroidTests
 import io.github.tb18003.musicmania.buildlogic.hasUnitTests
 import io.github.tb18003.musicmania.buildlogic.libs
 import io.github.tb18003.musicmania.buildlogic.musicManiaNamespace
@@ -31,6 +33,7 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             extensions.configure<LibraryAndroidComponentsExtension> {
                 beforeVariants { variant ->
                     (variant as HasUnitTestBuilder).enableUnitTest = variant.buildType != "release" && hasUnitTests()
+                    (variant as HasAndroidTestBuilder).enableAndroidTest = variant.buildType == "debug" && hasAndroidTests()
                 }
             }
             configureStaticAnalysis()
