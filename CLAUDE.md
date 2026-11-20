@@ -19,7 +19,7 @@ Principles: **privacy first** (everything is computed and stored on the device, 
 no backend), **offline first** (the UI always reads the local database), **secure by
 default**, and **delightful motion** that respects accessibility.
 
-- Repository name: `spotistats` · App name: `MusicMania` · Package: `io.github.tb18003.musicmania`
+- Repository: `tb18003/musicmania` · App name: `MusicMania` · Package: `io.github.tb18003.musicmania`
 - Code, comments, commits and docs: **English**. UI strings: **English + Spanish** (`values/`, `values-es/`).
 
 ## 2. Spotify Web API constraints (verified November 2026) — read before adding features

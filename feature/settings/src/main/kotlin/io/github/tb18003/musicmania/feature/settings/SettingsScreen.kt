@@ -69,7 +69,7 @@ import io.github.tb18003.musicmania.core.model.ThemeMode
 import io.github.tb18003.musicmania.core.ui.Formatters
 import java.time.LocalDate
 
-private const val SOURCE_URL = "https://github.com/tb18003/spotistats"
+private const val SOURCE_URL = "https://github.com/tb18003/musicmania"
 private const val LICENSE_URL = "https://www.gnu.org/licenses/gpl-3.0.html"
 
 @Composable
