@@ -20,3 +20,7 @@ updates:
     target-branch: develop
     schedule:
       interval: monthly
+    # One PR for all workflow actions: they all edit ci.yml and would conflict with each other.
+    groups:
+      github-actions:
+        patterns: ["*"]
