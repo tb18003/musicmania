@@ -34,8 +34,8 @@ tracking, no ads.
 
 ### Build and run (demo mode)
 ```bash
-git clone https://github.com/tb18003/spotistats.git
-cd spotistats
+git clone https://github.com/tb18003/musicmania.git
+cd musicmania
 cp local.properties.example local.properties   # set sdk.dir
 ./gradlew installDebug
 ```

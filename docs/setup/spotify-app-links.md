@@ -15,8 +15,10 @@ The file `/.well-known/assetlinks.json` must be served from the **root** of the 
 | GitHub user/org site (repo `<you>.github.io`) | `https://<you>.github.io/musicmania/callback` | `https://<you>.github.io/.well-known/assetlinks.json` |
 | Your own domain | `https://music.example.com/callback` | `https://music.example.com/.well-known/assetlinks.json` |
 
-A *project* GitHub Pages site (`<you>.github.io/spotistats`) cannot serve the root file by
+A *project* GitHub Pages site (`<you>.github.io/musicmania`) cannot serve the root file by
 itself — use the user site repository for the `.well-known` folder.
+Do not enable GitHub Pages on the `musicmania` repository itself while the callback lives at
+`<you>.github.io/musicmania/…`: a project site takes over that path and would shadow the callback page.
 
 ## 2. Get your signing certificate fingerprint(s)
 
