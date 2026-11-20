@@ -48,10 +48,10 @@ appauth = "0.11.1"
 # Testing
 junit4 = "4.13.2"
 turbine = "1.2.1"
-mockk = "1.14.5"
-robolectric = "4.16"
+mockk = "1.14.12"
+robolectric = "4.18"
 roborazzi = "1.79.0"
-konsist = "0.17.3"
+konsist = "0.18.1"
 # Static analysis
 detekt = "2.0.0-alpha.6"
 spotless = "7.2.1"
