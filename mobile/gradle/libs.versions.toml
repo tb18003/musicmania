@@ -54,7 +54,7 @@ roborazzi = "1.79.0"
 konsist = "0.18.1"
 # Static analysis
 detekt = "2.0.0-alpha.6"
-spotless = "8.11.0"
+spotless = "8.12.0"
 ktlint = "1.7.1"
 kover = "0.9.11"
 
