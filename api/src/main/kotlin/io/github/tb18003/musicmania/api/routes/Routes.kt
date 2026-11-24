@@ -6,7 +6,9 @@
 
 package io.github.tb18003.musicmania.api.routes
 
+import io.github.tb18003.musicmania.api.auth.ApiUser
 import io.github.tb18003.musicmania.api.auth.apiUser
+import io.github.tb18003.musicmania.api.db.Identity
 import io.github.tb18003.musicmania.api.db.LeaderboardRepository
 import io.github.tb18003.musicmania.api.db.ProfileRepository
 import io.github.tb18003.musicmania.api.db.StatsRepository
@@ -41,18 +43,20 @@ class Repositories(
     val leaderboard: LeaderboardRepository,
 )
 
+private val ApiUser.identity get() = Identity(spotifyUserId, displayName, avatarUrl)
+
 /** Authenticated `/v1` endpoints. The caller's id always comes from the verified token. */
 fun Route.v1Routes(repos: Repositories, json: Json, clock: Clock) {
     get("/me") {
         val user = call.apiUser
-        val profile = repos.profiles.upsert(user.spotifyUserId, user.displayName)
+        val profile = repos.profiles.upsert(user.identity)
         call.respond(MeResponse(profile.spotifyUserId, profile.displayName, user.role.name.lowercase(), profile.sharingEnabled))
     }
 
     put("/me/settings") {
         val user = call.apiUser
         val request = call.receiveLimited(json, SettingsRequest.serializer())
-        val profile = repos.profiles.setSharing(user.spotifyUserId, user.displayName, request.sharingEnabled)
+        val profile = repos.profiles.setSharing(user.identity, request.sharingEnabled)
         call.respond(MeResponse(profile.spotifyUserId, profile.displayName, user.role.name.lowercase(), profile.sharingEnabled))
     }
 
@@ -60,7 +64,7 @@ fun Route.v1Routes(repos: Repositories, json: Json, clock: Clock) {
         val user = call.apiUser
         val upload = call.receiveLimited(json, StatsUpload.serializer())
         StatsValidator.validate(upload)
-        repos.stats.replace(user.spotifyUserId, user.displayName, upload.periods)
+        repos.stats.replace(user.identity, upload.periods)
         call.respond(HttpStatusCode.NoContent)
     }
 

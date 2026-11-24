@@ -19,6 +19,7 @@ data class ApiUser(
     val spotifyUserId: String,
     val displayName: String?,
     val role: Role,
+    val avatarUrl: String? = null,
 )
 
 class Authenticator(
@@ -45,7 +46,7 @@ class Authenticator(
             "not_allowlisted",
             "This Spotify account is not allowed to use the MusicMania API. Ask the administrator to add it.",
         )
-        return ApiUser(user.id, user.displayName ?: entry.displayName, entry.role)
+        return ApiUser(user.id, user.displayName ?: entry.displayName, entry.role, user.avatarUrl)
     }
 
     private fun bearerToken(header: String?): String? {

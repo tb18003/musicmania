@@ -21,6 +21,8 @@ import java.time.Duration
 data class SpotifyUser(
     val id: String,
     val displayName: String?,
+    /** The user's Spotify profile picture (https only), or null if they have none. */
+    val avatarUrl: String? = null,
 )
 
 sealed interface TokenVerification {
@@ -75,22 +77,45 @@ class SpotifyTokenVerifier(
 
     private fun parse(body: String): TokenVerification = try {
         val me = json.decodeFromString(MeResponse.serializer(), body)
-        if (SPOTIFY_ID.matches(me.id)) TokenVerification.Valid(SpotifyUser(me.id, me.displayName)) else TokenVerification.Invalid
+        if (SPOTIFY_ID.matches(
+                me.id,
+            )
+        ) {
+            TokenVerification.Valid(SpotifyUser(me.id, me.displayName, avatarOf(me.images)))
+        } else {
+            TokenVerification.Invalid
+        }
     } catch (_: SerializationException) {
         TokenVerification.Unavailable(retryAfterSeconds = null)
     } catch (_: IllegalArgumentException) {
         TokenVerification.Unavailable(retryAfterSeconds = null)
     }
 
+    /** The sharpest picture Spotify offers, if its URL is one the database accepts (https, bounded length). */
+    private fun avatarOf(images: List<Image>): String? = images
+        .filter { it.url.startsWith("https://") && it.url.length <= MAX_AVATAR_URL_LENGTH }
+        .maxByOrNull { it.height ?: 0 }
+        ?.url
+
     @Serializable
     private data class MeResponse(
         val id: String,
         @SerialName("display_name") val displayName: String? = null,
+        val images: List<Image> = emptyList(),
+    )
+
+    @Serializable
+    private data class Image(
+        val url: String,
+        val height: Int? = null,
     )
 
     companion object {
         private val TIMEOUT: Duration = Duration.ofSeconds(3)
         private const val MAX_TOKEN_LENGTH = 2048
+
+        /** Same as the database's profiles.avatar_url check. */
+        private const val MAX_AVATAR_URL_LENGTH = 2048
         private const val HTTP_OK = 200
         private const val HTTP_BAD_REQUEST = 400
         private const val HTTP_UNAUTHORIZED = 401
