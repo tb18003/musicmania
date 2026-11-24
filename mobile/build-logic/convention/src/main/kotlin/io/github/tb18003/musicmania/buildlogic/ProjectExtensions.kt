@@ -6,6 +6,7 @@ import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.getByType
+import java.io.File
 
 /** Typed access to the shared `libs` version catalog from convention plugins. */
 val Project.libs: VersionCatalog
@@ -16,6 +17,12 @@ fun VersionCatalog.lib(alias: String): Provider<MinimalExternalModuleDependency>
 fun VersionCatalog.version(alias: String): String = findVersion(alias).get().requiredVersion
 
 fun VersionCatalog.pluginId(alias: String): String = findPlugin(alias).get().get().pluginId
+
+/**
+ * A file at the repository root. The Android build lives in `mobile/`; configuration shared
+ * with the API (Detekt, Spotless header, .editorconfig) lives one level up.
+ */
+fun Project.repoFile(path: String): File = rootProject.layout.projectDirectory.dir("..").file(path).asFile
 
 /** True when the module has JVM unit tests (`src/test`). */
 fun Project.hasUnitTests(): Boolean = file("src/test").exists()

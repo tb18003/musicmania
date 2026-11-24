@@ -17,7 +17,7 @@ internal fun Project.configureStaticAnalysis() {
     extensions.configure<DetektExtension> {
         buildUponDefaultConfig.set(true)
         parallel.set(true)
-        config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+        config.setFrom(repoFile("config/detekt/detekt.yml"))
         baseline.set(file("detekt-baseline.xml"))
     }
 
@@ -28,12 +28,12 @@ internal fun Project.configureStaticAnalysis() {
             // build/ included, which parallel tasks rewrite ("Could not read path …/build/…").
             target(fileTree("src") { include("**/*.kt") })
             // Rules are configured in the root .editorconfig.
-            ktlint(ktlintVersion).setEditorConfigPath(rootProject.file(".editorconfig"))
-            licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
+            ktlint(ktlintVersion).setEditorConfigPath(repoFile(".editorconfig"))
+            licenseHeaderFile(repoFile("config/spotless/copyright.kt"))
         }
         kotlinGradle {
             target("*.kts")
-            ktlint(ktlintVersion).setEditorConfigPath(rootProject.file(".editorconfig"))
+            ktlint(ktlintVersion).setEditorConfigPath(repoFile(".editorconfig"))
         }
     }
 }

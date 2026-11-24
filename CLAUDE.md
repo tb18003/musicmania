@@ -51,6 +51,15 @@ Consequences baked into the design:
 
 ## 3. Architecture
 
+### Repository layout (monorepo)
+| Directory | Contents |
+|---|---|
+| `mobile/` | Android app (Gradle root: run every `./gradlew` command from here; open it in Android Studio) |
+| `config/` | Shared static-analysis config (`detekt/detekt.yml`, `spotless/copyright.kt`) for every Kotlin project |
+| `docs/` | ADRs and setup guides · `.github/`: CI (`ci.yml` + composite actions), Dependabot, templates |
+
+Module paths below are relative to `mobile/`.
+
 Clean Architecture + MVVM with **Unidirectional Data Flow**, multi-module like *Now in Android*.
 
 ```
@@ -81,7 +90,7 @@ core:model / core:common: pure Kotlin, used by everyone. core:testing: fakes for
 | `widget` | Compose lib | Glance home-screen widget |
 | `feature:*` | Compose lib | `auth`, `home`, `top`, `history`, `detail`, `insights`, `recap`, `importer`, `settings` |
 
-### Dependency rules (enforced by Konsist tests in `app/src/test`)
+### Dependency rules (enforced by Konsist tests in `mobile/app/src/test`)
 - `feature:*` → only `core:domain`, `core:ui`, `core:designsystem`, `core:model`, `core:common`.
   **Never** another feature, never `core:data|network|database|datastore`.
   Sole documented exception: `feature:auth` → `core:auth` (it launches the OAuth intent).
@@ -104,20 +113,20 @@ One-shot events (snackbars) use a `Channel` exposed as `Flow` **with a single co
 ## 4. Tech stack
 
 Kotlin 2.4.21 · AGP 9.5.1 (built-in Kotlin, new DSL) · Gradle 9.9.1 (checksum-pinned wrapper) · JDK 21 to run Gradle,
-bytecode target 17 · compileSdk/targetSdk 36 · minSdk 26 · Compose BOM 2025.12.00 + Material 3
+bytecode target 17 · compileSdk 37 / targetSdk 36 · minSdk 26 · Compose (BOM) + Material 3
 · Navigation Compose (type-safe `@Serializable` routes) · Hilt 2.60 + KSP 2.3 · Coroutines/Flow
-· Retrofit 3 + OkHttp 4 + kotlinx.serialization · Room 2.8 + Paging 3 · DataStore · Tink ·
+· Retrofit 3 + OkHttp 5 + kotlinx.serialization · Room 2.8 + Paging 3 · DataStore · Tink ·
 AppAuth · Coil 3 · Palette · WorkManager · Glance · SplashScreen.
-All versions live in `gradle/libs.versions.toml`. Shared build logic lives in
-`build-logic/convention` (convention plugins `musicmania.*`).
+All versions live in `mobile/gradle/libs.versions.toml`. Shared build logic lives in
+`mobile/build-logic/convention` (convention plugins `musicmania.*`).
 
 > AGP 9 uses built-in Kotlin: never apply `org.jetbrains.kotlin.android` and never add the
 > `android.builtInKotlin`/`android.newDsl` opt-out flags (see ADR 0006).
-> Known follow-up: Detekt 1.23 uses Gradle APIs removed in Gradle 10 ⇒ migrate to Detekt 2 in its own PR.
+> Static analysis runs on Detekt 2 (`dev.detekt`, ADR 0008): config keys use `allowed*` semantics.
 
 ## 5. Commands
 
-Use JDK 21 (Android Studio's JBR works): `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`.
+Run from `mobile/`. Use JDK 21 (Android Studio's JBR works): `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`.
 
 ```bash
 ./gradlew assembleDebug                 # build the app
@@ -173,7 +182,7 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
 1. **Never log, print, toast, or put in exceptions any token, auth code or Authorization header.**
    `AuthTokens.toString()` is redacted; HTTP logging is debug-only, BASIC level, header redacted.
 2. **No secrets in the repo.** `SPOTIFY_CLIENT_ID`/`SPOTIFY_REDIRECT_URI` come from env vars or
-   git-ignored `local.properties` (see `local.properties.example`). Keystores never committed.
+   git-ignored `mobile/local.properties` (see `mobile/local.properties.example`). Keystores never committed.
    There is no client secret anywhere (PKCE public client) — do not add one.
 3. OAuth = Authorization Code **+ PKCE** via AppAuth in a **Custom Tab** (never a WebView),
    `state` validated, HTTPS **verified App Link** redirect.
@@ -200,7 +209,7 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
 | Database | `core:database`, `core:data` | Robolectric + in-memory Room |
 | Import/security | `core:data` | Real ZIP/JSON fixtures, zip-bomb and invalid-input tests |
 | Workers | `sync:work` | WorkManager testing + Robolectric |
-| Architecture | `app/src/test` | Konsist (layer rules, naming) |
+| Architecture | `mobile/app/src/test` | Konsist (layer rules, naming) |
 | Screenshots | `core:designsystem` | Roborazzi (Robolectric native graphics) |
 
 Rules: write tests **with** the change, not after. Prefer fakes over mocks. Construct
@@ -248,8 +257,9 @@ Bug fix ⇒ first a failing test that reproduces it.
 
 ## 12. Where things are
 
-- Build logic: `build-logic/convention/src/main/kotlin/`
-- Version catalog: `gradle/libs.versions.toml` · Detekt: `config/detekt/detekt.yml` · ktlint: `.editorconfig`
-- Room schemas (commit them!): `core/database/schemas/`
+- Build logic: `mobile/build-logic/convention/src/main/kotlin/`
+- Version catalog: `mobile/gradle/libs.versions.toml` · Detekt: `config/detekt/detekt.yml` · ktlint: `.editorconfig` (repo root)
+- Room schemas (commit them!): `mobile/core/database/schemas/`
+- CI: `.github/workflows/ci.yml` — parallel jobs gated by one required check, `CI success` (ADR 0009)
 - Architecture decisions: `docs/adr/` · App Links / OAuth setup: `docs/setup/spotify-app-links.md`
 - Security policy and threat model: `SECURITY.md` · Contribution guide: `CONTRIBUTING.md`

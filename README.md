@@ -32,10 +32,17 @@ tracking, no ads.
 - Android Studio (recent) or JDK 21, Android SDK 36.
 - A device or emulator running Android 8.0 (API 26) or newer.
 
+### Repository layout
+| Directory | Contents |
+|---|---|
+| [`mobile/`](mobile) | The Android app (Gradle project). Open this folder in Android Studio. |
+| [`config/`](config) | Static-analysis configuration shared by every Kotlin project (Detekt, license header). |
+| [`docs/`](docs) | Architecture decisions (ADRs) and setup guides. |
+
 ### Build and run (demo mode)
 ```bash
 git clone https://github.com/tb18003/musicmania.git
-cd musicmania
+cd musicmania/mobile
 cp local.properties.example local.properties   # set sdk.dir
 ./gradlew installDebug
 ```
@@ -51,7 +58,7 @@ Spotify now requires an HTTPS redirect, so a one-time setup is needed:
 3. Publish `assetlinks.json` for that domain so Android verifies the App Link — full guide in
    [`docs/setup/spotify-app-links.md`](docs/setup/spotify-app-links.md).
 4. Add up to 5 users (Development Mode limit) under *User Management*.
-5. Put your values in `local.properties`:
+5. Put your values in `mobile/local.properties`:
    ```properties
    SPOTIFY_CLIENT_ID=your_client_id
    SPOTIFY_REDIRECT_URI=https://you.github.io/musicmania/callback
@@ -77,6 +84,7 @@ app → feature:* → core:domain ← core:data → core:network / core:database
 
 ## Quality
 
+From `mobile/`:
 ```bash
 ./gradlew spotlessCheck detekt lintDebug testDebugUnitTest test koverHtmlReport
 ```

@@ -25,7 +25,7 @@ Only the latest release on `master` receives security fixes.
 | Imported files | Malicious ZIP/JSON (zip bomb, path traversal, huge files) | Storage Access Framework only (no storage permission); entries never extracted to disk; per-entry / total size and entry-count limits; streaming JSON parser; unknown fields ignored |
 | Personal data in exports | Over-collection | IP address, country and user-agent fields of the export are never parsed or stored |
 | Shared device | Next user sees previous user's data | Sign-out deletes tokens **and** the local database |
-| Build secrets | Leaking credentials through the repo | Client ID/redirect from env vars or git-ignored `local.properties`; no client secret exists (PKCE public client); signing keys via env vars; `gitleaks` in CI |
+| Build secrets | Leaking credentials through the repo | Client ID/redirect from env vars or git-ignored `mobile/local.properties`; no client secret exists (PKCE public client); signing keys via env vars; `gitleaks` in CI |
 | Supply chain | Compromised dependency or Gradle distribution | Version catalog, Dependabot, checksum-pinned Gradle wrapper, wrapper validation in CI |
 
 ### Decisions
