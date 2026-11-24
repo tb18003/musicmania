@@ -78,6 +78,8 @@ with the values from `.env.example`.
 
 ## Deployment
 
-Target: Google Cloud Run (`europe-southwest1`, scale to zero, max 2 instances), with the database
-password in Secret Manager and GitHub Actions authenticating through Workload Identity Federation
-(no JSON keys). The step-by-step guide and the deploy workflow come with the cloud setup.
+Google Cloud Run in Madrid (`europe-southwest1`): scale to zero, `max-instances=1`, database password
+and Supabase CA certificate in Secret Manager, budget alert. One-time setup with
+[`deploy/setup-gcp.sh`](deploy/setup-gcp.sh); afterwards `.github/workflows/deploy-api.yml` deploys
+on `api-v*` tags through Workload Identity Federation (no JSON keys). Step-by-step guide:
+[`docs/setup/cloud-deploy.md`](../docs/setup/cloud-deploy.md).

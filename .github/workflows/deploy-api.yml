@@ -1,0 +1,55 @@
+name: Deploy API
+
+# Publishes a new API version to Cloud Run. Run api/deploy/setup-gcp.sh once first
+# (docs/setup/cloud-deploy.md), then deploy by pushing a tag such as `api-v0.1.1`, or manually.
+on:
+  push:
+    tags: ["api-v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy to Cloud Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Protected environment: the Workload Identity provider only trusts jobs running in it,
+    # and its required reviewer approves every deployment.
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/musicmania/musicmania-api:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Keyless: GitHub's OIDC token is exchanged for a short-lived credential of the deployer account.
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and push the image
+        run: |
+          gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+          docker build --tag "$IMAGE" api
+          docker push "$IMAGE"
+
+      # Only the image changes: environment variables, secrets, limits and the service account set
+      # by setup-gcp.sh are kept as they are.
+      - name: Deploy
+        run: |
+          gcloud run deploy musicmania-api --image="$IMAGE" --region="${{ vars.GCP_REGION }}" --quiet
+          echo "URL=$(gcloud run services describe musicmania-api --region="${{ vars.GCP_REGION }}" --format='value(status.url)')" >> "$GITHUB_ENV"
+
+      - name: Smoke test
+        run: curl -fsS --retry 3 --retry-delay 5 "$URL/health"
