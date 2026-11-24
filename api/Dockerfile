@@ -1,5 +1,5 @@
 # Build context: the api/ directory.  docker build -t musicmania-api api/
-FROM eclipse-temurin:21-jdk-noble AS build
+FROM eclipse-temurin:25-jdk-noble AS build
 WORKDIR /src
 COPY . .
 RUN chmod +x gradlew && ./gradlew --no-daemon --no-configuration-cache buildFatJar
