@@ -7,21 +7,30 @@
 package io.github.tb18003.musicmania.feature.settings
 
 import app.cash.turbine.test
+import io.github.tb18003.musicmania.core.common.result.AppError
+import io.github.tb18003.musicmania.core.domain.usecase.BuildSharedStatsUseCase
+import io.github.tb18003.musicmania.core.domain.usecase.PublishListeningStatsUseCase
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.core.model.ThemeMode
 import io.github.tb18003.musicmania.core.testing.MainDispatcherRule
+import io.github.tb18003.musicmania.core.testing.TestData
+import io.github.tb18003.musicmania.core.testing.repository.FakeCloudRepository
 import io.github.tb18003.musicmania.core.testing.repository.FakeDataManagementRepository
 import io.github.tb18003.musicmania.core.testing.repository.FakePreferencesRepository
 import io.github.tb18003.musicmania.core.testing.repository.FakeSessionRepository
 import io.github.tb18003.musicmania.core.testing.repository.FakeSyncScheduler
 import io.github.tb18003.musicmania.core.testing.repository.FakeUserRepository
 import io.github.tb18003.musicmania.core.testing.repository.InMemoryHistoryRepository
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 import java.io.ByteArrayOutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class SettingsViewModelTest {
@@ -33,9 +42,60 @@ class SettingsViewModelTest {
     private val scheduler = FakeSyncScheduler().apply { periodicScheduled = true }
     private val data = FakeDataManagementRepository()
 
+    private val cloud = FakeCloudRepository()
+    private val history = InMemoryHistoryRepository()
+
     // Lazy: must be created after MainDispatcherRule has installed the test Main dispatcher.
     private val viewModel by lazy {
-        SettingsViewModel(preferences, session, scheduler, data, FakeUserRepository(), InMemoryHistoryRepository())
+        SettingsViewModel(
+            preferences,
+            session,
+            scheduler,
+            data,
+            cloud,
+            PublishListeningStatsUseCase(cloud, session, BuildSharedStatsUseCase(history, TestData.fixedClock)),
+            FakeUserRepository(),
+            history,
+        )
+    }
+
+    /** uiState is WhileSubscribed: keep a collector alive, as the screen does. */
+    private fun TestScope.subscribe() {
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
+    }
+
+    @Test
+    fun `without a cloud API there is no ranking section`() = runTest {
+        cloud.isEnabled = false
+        assertNull(viewModel.uiState.value.cloud)
+    }
+
+    @Test
+    fun `opting in to the ranking publishes right away`() = runTest {
+        subscribe()
+        assertEquals(false, viewModel.uiState.value.cloud?.sharingEnabled)
+
+        viewModel.setCloudSharing(true)
+
+        assertEquals(true, cloud.profile.sharingEnabled)
+        assertEquals(1, cloud.published.size)
+        assertEquals(true, viewModel.uiState.value.cloud?.sharingEnabled)
+    }
+
+    @Test
+    fun `accounts outside the allowlist see why`() = runTest {
+        cloud.failure = AppError.NotAllowlisted
+        subscribe()
+        assertEquals(true, viewModel.uiState.value.cloud?.notAllowlisted)
+    }
+
+    @Test
+    fun `deleting server data reports an event`() = runTest {
+        viewModel.eventFlow.test {
+            viewModel.deleteCloudData()
+            assertEquals(SettingsEvent.CloudDataDeleted, awaitItem())
+        }
+        assertTrue(cloud.deleted)
     }
 
     @Test

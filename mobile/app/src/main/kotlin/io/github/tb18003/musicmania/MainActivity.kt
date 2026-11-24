@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = state.preferences.useDynamicColor,
                 reduceMotion = state.preferences.reduceMotion,
             ) {
-                MusicManiaApp(session = state.session)
+                MusicManiaApp(session = state.session, cloudEnabled = viewModel.cloudEnabled)
             }
         }
     }

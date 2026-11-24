@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_leaderboard_title">Ranking</string>
+    <string name="feature_leaderboard_subtitle">Cómo vas frente a tus amigos</string>
+    <string name="feature_leaderboard_period_week">Semana</string>
+    <string name="feature_leaderboard_period_month">Mes</string>
+    <string name="feature_leaderboard_period_year">Año</string>
+    <string name="feature_leaderboard_period_all_time">Siempre</string>
+    <string name="feature_leaderboard_metric_minutes">Minutos</string>
+    <string name="feature_leaderboard_metric_streams">Streams</string>
+    <string name="feature_leaderboard_metric_streak">Racha</string>
+    <string name="feature_leaderboard_metric_artists">Artistas</string>
+    <string name="feature_leaderboard_minutes_value">%1$s min</string>
+    <plurals name="feature_leaderboard_days">
+        <item quantity="one">%1$d día</item>
+        <item quantity="other">%1$d días</item>
+    </plurals>
+    <string name="feature_leaderboard_you">Tú</string>
+    <string name="feature_leaderboard_top_artists">Artistas top</string>
+    <string name="feature_leaderboard_top_tracks">Canciones top</string>
+    <string name="feature_leaderboard_empty_title">Nadie comparte todavía</string>
+    <string name="feature_leaderboard_empty_message">Cuando tus amigos activen compartir, aparecerán aquí.</string>
+    <string name="feature_leaderboard_sharing_off_title">Únete al ranking</string>
+    <string name="feature_leaderboard_sharing_off_message">Solo se comparten totales: minutos, streams, rachas, artistas distintos y tu top 10 de cada periodo. Nunca tu historial de escuchas. Puedes dejar de compartir y borrarlo cuando quieras desde Ajustes.</string>
+    <string name="feature_leaderboard_enable_sharing">Compartir mis estadísticas</string>
+    <string name="feature_leaderboard_not_allowlisted_title">Aún no estás en la lista</string>
+    <string name="feature_leaderboard_not_allowlisted_message">Este ranking es privado. Envía tu ID de Spotify al administrador para que te añada.</string>
+    <string name="feature_leaderboard_copy_id">Copiar ID de Spotify</string>
+</resources>

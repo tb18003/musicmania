@@ -12,6 +12,9 @@ SPOTIFY_CLIENT_ID=your_spotify_client_id
 # Android App Link (see docs/setup/spotify-app-links.md).
 SPOTIFY_REDIRECT_URI=https://example.github.io/musicmania/callback
 
+# Optional friends leaderboard: the deployed MusicMania API (api/). Leave empty for a fully local app.
+# MUSICMANIA_API_URL=https://musicmania-api-xxxxx.europe-southwest1.run.app
+
 # Optional release signing (alternatively use env vars with the same names)
 # MUSICMANIA_KEYSTORE_PATH=/absolute/path/to/release.jks
 # MUSICMANIA_KEYSTORE_PASSWORD=

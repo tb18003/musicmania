@@ -10,8 +10,11 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import io.github.tb18003.musicmania.core.data.importer.DefaultStreamingHistoryImporter
 import io.github.tb18003.musicmania.core.data.repository.CachedCatalogRepository
+import io.github.tb18003.musicmania.core.data.repository.CloudSyncObserver
+import io.github.tb18003.musicmania.core.data.repository.DefaultCloudRepository
 import io.github.tb18003.musicmania.core.data.repository.DefaultDataManagementRepository
 import io.github.tb18003.musicmania.core.data.repository.DefaultHistoryRepository
 import io.github.tb18003.musicmania.core.data.repository.DefaultPlaybackRepository
@@ -21,6 +24,7 @@ import io.github.tb18003.musicmania.core.data.repository.DefaultSessionRepositor
 import io.github.tb18003.musicmania.core.data.repository.DefaultUserRepository
 import io.github.tb18003.musicmania.core.data.repository.OfflineFirstTopItemsRepository
 import io.github.tb18003.musicmania.core.domain.repository.CatalogRepository
+import io.github.tb18003.musicmania.core.domain.repository.CloudRepository
 import io.github.tb18003.musicmania.core.domain.repository.DataManagementRepository
 import io.github.tb18003.musicmania.core.domain.repository.HistoryRepository
 import io.github.tb18003.musicmania.core.domain.repository.PlaybackRepository
@@ -28,6 +32,7 @@ import io.github.tb18003.musicmania.core.domain.repository.PlaylistRepository
 import io.github.tb18003.musicmania.core.domain.repository.PreferencesRepository
 import io.github.tb18003.musicmania.core.domain.repository.SessionRepository
 import io.github.tb18003.musicmania.core.domain.repository.StreamingHistoryImporter
+import io.github.tb18003.musicmania.core.domain.repository.SyncObserver
 import io.github.tb18003.musicmania.core.domain.repository.TopItemsRepository
 import io.github.tb18003.musicmania.core.domain.repository.UserRepository
 
@@ -64,4 +69,12 @@ internal abstract class DataModule {
 
     @Binds
     abstract fun bindsImporter(impl: DefaultStreamingHistoryImporter): StreamingHistoryImporter
+
+    @Binds
+    abstract fun bindsCloud(impl: DefaultCloudRepository): CloudRepository
+
+    /** Publishes leaderboard aggregates after each background sync (sync:work declares the set). */
+    @Binds
+    @IntoSet
+    abstract fun bindsCloudSyncObserver(impl: CloudSyncObserver): SyncObserver
 }

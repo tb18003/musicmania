@@ -39,4 +39,15 @@
     <string name="feature_settings_sign_out_confirm">You will be signed out and all local data will be deleted from this device.</string>
     <string name="feature_settings_confirm">Confirm</string>
     <string name="feature_settings_disclaimer">MusicMania is an independent open-source project, not affiliated with or endorsed by Spotify AB. Spotify is a trademark of Spotify AB.</string>
+    <string name="feature_settings_ranking">Friends ranking</string>
+    <string name="feature_settings_cloud_sharing">Share my stats</string>
+    <string name="feature_settings_cloud_sharing_body">Only totals and top 10s per period, never your listening history.</string>
+    <string name="feature_settings_cloud_not_allowlisted">You are not on the ranking list yet. Send your Spotify ID to the administrator.</string>
+    <string name="feature_settings_spotify_id">Your Spotify ID</string>
+    <string name="feature_settings_spotify_id_copied">Spotify ID copied</string>
+    <string name="feature_settings_cloud_delete">Delete my data from the server</string>
+    <string name="feature_settings_cloud_delete_body">Removes your profile and stats from the ranking</string>
+    <string name="feature_settings_cloud_delete_confirm">Your stats will be deleted from the server and you will stop sharing. Your data on this phone is not affected.</string>
+    <string name="feature_settings_cloud_deleted">Your data was deleted from the server</string>
+    <string name="feature_settings_cloud_failed">The ranking server could not be reached</string>
 </resources>

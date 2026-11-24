@@ -14,6 +14,7 @@
     <string name="core_ui_error_title">Algo ha salido mal</string>
     <string name="core_ui_error_network">Parece que no tienes conexión. Mostrando lo guardado en tu dispositivo.</string>
     <string name="core_ui_error_unauthorized">Tu sesión de Spotify ha caducado. Vuelve a iniciar sesión.</string>
+    <string name="core_ui_error_not_allowlisted">Tu cuenta de Spotify aún no está en la lista del ranking de MusicMania. Envía tu ID de Spotify al administrador.</string>
     <string name="core_ui_error_forbidden">Spotify ha denegado el acceso. En modo desarrollo tu cuenta debe estar en la lista de usuarios de la app (máx. 5) y el propietario necesita Premium.</string>
     <string name="core_ui_error_not_found">No lo hemos encontrado en Spotify.</string>
     <string name="core_ui_error_rate_limited">Spotify está limitando las peticiones. Inténtalo en un minuto.</string>

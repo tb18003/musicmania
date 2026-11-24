@@ -14,6 +14,7 @@
     <string name="core_ui_error_title">Something went wrong</string>
     <string name="core_ui_error_network">You seem to be offline. Showing what is saved on your device.</string>
     <string name="core_ui_error_unauthorized">Your Spotify session expired. Please sign in again.</string>
+    <string name="core_ui_error_not_allowlisted">Your Spotify account is not on the MusicMania ranking list yet. Send your Spotify ID to the administrator.</string>
     <string name="core_ui_error_forbidden">Spotify denied access. In Development Mode your account must be on the app\'s user list (max. 5) and the app owner needs Premium.</string>
     <string name="core_ui_error_not_found">We couldn\'t find that on Spotify.</string>
     <string name="core_ui_error_rate_limited">Spotify is limiting requests right now. Try again in a minute.</string>

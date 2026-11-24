@@ -22,6 +22,9 @@ sealed interface AppError {
 
     data object NotFound : AppError
 
+    /** The MusicMania cloud API does not know this Spotify account (it is not on the allowlist). */
+    data object NotAllowlisted : AppError
+
     data class RateLimited(val retryAfterSeconds: Long?) : AppError
 
     data class Server(val code: Int) : AppError

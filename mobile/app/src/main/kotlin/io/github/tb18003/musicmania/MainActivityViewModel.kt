@@ -9,6 +9,7 @@ package io.github.tb18003.musicmania
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.tb18003.musicmania.core.common.config.CloudConfig
 import io.github.tb18003.musicmania.core.domain.repository.PreferencesRepository
 import io.github.tb18003.musicmania.core.domain.repository.SessionRepository
 import io.github.tb18003.musicmania.core.domain.repository.SyncScheduler
@@ -34,7 +35,11 @@ class MainActivityViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository,
     private val syncScheduler: SyncScheduler,
     private val userRepository: UserRepository,
+    cloudConfig: CloudConfig,
 ) : ViewModel() {
+    /** The friends leaderboard tab only exists when the cloud API is configured. */
+    val cloudEnabled: Boolean = cloudConfig.isConfigured
+
     val uiState: StateFlow<MainUiState> = combine(sessionRepository.session, preferencesRepository.preferences, ::MainUiState)
         .stateIn(viewModelScope, SharingStarted.Eagerly, MainUiState())
 
