@@ -33,6 +33,7 @@ import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
+import io.github.tb18003.musicmania.core.designsystem.theme.LocalEntranceState
 import io.github.tb18003.musicmania.core.designsystem.theme.LocalReduceMotion
 import io.github.tb18003.musicmania.core.designsystem.theme.Motion
 import io.github.tb18003.musicmania.core.designsystem.theme.MusicManiaTheme
@@ -47,13 +48,21 @@ import kotlin.math.sin
  * for TalkBack through `contentDescription`.
  */
 
-/** 0 -> 1 progress that runs once when [key] changes (instant with reduced motion). */
+/**
+ * 0 -> 1 progress that runs once when [key] changes. Instant with reduced motion, and when a
+ * revisited screen is just reloading its data (see [LocalEntranceState]).
+ */
 @Composable
 fun rememberEntranceProgress(key: Any?, durationMillis: Int = Motion.LONG, delayMillis: Int = 0): Float {
     val reduce = LocalReduceMotion.current
-    val progress = remember(key) { Animatable(if (reduce) 1f else 0f) }
+    val entrance = LocalEntranceState.current
+    val progress = remember(key) { Animatable(if (reduce || !entrance.shouldAnimateDataChange()) 1f else 0f) }
     LaunchedEffect(key, reduce) {
-        if (reduce) progress.snapTo(1f) else progress.animateTo(1f, tween(durationMillis, delayMillis, Motion.EmphasizedDecelerate))
+        if (reduce || !entrance.shouldAnimateDataChange()) {
+            progress.snapTo(1f)
+        } else {
+            progress.animateTo(1f, tween(durationMillis, delayMillis, Motion.EmphasizedDecelerate))
+        }
     }
     return progress.value
 }

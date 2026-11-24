@@ -156,6 +156,9 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
 - Use design-system tokens only: `MaterialTheme.colorScheme`, `MusicManiaTheme.extendedColors`,
   `Motion`, `motionTween()/motionSpring()`. No hard-coded colours in features (charts/brand cards excepted).
 - **Every animation must respect `LocalReduceMotion`** (use the provided helpers, they already do).
+- Entrance motion plays **once per session per screen**: wrap new navigation destinations in
+  `ProvideEntranceOnce(key) { … }` and use `staggeredEntrance` / `rememberEntranceProgress` /
+  `AnimatedCounter`, which honour `LocalEntranceState`. Ambient loops are not entrances.
 - Shared elements: `Modifier.sharedElementOrSelf(SharedKeys.artwork(kind, name, artist))`;
   destinations call `ProvideNavAnimatedScope { … }`.
 - Charts provide a `description` for TalkBack. Touch targets ≥ 48 dp. Text from `stringResource`.

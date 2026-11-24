@@ -32,6 +32,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import io.github.tb18003.musicmania.core.designsystem.theme.LocalEntranceState
 import io.github.tb18003.musicmania.core.designsystem.theme.LocalReduceMotion
 import io.github.tb18003.musicmania.core.designsystem.theme.Motion
 import io.github.tb18003.musicmania.core.designsystem.theme.motionSpring
@@ -79,9 +80,12 @@ fun Modifier.shimmer(shape: Shape = RoundedCornerShape(12.dp)): Modifier = compo
 
 /**
  * Fades and slides an item in once, delayed by its [index]: lists "cascade" into place.
+ * Only on the first visit of a screen in the session (see [LocalEntranceState]).
  */
 fun Modifier.staggeredEntrance(index: Int, maxStaggered: Int = 12): Modifier = composed {
-    if (LocalReduceMotion.current) return@composed this
+    val entrance = LocalEntranceState.current
+    val play = remember { entrance.shouldPlayEntrance() }
+    if (LocalReduceMotion.current || !play) return@composed this
     val progress = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         progress.animateTo(1f, tween(Motion.MEDIUM, delayMillis = index.coerceAtMost(maxStaggered) * Motion.STAGGER_MS))

@@ -55,6 +55,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import io.github.tb18003.musicmania.core.designsystem.theme.LocalEntranceState
 import io.github.tb18003.musicmania.core.designsystem.theme.LocalReduceMotion
 import io.github.tb18003.musicmania.core.designsystem.theme.Motion
 import io.github.tb18003.musicmania.core.designsystem.theme.MusicManiaTheme
@@ -64,7 +65,10 @@ import java.text.NumberFormat
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
-/** Counts up from 0 (or the previous value) to [value] with a decelerating curve. */
+/**
+ * Counts up from 0 (or the previous value) to [value] with a decelerating curve. Shows the
+ * value directly with reduced motion or while a revisited screen reloads (see [LocalEntranceState]).
+ */
 @Composable
 fun AnimatedCounter(
     value: Long,
@@ -75,12 +79,11 @@ fun AnimatedCounter(
     durationMillis: Int = Motion.EXTRA_LONG,
 ) {
     val reduceMotion = LocalReduceMotion.current
-    val animated = remember { Animatable(if (reduceMotion) value.toFloat() else 0f) }
+    val entrance = LocalEntranceState.current
+    val animated = remember { Animatable(if (reduceMotion || !entrance.shouldAnimateDataChange()) value.toFloat() else 0f) }
     LaunchedEffect(value, reduceMotion) {
-        if (reduceMotion) {
-            animated.snapTo(
-                value.toFloat(),
-            )
+        if (reduceMotion || !entrance.shouldAnimateDataChange()) {
+            animated.snapTo(value.toFloat())
         } else {
             animated.animateTo(value.toFloat(), tween(durationMillis, easing = Motion.EmphasizedDecelerate))
         }
