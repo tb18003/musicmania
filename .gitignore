@@ -9,6 +9,8 @@ local.properties
 secrets.properties
 *.env
 .env*
+# Templates without real values are committed.
+!.env.example
 
 # Signing material — never commit
 *.jks

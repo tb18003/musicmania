@@ -15,6 +15,22 @@ updates:
       testing:
         patterns: ["junit*", "app.cash.turbine*", "io.mockk*", "org.robolectric*", "io.github.takahirom.roborazzi*", "com.lemonappdev*"]
 
+  - package-ecosystem: gradle
+    directory: /api
+    target-branch: develop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      api-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /api
+    target-branch: develop
+    schedule:
+      interval: monthly
+
   - package-ecosystem: github-actions
     # Workflows plus the local composite actions they use.
     directories: ["/", "/.github/actions/*"]

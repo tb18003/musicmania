@@ -1,0 +1,229 @@
+openapi: 3.1.0
+info:
+  title: MusicMania API
+  version: 0.1.0
+  summary: Friends leaderboard for MusicMania (allow-listed Spotify accounts only).
+  description: |
+    Every `/v1` endpoint requires the caller's **Spotify access token** as a bearer token (the same
+    token the app already uses with Spotify; there is no separate login). The API asks Spotify who
+    the token belongs to, then checks the account against a manually managed allowlist.
+
+    Errors use RFC 9457 problem details (`application/problem+json`) with a stable `code`.
+  license:
+    name: GPL-3.0-or-later
+    identifier: GPL-3.0-or-later
+servers:
+  - url: https://musicmania-api.example.run.app
+    description: Cloud Run (replace with your deployment URL)
+security:
+  - spotifyToken: []
+
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      security: []
+      responses:
+        "200":
+          description: The service is running.
+          content:
+            application/json:
+              schema: { type: object, properties: { status: { type: string, const: ok } } }
+
+  /v1/me:
+    get:
+      summary: My profile (created, private, on the first call)
+      responses:
+        "200": { $ref: "#/components/responses/Me" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/NotAllowlisted" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+    delete:
+      summary: Delete my profile and all my statistics (I stay allow-listed)
+      responses:
+        "204": { description: Deleted. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/NotAllowlisted" }
+
+  /v1/me/settings:
+    put:
+      summary: Opt in or out of sharing my statistics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sharingEnabled]
+              properties: { sharingEnabled: { type: boolean } }
+      responses:
+        "200": { $ref: "#/components/responses/Me" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/NotAllowlisted" }
+
+  /v1/me/stats:
+    put:
+      summary: Upload my aggregated statistics (idempotent; replaces each uploaded period)
+      description: Body limited to 64 KB, at most 8 periods and 10 top items per list.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StatsUpload" }
+      responses:
+        "204": { description: Stored. }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/NotAllowlisted" }
+        "413": { description: Body larger than 64 KB. }
+
+  /v1/leaderboards:
+    get:
+      summary: Ranking of everyone who shares, for one metric and period
+      parameters:
+        - name: metric
+          in: query
+          schema: { type: string, enum: [minutes, streams, streak, unique_artists], default: minutes }
+        - $ref: "#/components/parameters/Period"
+        - $ref: "#/components/parameters/Start"
+      responses:
+        "200":
+          description: Competition ranking (ties share a rank: 1, 1, 3).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Leaderboard" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/NotAllowlisted" }
+
+  /v1/users/{spotifyUserId}/stats:
+    get:
+      summary: A user's statistics and top items for a period (only if they share, or it is me)
+      parameters:
+        - name: spotifyUserId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: "#/components/parameters/Period"
+        - $ref: "#/components/parameters/Start"
+      responses:
+        "200":
+          description: The user's statistics.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserStats" }
+        "404": { description: No shared statistics for this user and period. }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/NotAllowlisted" }
+
+components:
+  securitySchemes:
+    spotifyToken:
+      type: http
+      scheme: bearer
+      description: A Spotify access token. Verified with Spotify (`GET /v1/me`) and cached for at most 5 minutes.
+
+  parameters:
+    Period:
+      name: period
+      in: query
+      schema: { $ref: "#/components/schemas/PeriodKind" }
+    Start:
+      name: start
+      in: query
+      description: First day of the period (Monday for weeks). Defaults to the current period (UTC).
+      schema: { type: string, format: date }
+
+  responses:
+    Me:
+      description: My profile.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [spotifyUserId, role, sharingEnabled]
+            properties:
+              spotifyUserId: { type: string }
+              displayName: { type: string }
+              role: { type: string, enum: [member, admin] }
+              sharingEnabled: { type: boolean }
+    BadRequest:
+      description: "Invalid input (codes: invalid_json, invalid_stats, invalid_data, invalid_metric, invalid_period, invalid_start)."
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    Unauthorized:
+      description: "Missing or invalid Spotify token (codes: missing_token, invalid_token)."
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    NotAllowlisted:
+      description: "Valid token, but the account is not allowed to use the API (code: not_allowlisted)."
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+    Unavailable:
+      description: "Spotify or the database could not answer; retry later (codes: upstream_unavailable, database_unavailable)."
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content: { application/problem+json: { schema: { $ref: "#/components/schemas/Problem" } } }
+
+  schemas:
+    PeriodKind:
+      type: string
+      enum: [week, month, year, all_time]
+      default: week
+    TopItem:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        spotifyId: { type: string, pattern: "^[A-Za-z0-9]{1,64}$" }
+    PeriodStats:
+      type: object
+      required: [kind, start, minutes, streams, uniqueArtists, uniqueTracks]
+      properties:
+        kind: { $ref: "#/components/schemas/PeriodKind" }
+        start: { type: string, format: date, description: "First day of the period; 1970-01-01 for all_time." }
+        minutes: { type: integer, minimum: 0 }
+        streams: { type: integer, minimum: 0 }
+        uniqueArtists: { type: integer, minimum: 0 }
+        uniqueTracks: { type: integer, minimum: 0 }
+        currentStreak: { type: integer, minimum: 0, default: 0 }
+        longestStreak: { type: integer, minimum: 0, default: 0 }
+        topArtists: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/TopItem" } }
+        topTracks: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/TopItem" } }
+    StatsUpload:
+      type: object
+      required: [periods]
+      properties:
+        periods: { type: array, minItems: 1, maxItems: 8, items: { $ref: "#/components/schemas/PeriodStats" } }
+    Leaderboard:
+      type: object
+      properties:
+        metric: { type: string }
+        period: { $ref: "#/components/schemas/PeriodKind" }
+        start: { type: string, format: date }
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              rank: { type: integer }
+              spotifyUserId: { type: string }
+              displayName: { type: string }
+              avatarUrl: { type: string }
+              value: { type: integer }
+              isMe: { type: boolean }
+    UserStats:
+      allOf:
+        - $ref: "#/components/schemas/PeriodStats"
+        - type: object
+          properties:
+            spotifyUserId: { type: string }
+            displayName: { type: string }
+            avatarUrl: { type: string }
+    Problem:
+      type: object
+      required: [title, status, code, detail]
+      properties:
+        type: { type: string, default: about:blank }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
