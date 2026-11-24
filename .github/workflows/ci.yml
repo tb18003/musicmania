@@ -28,6 +28,7 @@ jobs:
     outputs:
       mobile: ${{ steps.filter.outputs.mobile }}
       database: ${{ steps.filter.outputs.database }}
+      api: ${{ steps.filter.outputs.api }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -41,6 +42,7 @@ jobs:
           if [ "$EVENT" != "pull_request" ]; then
             echo "mobile=true" >> "$GITHUB_OUTPUT"
             echo "database=true" >> "$GITHUB_OUTPUT"
+            echo "api=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           changed=$(git diff --name-only "$BASE_SHA"...HEAD)
@@ -49,6 +51,8 @@ jobs:
           # Shared config and CI changes affect every part.
           echo "mobile=$(touched '^(mobile/|config/|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
           echo "database=$(touched '^(database/|\.github/)')" >> "$GITHUB_OUTPUT"
+          # The API tests apply the database migrations, so schema changes re-run them too.
+          echo "api=$(touched '^(api/|database/|config/|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
 
   secrets-scan:
     name: Secret scanning
@@ -253,6 +257,40 @@ jobs:
             done
           done
 
+  # ---------------------------------------------------------------- api
+
+  api-checks:
+    name: API · Static analysis, tests and image
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      # Integration tests run on an embedded Postgres 17 with the real migrations from database/.
+      - name: Spotless, Detekt, tests, coverage and fat jar
+        run: ./gradlew spotlessCheck detekt test koverXmlReport buildFatJar
+      - name: Build the container image
+        run: docker build --tag musicmania-api:ci .
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-reports
+          path: |
+            api/build/reports/tests/
+            api/build/reports/kover/
+            api/build/reports/detekt/
+          retention-days: 7
+
   # ---------------------------------------------------------------- gate
 
   # The only check the branch rules need to require: it fails if any job failed or was
@@ -269,6 +307,7 @@ jobs:
       - mobile-build
       - mobile-instrumented
       - database-tests
+      - api-checks
     runs-on: ubuntu-latest
     steps:
       - name: All jobs passed or were skipped

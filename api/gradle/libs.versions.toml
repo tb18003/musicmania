@@ -1,0 +1,50 @@
+[versions]
+kotlin = "2.4.21"
+ktor = "3.6.1"
+serialization = "1.13.0"
+hikari = "7.1.0"
+postgresql = "42.7.14"
+caffeine = "3.3.1"
+logback = "1.6.7"
+# Tests
+junit = "6.1.2"
+okhttp = "5.5.1"
+embeddedPostgres = "2.2.2"
+# Postgres 17, the same major version as the hosted Supabase project.
+embeddedPostgresBinaries = "17.11.0"
+# Static analysis (same versions as mobile/)
+detekt = "2.0.0-alpha.6"
+spotless = "8.11.0"
+ktlint = "1.7.1"
+kover = "0.9.11"
+
+[libraries]
+ktor-bom = { group = "io.ktor", name = "ktor-bom", version.ref = "ktor" }
+ktor-server-core = { group = "io.ktor", name = "ktor-server-core" }
+ktor-server-netty = { group = "io.ktor", name = "ktor-server-netty" }
+ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json" }
+ktor-server-status-pages = { group = "io.ktor", name = "ktor-server-status-pages" }
+ktor-server-rate-limit = { group = "io.ktor", name = "ktor-server-rate-limit" }
+ktor-server-call-logging = { group = "io.ktor", name = "ktor-server-call-logging" }
+ktor-server-cors = { group = "io.ktor", name = "ktor-server-cors" }
+ktor-server-test-host = { group = "io.ktor", name = "ktor-server-test-host" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+hikari = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikari" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver3", version.ref = "okhttp" }
+embedded-postgres = { group = "io.zonky.test", name = "embedded-postgres", version.ref = "embeddedPostgres" }
+embedded-postgres-binaries-bom = { group = "io.zonky.test.postgres", name = "embedded-postgres-binaries-bom", version.ref = "embeddedPostgresBinaries" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

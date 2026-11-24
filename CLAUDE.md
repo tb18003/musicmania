@@ -55,6 +55,7 @@ Consequences baked into the design:
 | Directory | Contents |
 |---|---|
 | `mobile/` | Android app (Gradle root: run every `./gradlew` command from here; open it in Android Studio) |
+| `api/` | Kotlin/Ktor service (own Gradle build, `./gradlew` from `api/`): Spotify-token auth + allowlist, `/v1` endpoints, JDBC repositories, `openapi.yaml`; integration tests on embedded Postgres 17 with the real migrations; `Dockerfile` for Cloud Run |
 | `database/` | Supabase/Postgres schema for the friends leaderboard: `supabase/migrations` (portable SQL, never edit a pushed one), pgTAP tests in `supabase/tests`, `README.md` (access model, manual allowlist). CLI v3 is local by default; hosted changes need `--remote` |
 | `config/` | Shared static-analysis config (`detekt/detekt.yml`, `spotless/copyright.kt`) for every Kotlin project |
 | `docs/` | ADRs and setup guides · `.github/`: CI (`ci.yml` + composite actions), Dependabot, templates |

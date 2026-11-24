@@ -36,6 +36,7 @@ tracking, no ads.
 | Directory | Contents |
 |---|---|
 | [`mobile/`](mobile) | The Android app (Gradle project). Open this folder in Android Studio. |
+| [`api/`](api) | Kotlin/Ktor API for the optional friends leaderboard; authenticates with the user's Spotify token. |
 | [`database/`](database) | Cloud database schema for the optional friends leaderboard (Supabase/Postgres migrations + pgTAP tests). |
 | [`config/`](config) | Static-analysis configuration shared by every Kotlin project (Detekt, license header). |
 | [`docs/`](docs) | Architecture decisions (ADRs) and setup guides. |
