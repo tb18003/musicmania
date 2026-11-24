@@ -1,0 +1,16 @@
+name: Set up the mobile build
+description: JDK 21, Gradle with its cache, and the CI-only Gradle settings.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: 21
+
+    - uses: gradle/actions/setup-gradle@v6
+
+    - name: Use CI Gradle settings
+      shell: bash
+      run: mkdir -p ~/.gradle && cp "$GITHUB_WORKSPACE/.github/ci-gradle.properties" ~/.gradle/gradle.properties

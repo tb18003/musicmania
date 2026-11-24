@@ -28,6 +28,7 @@ e.g. `feat(insights): add weekday heatmap`. Keep commits small; each one must bu
 ## Before opening a PR
 
 ```bash
+cd mobile
 ./gradlew spotlessApply                                   # format + license headers
 ./gradlew spotlessCheck detekt testDebugUnitTest test assembleDebug lintDebug
 ```

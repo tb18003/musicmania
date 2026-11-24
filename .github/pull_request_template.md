@@ -11,7 +11,7 @@
 - [ ] Branch targets `develop` (or `master` for release/hotfix branches)
 - [ ] Commits follow Conventional Commits
 - [ ] Tests added/updated (bug fixes include a failing test first)
-- [ ] `./gradlew spotlessCheck detekt testDebugUnitTest test assembleDebug` passes locally
+- [ ] `./gradlew spotlessCheck detekt testDebugUnitTest test assembleDebug` passes locally (in `mobile/`)
 - [ ] UI strings added in English **and** Spanish; animations respect *reduce motion*
 - [ ] No secrets, tokens or personal data in code, logs or fixtures
 - [ ] New dependencies justified (purpose, GPL-3.0-compatible licence)

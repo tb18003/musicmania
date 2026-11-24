@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: gradle
-    directory: /
+    directory: /mobile
     target-branch: develop
     # Every update PR runs the full CI: batch them monthly to save runner minutes.
     schedule:
@@ -16,7 +16,8 @@ updates:
         patterns: ["junit*", "app.cash.turbine*", "io.mockk*", "org.robolectric*", "io.github.takahirom.roborazzi*", "com.lemonappdev*"]
 
   - package-ecosystem: github-actions
-    directory: /
+    # Workflows plus the local composite actions they use.
+    directories: ["/", "/.github/actions/*"]
     target-branch: develop
     schedule:
       interval: monthly

@@ -23,6 +23,7 @@ Do not enable GitHub Pages on the `musicmania` repository itself while the callb
 ## 2. Get your signing certificate fingerprint(s)
 
 ```bash
+cd mobile
 ./gradlew :app:signingReport
 ```
 Copy the `SHA-256` of the **debug** variant (for development) and of your **release** key.
@@ -49,7 +50,7 @@ In the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard):
 
 ## 5. Configure the build
 
-`local.properties` (git-ignored) or environment variables in CI:
+`mobile/local.properties` (git-ignored) or environment variables in CI:
 ```properties
 SPOTIFY_CLIENT_ID=0123456789abcdef0123456789abcdef
 SPOTIFY_REDIRECT_URI=https://<you>.github.io/musicmania/callback
