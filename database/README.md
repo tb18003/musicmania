@@ -61,6 +61,8 @@ supabase stop
 
 ## Deploying to the hosted project
 
+Full walkthrough (schema, API role password, Cloud Run): [`docs/setup/cloud-deploy.md`](../docs/setup/cloud-deploy.md).
+
 One-time setup:
 1. Create a Supabase project (region close to your users, e.g. `eu-west-3` Paris) and keep the
    database password in a password manager.
