@@ -23,6 +23,9 @@ class FakeCloudRepository(override var isEnabled: Boolean = true) : CloudReposit
 
     /** When set, every call fails with this error (e.g. [AppError.NotAllowlisted]). */
     var failure: AppError? = null
+
+    /** When set, only uploads fail (the rest of the API works). */
+    var publishFailure: AppError? = null
     var entries: List<LeaderboardEntry> = emptyList()
     var friends: Map<String, FriendStats> = emptyMap()
 
@@ -40,7 +43,8 @@ class FakeCloudRepository(override var isEnabled: Boolean = true) : CloudReposit
         profile
     }
 
-    override suspend fun publish(stats: List<SharedPeriodStats>) = respond { published += stats }
+    override suspend fun publish(stats: List<SharedPeriodStats>): DataResult<Unit> =
+        publishFailure?.let { DataResult.Failure(it) } ?: respond { published += stats }
 
     override suspend fun leaderboard(metric: LeaderboardMetric, period: LeaderboardPeriod, start: LocalDate) = respond {
         leaderboardRequests += Triple(metric, period, start)

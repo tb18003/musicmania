@@ -103,8 +103,8 @@ class SettingsViewModel @Inject constructor(
         cloudSettings.update { it?.copy(busy = true) }
         when (val result = cloud.setSharing(enabled)) {
             is DataResult.Success -> {
-                if (enabled) publishStats()
                 cloudSettings.value = CloudSettings(sharingEnabled = result.data.sharingEnabled)
+                if (enabled && publishStats() is DataResult.Failure) events.send(SettingsEvent.CloudFailed)
             }
             is DataResult.Failure -> {
                 cloudSettings.value = settingsFor(result.error)
