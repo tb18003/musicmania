@@ -83,6 +83,16 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `a failed upload after opting in is reported`() = runTest {
+        cloud.publishFailure = AppError.Network
+        viewModel.eventFlow.test {
+            viewModel.setCloudSharing(true)
+            assertEquals(SettingsEvent.CloudFailed, awaitItem())
+        }
+        assertTrue(cloud.profile.sharingEnabled, "sharing stays on: the next sync retries the upload")
+    }
+
+    @Test
     fun `accounts outside the allowlist see why`() = runTest {
         cloud.failure = AppError.NotAllowlisted
         subscribe()

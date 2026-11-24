@@ -76,6 +76,9 @@ class LeaderboardViewModel @Inject constructor(
 
     private var loadJob: Job? = null
 
+    /** One automatic upload per screen if I share but am missing from the ranking. */
+    private var triedSelfHeal = false
+
     init {
         load()
     }
@@ -98,12 +101,13 @@ class LeaderboardViewModel @Inject constructor(
     fun enableSharing() {
         viewModelScope.launch {
             state.update { it.copy(isEnablingSharing = true) }
-            when (val result = cloud.setSharing(true)) {
-                is DataResult.Success -> publishStats()
-                is DataResult.Failure -> state.update { it.copy(content = contentFor(result.error)) }
+            val failure = when (val result = cloud.setSharing(true)) {
+                is DataResult.Success -> (publishStats() as? DataResult.Failure)?.error
+                is DataResult.Failure -> result.error
             }
             state.update { it.copy(isEnablingSharing = false) }
-            load()
+            // A failed upload is shown (with retry) instead of an empty, misleading ranking.
+            if (failure != null) state.update { it.copy(content = contentFor(failure)) } else load()
         }
     }
 
@@ -141,10 +145,16 @@ class LeaderboardViewModel @Inject constructor(
 
     private suspend fun ranking(): LeaderboardContent {
         val current = state.value
-        return when (val result = getLeaderboard(current.metric, current.period)) {
-            is DataResult.Success -> LeaderboardContent.Ranking(result.data)
-            is DataResult.Failure -> contentFor(result.error)
+        val entries = when (val result = getLeaderboard(current.metric, current.period)) {
+            is DataResult.Success -> result.data
+            is DataResult.Failure -> return contentFor(result.error)
         }
+        // I share but I'm not there (e.g. the upload never happened): upload once and fetch again.
+        if (entries.none { it.isMe } && !triedSelfHeal) {
+            triedSelfHeal = true
+            if (publishStats() is DataResult.Success) return ranking()
+        }
+        return LeaderboardContent.Ranking(entries)
     }
 
     private suspend fun contentFor(error: AppError): LeaderboardContent = if (error == AppError.NotAllowlisted) {

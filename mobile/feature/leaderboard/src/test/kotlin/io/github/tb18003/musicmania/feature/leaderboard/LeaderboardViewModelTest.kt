@@ -78,6 +78,30 @@ class LeaderboardViewModelTest {
     }
 
     @Test
+    fun `a failed upload when opting in offers a retry instead of an empty ranking`() = runTest {
+        cloud.publishFailure = AppError.Network
+        val viewModel = viewModel()
+
+        viewModel.enableSharing()
+
+        assertIs<LeaderboardContent.Error>(viewModel.uiState.value.content)
+        assertEquals(false, viewModel.uiState.value.isEnablingSharing)
+    }
+
+    @Test
+    fun `sharing but missing from the ranking uploads once and fetches again`() = runTest {
+        cloud.profile = cloud.profile.copy(sharingEnabled = true)
+        cloud.entries = entries.filterNot { it.isMe }
+
+        val viewModel = viewModel()
+
+        assertEquals(1, cloud.published.size, "my stats are uploaded so I can appear")
+        assertEquals(2, cloud.leaderboardRequests.size, "the ranking is fetched again after the upload")
+        viewModel.selectPeriod(LeaderboardPeriod.YEAR)
+        assertEquals(1, cloud.published.size, "only one automatic upload per screen")
+    }
+
+    @Test
     fun `changing metric and period reloads and survives process death`() = runTest {
         cloud.profile = cloud.profile.copy(sharingEnabled = true)
         cloud.entries = entries

@@ -90,7 +90,7 @@ class PublishListeningStatsUseCase @Inject constructor(
     private val buildSharedStats: BuildSharedStatsUseCase,
 ) {
     suspend operator fun invoke(): DataResult<Boolean> {
-        if (!cloud.isEnabled || session.session.first() != SessionState.SignedIn) return DataResult.Success(false)
+        if (!cloud.isEnabled || !isSignedIn()) return DataResult.Success(false)
         val profile = when (val me = cloud.me()) {
             is DataResult.Success -> me.data
             is DataResult.Failure -> return me
@@ -101,6 +101,9 @@ class PublishListeningStatsUseCase @Inject constructor(
             is DataResult.Failure -> upload
         }
     }
+
+    /** The session flow starts with Loading: wait for the real state, never decide on the placeholder. */
+    private suspend fun isSignedIn(): Boolean = session.session.first { it != SessionState.Loading } == SessionState.SignedIn
 }
 
 class GetLeaderboardUseCase @Inject constructor(

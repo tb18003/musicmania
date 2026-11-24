@@ -34,8 +34,10 @@ import io.github.tb18003.musicmania.core.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import java.io.OutputStream
 
@@ -82,7 +84,9 @@ class FakeCatalogRepository : CatalogRepository {
 
 class FakeSessionRepository(initial: SessionState = SessionState.SignedIn) : SessionRepository {
     val state = MutableStateFlow(initial)
-    override val session: Flow<SessionState> = state
+
+    /** Like the real repository: every collection starts with [SessionState.Loading]. */
+    override val session: Flow<SessionState> = state.onStart { emit(SessionState.Loading) }.distinctUntilChanged()
 
     override suspend fun enterDemoMode() = state.update { SessionState.Demo }
 
