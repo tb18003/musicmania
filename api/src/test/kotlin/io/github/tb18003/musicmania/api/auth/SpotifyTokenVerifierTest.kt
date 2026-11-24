@@ -47,6 +47,26 @@ class SpotifyTokenVerifierTest {
     }
 
     @Test
+    fun `the sharpest https profile picture is kept`() = runBlocking {
+        respond(
+            200,
+            """{"id":"ana_01","images":[{"url":"https://i.scdn.co/image/small","height":64,"width":64},
+               {"url":"https://i.scdn.co/image/large","height":300,"width":300},
+               {"url":"http://insecure.example/huge","height":1000,"width":1000}]}""",
+        )
+        assertEquals(
+            TokenVerification.Valid(SpotifyUser("ana_01", null, "https://i.scdn.co/image/large")),
+            verifier.verify("token-ana"),
+        )
+    }
+
+    @Test
+    fun `users without a picture have no avatar`() = runBlocking {
+        respond(200, """{"id":"ana_01","images":[]}""")
+        assertEquals(TokenVerification.Valid(SpotifyUser("ana_01", null, null)), verifier.verify("token-ana"))
+    }
+
+    @Test
     fun `rejected and forbidden tokens are invalid`() = runBlocking {
         respond(401)
         respond(403)

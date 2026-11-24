@@ -24,6 +24,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
@@ -186,6 +187,19 @@ class ApiIntegrationTest {
     }
 
     @Test
+    fun `the leaderboard shows each person's Spotify picture`() = api { client ->
+        client.putJson("/v1/me/stats", "token-ana", stats(minutes = 300))
+        client.putJson("/v1/me/stats", "token-bruno", stats(minutes = 500))
+        client.putJson("/v1/me/settings", "token-ana", """{"sharingEnabled":true}""")
+        client.putJson("/v1/me/settings", "token-bruno", """{"sharingEnabled":true}""")
+
+        val entries = client.get("/v1/leaderboards?start=$week") { bearerAuth("token-ana") }.json()["entries"]!!.jsonArray
+        val avatars = entries.associate { it.jsonObject["spotifyUserId"]?.jsonPrimitive?.content to it.jsonObject["avatarUrl"] }
+        assertEquals("https://i.scdn.co/image/ana", avatars["ana"]?.jsonPrimitive?.content)
+        assertEquals(JsonNull, avatars["bruno"] ?: JsonNull, "no picture on Spotify, none here")
+    }
+
+    @Test
     fun `uploading again replaces the period instead of adding to it`() = api { client ->
         client.putJson("/v1/me/stats", "token-ana", stats(minutes = 300))
         client.putJson("/v1/me/stats", "token-ana", stats(minutes = 320))
@@ -250,9 +264,14 @@ class ApiIntegrationTest {
             val token = request.headers["Authorization"]?.removePrefix("Bearer ")
             return when {
                 token == "token-ratelimited" -> MockResponse.Builder().code(429).addHeader("Retry-After", "7").build()
-                token in users -> MockResponse.Builder().code(200).body("""{"id":"${users[token]}","display_name":null}""").build()
+                token == "token-ana" -> ok(
+                    """{"id":"ana","display_name":null,"images":[{"url":"https://i.scdn.co/image/ana","height":300}]}""",
+                )
+                token in users -> ok("""{"id":"${users[token]}","display_name":null}""")
                 else -> MockResponse.Builder().code(401).build()
             }
         }
+
+        private fun ok(body: String) = MockResponse.Builder().code(200).body(body).build()
     }
 }

@@ -24,6 +24,13 @@ data class AllowlistEntry(
     val enabled: Boolean,
 )
 
+/** Who is writing, as Spotify reported it when the token was verified. */
+data class Identity(
+    val spotifyUserId: String,
+    val displayName: String?,
+    val avatarUrl: String?,
+)
+
 data class Profile(
     val spotifyUserId: String,
     val displayName: String?,
@@ -48,16 +55,16 @@ class AllowlistRepository(private val db: Database) {
 }
 
 class ProfileRepository(private val db: Database) {
-    /** Creates the profile on first use and refreshes the name and last-seen time afterwards. */
-    suspend fun upsert(spotifyUserId: String, displayName: String?): Profile = db.transaction { c -> upsert(c, spotifyUserId, displayName) }
+    /** Creates the profile on first use and refreshes the name, picture and last-seen time afterwards. */
+    suspend fun upsert(identity: Identity): Profile = db.transaction { c -> upsert(c, identity) }
 
-    suspend fun setSharing(spotifyUserId: String, displayName: String?, enabled: Boolean): Profile = db.transaction { c ->
-        upsert(c, spotifyUserId, displayName)
+    suspend fun setSharing(identity: Identity, enabled: Boolean): Profile = db.transaction { c ->
+        upsert(c, identity)
         requireNotNull(
             c.queryOne(
                 "update musicmania.profiles set sharing_enabled = ? where spotify_user_id = ? $RETURNING_PROFILE",
                 enabled,
-                spotifyUserId,
+                identity.spotifyUserId,
                 map = ::toProfile,
             ),
         )
@@ -72,17 +79,20 @@ class ProfileRepository(private val db: Database) {
         private const val MAX_NAME_LENGTH = 100
         private const val RETURNING_PROFILE = "returning spotify_user_id, display_name, sharing_enabled"
 
-        internal fun upsert(c: Connection, spotifyUserId: String, displayName: String?): Profile = requireNotNull(
+        internal fun upsert(c: Connection, identity: Identity): Profile = requireNotNull(
             c.queryOne(
+                // The picture always mirrors Spotify: removing it there removes it here.
                 """
-                insert into musicmania.profiles (spotify_user_id, display_name) values (?, ?)
+                insert into musicmania.profiles (spotify_user_id, display_name, avatar_url) values (?, ?, ?)
                 on conflict (spotify_user_id) do update
                     set display_name = coalesce(excluded.display_name, musicmania.profiles.display_name),
+                        avatar_url = excluded.avatar_url,
                         last_seen_at = now()
                 $RETURNING_PROFILE
                 """.trimIndent(),
-                spotifyUserId,
-                displayName?.take(MAX_NAME_LENGTH),
+                identity.spotifyUserId,
+                identity.displayName?.take(MAX_NAME_LENGTH),
+                identity.avatarUrl,
                 map = ::toProfile,
             ),
         )
@@ -97,8 +107,9 @@ class ProfileRepository(private val db: Database) {
 
 class StatsRepository(private val db: Database) {
     /** Upserts every period and replaces its top items, atomically. Inputs are already validated. */
-    suspend fun replace(spotifyUserId: String, displayName: String?, periods: List<PeriodStats>) = db.transaction { c ->
-        ProfileRepository.upsert(c, spotifyUserId, displayName)
+    suspend fun replace(identity: Identity, periods: List<PeriodStats>) = db.transaction { c ->
+        ProfileRepository.upsert(c, identity)
+        val spotifyUserId = identity.spotifyUserId
         periods.forEach { period ->
             val start = LocalDate.parse(period.start)
             c.update(
