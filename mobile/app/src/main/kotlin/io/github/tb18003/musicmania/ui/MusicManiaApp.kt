@@ -53,15 +53,15 @@ import io.github.tb18003.musicmania.navigation.navigateToTopLevel
 
 /** Root composable: switches between onboarding and the main app with a cross-fade. */
 @Composable
-fun MusicManiaApp(session: SessionState) {
+fun MusicManiaApp(session: SessionState, cloudEnabled: Boolean = false) {
     // Remembers which screens already played their entrance animation in this session.
     CompositionLocalProvider(LocalEntranceRegistry provides rememberEntranceRegistry()) {
-        MusicManiaStages(session)
+        MusicManiaStages(session, cloudEnabled)
     }
 }
 
 @Composable
-private fun MusicManiaStages(session: SessionState) {
+private fun MusicManiaStages(session: SessionState, cloudEnabled: Boolean) {
     AnimatedContent(
         // Exposes test tags to UiAutomator (baseline profile generator, macrobenchmarks).
         modifier = Modifier.semantics { testTagsAsResourceId = true },
@@ -76,7 +76,7 @@ private fun MusicManiaStages(session: SessionState) {
         when (stage) {
             AppStage.LOADING -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             AppStage.AUTH -> AuthRoute()
-            AppStage.MAIN -> MainScaffold()
+            AppStage.MAIN -> MainScaffold(cloudEnabled)
         }
     }
 }
@@ -84,12 +84,13 @@ private fun MusicManiaStages(session: SessionState) {
 private enum class AppStage { LOADING, AUTH, MAIN }
 
 @Composable
-private fun MainScaffold() {
+private fun MainScaffold(cloudEnabled: Boolean) {
+    val destinations = remember(cloudEnabled) { TopLevelDestination.visible(cloudEnabled) }
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
-    val showBottomBar = TopLevelDestination.entries.any { currentDestination.isOn(it) }
+    val showBottomBar = destinations.any { currentDestination.isOn(it) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -101,7 +102,7 @@ private fun MainScaffold() {
                 exit = slideOutVertically { it } + fadeOut(),
             ) {
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    TopLevelDestination.entries.forEach { destination ->
+                    destinations.forEach { destination ->
                         val selected = currentDestination.isOn(destination)
                         NavigationBarItem(
                             modifier = Modifier.testTag("nav_${destination.name.lowercase()}"),

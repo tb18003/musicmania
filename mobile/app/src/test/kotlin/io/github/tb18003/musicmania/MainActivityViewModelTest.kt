@@ -6,6 +6,7 @@
 
 package io.github.tb18003.musicmania
 
+import io.github.tb18003.musicmania.core.common.config.CloudConfig
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.core.testing.MainDispatcherRule
 import io.github.tb18003.musicmania.core.testing.repository.FakePreferencesRepository
@@ -26,7 +27,7 @@ class MainActivityViewModelTest {
     fun `signing in schedules sync and signing out cancels it`() {
         val session = FakeSessionRepository(SessionState.SignedOut)
         val scheduler = FakeSyncScheduler()
-        val viewModel = MainActivityViewModel(session, FakePreferencesRepository(), scheduler, FakeUserRepository())
+        val viewModel = MainActivityViewModel(session, FakePreferencesRepository(), scheduler, FakeUserRepository(), CloudConfig.Disabled)
 
         session.state.value = SessionState.SignedIn
         assertTrue(scheduler.periodicScheduled)
@@ -39,7 +40,13 @@ class MainActivityViewModelTest {
     @Test
     fun `demo mode never schedules network sync`() {
         val scheduler = FakeSyncScheduler()
-        MainActivityViewModel(FakeSessionRepository(SessionState.Demo), FakePreferencesRepository(), scheduler, FakeUserRepository())
+        MainActivityViewModel(
+            FakeSessionRepository(SessionState.Demo),
+            FakePreferencesRepository(),
+            scheduler,
+            FakeUserRepository(),
+            CloudConfig.Disabled,
+        )
         assertFalse(scheduler.periodicScheduled)
     }
 }

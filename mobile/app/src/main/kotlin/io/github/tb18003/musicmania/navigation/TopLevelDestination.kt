@@ -8,10 +8,12 @@ package io.github.tb18003.musicmania.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Leaderboard
+import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Insights
@@ -21,6 +23,7 @@ import io.github.tb18003.musicmania.R
 import io.github.tb18003.musicmania.feature.history.navigation.HistoryDestination
 import io.github.tb18003.musicmania.feature.home.navigation.HomeDestination
 import io.github.tb18003.musicmania.feature.insights.navigation.InsightsDestination
+import io.github.tb18003.musicmania.feature.leaderboard.navigation.LeaderboardDestination
 import io.github.tb18003.musicmania.feature.top.navigation.TopDestination
 import kotlin.reflect.KClass
 
@@ -36,4 +39,17 @@ enum class TopLevelDestination(
     TOP(TopDestination, TopDestination::class, Icons.Rounded.Leaderboard, Icons.Outlined.Leaderboard, R.string.nav_top),
     HISTORY(HistoryDestination, HistoryDestination::class, Icons.Rounded.History, Icons.Outlined.History, R.string.nav_history),
     INSIGHTS(InsightsDestination, InsightsDestination::class, Icons.Rounded.Insights, Icons.Outlined.Insights, R.string.nav_insights),
+    LEADERBOARD(
+        LeaderboardDestination,
+        LeaderboardDestination::class,
+        Icons.Rounded.EmojiEvents,
+        Icons.Outlined.EmojiEvents,
+        R.string.nav_leaderboard,
+    ),
+    ;
+
+    companion object {
+        /** The leaderboard needs the optional cloud API. */
+        fun visible(cloudEnabled: Boolean): List<TopLevelDestination> = entries.filter { it != LEADERBOARD || cloudEnabled }
+    }
 }

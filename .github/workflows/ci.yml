@@ -111,6 +111,10 @@ jobs:
       - uses: ./.github/actions/setup-mobile
       - name: Unit, integration and architecture tests
         run: ./gradlew testDebugUnitTest test koverXmlReport
+      # Failed tests become annotations (name + message), readable without opening the logs.
+      - name: Report failing tests
+        if: failure()
+        run: python3 ../.github/scripts/report-test-failures.py .
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v7
@@ -278,6 +282,9 @@ jobs:
       # Integration tests run on an embedded Postgres 17 with the real migrations from database/.
       - name: Spotless, Detekt, tests, coverage and fat jar
         run: ./gradlew spotlessCheck detekt test koverXmlReport buildFatJar
+      - name: Report failing tests
+        if: failure()
+        run: python3 ../.github/scripts/report-test-failures.py .
       - name: Build the container image
         run: docker build --tag musicmania-api:ci .
       - name: Upload reports

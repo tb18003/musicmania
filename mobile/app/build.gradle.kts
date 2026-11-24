@@ -25,7 +25,11 @@ val spotifyClientId = secret("SPOTIFY_CLIENT_ID")
 val spotifyRedirectUri = secret("SPOTIFY_REDIRECT_URI", "https://example.invalid/musicmania/callback")
 val redirect: URI = URI(spotifyRedirectUri)
 
+// Optional friends leaderboard: empty keeps the app fully local (no ranking tab).
+val musicManiaApiUrl = secret("MUSICMANIA_API_URL")
+
 require(spotifyClientId.matches(Regex("[A-Za-z0-9]*"))) { "SPOTIFY_CLIENT_ID must be alphanumeric" }
+require(musicManiaApiUrl.isEmpty() || musicManiaApiUrl.startsWith("https://")) { "MUSICMANIA_API_URL must be empty or https://" }
 require(redirect.scheme == "https") { "SPOTIFY_REDIRECT_URI must be an https:// App Link (Spotify rejects custom schemes)" }
 
 android {
@@ -38,6 +42,7 @@ android {
 
         buildConfigField("String", "SPOTIFY_CLIENT_ID", "\"$spotifyClientId\"")
         buildConfigField("String", "SPOTIFY_REDIRECT_URI", "\"$spotifyRedirectUri\"")
+        buildConfigField("String", "MUSICMANIA_API_URL", "\"$musicManiaApiUrl\"")
         // Used by the verified App Link intent filter that receives the OAuth redirect.
         manifestPlaceholders["redirectHost"] = redirect.host
         manifestPlaceholders["redirectPath"] = redirect.path.ifEmpty { "/" }
@@ -102,6 +107,7 @@ dependencies {
     implementation(projects.feature.history)
     implementation(projects.feature.detail)
     implementation(projects.feature.insights)
+    implementation(projects.feature.leaderboard)
     implementation(projects.feature.recap)
     implementation(projects.feature.importer)
     implementation(projects.feature.settings)

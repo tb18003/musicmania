@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="feature_leaderboard_title">Ranking</string>
+    <string name="feature_leaderboard_subtitle">How you compare with your friends</string>
+    <string name="feature_leaderboard_period_week">Week</string>
+    <string name="feature_leaderboard_period_month">Month</string>
+    <string name="feature_leaderboard_period_year">Year</string>
+    <string name="feature_leaderboard_period_all_time">All time</string>
+    <string name="feature_leaderboard_metric_minutes">Minutes</string>
+    <string name="feature_leaderboard_metric_streams">Streams</string>
+    <string name="feature_leaderboard_metric_streak">Streak</string>
+    <string name="feature_leaderboard_metric_artists">Artists</string>
+    <string name="feature_leaderboard_minutes_value">%1$s min</string>
+    <plurals name="feature_leaderboard_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="feature_leaderboard_you">You</string>
+    <string name="feature_leaderboard_top_artists">Top artists</string>
+    <string name="feature_leaderboard_top_tracks">Top tracks</string>
+    <string name="feature_leaderboard_empty_title">Nobody is sharing yet</string>
+    <string name="feature_leaderboard_empty_message">When your friends turn on sharing, they will show up here.</string>
+    <string name="feature_leaderboard_sharing_off_title">Join the ranking</string>
+    <string name="feature_leaderboard_sharing_off_message">Only totals are shared: minutes, streams, streaks, unique artists and your top 10 per period. Never your listening history. You can stop sharing and delete it at any time in Settings.</string>
+    <string name="feature_leaderboard_enable_sharing">Share my stats</string>
+    <string name="feature_leaderboard_not_allowlisted_title">You are not on the list yet</string>
+    <string name="feature_leaderboard_not_allowlisted_message">This ranking is private. Send your Spotify ID to the administrator so they can add you.</string>
+    <string name="feature_leaderboard_copy_id">Copy Spotify ID</string>
+</resources>

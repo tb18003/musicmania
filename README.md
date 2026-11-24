@@ -68,6 +68,17 @@ Spotify now requires an HTTPS redirect, so a one-time setup is needed:
 
 No client secret is used — the app uses the OAuth Authorization Code flow with PKCE.
 
+### Friends ranking (optional)
+With the cloud parts deployed ([`database/`](database), [`api/`](api)), up to five allow-listed friends
+can compare their stats. Add the API URL to `mobile/local.properties`:
+```properties
+MUSICMANIA_API_URL=https://your-api.run.app
+```
+A **Ranking** tab appears. Sharing is opt-in (off by default) and only totals per week, month, year
+and all time are uploaded (minutes, streams, streaks, unique artists, top 10) — never your history.
+You can stop sharing and delete your server data any time in *Settings → Friends ranking*.
+Without the URL, MusicMania stays 100 % local.
+
 ### Import your lifetime history
 In the app: *Settings → Import streaming history* and follow the steps. Request
 **Extended streaming history** on Spotify's [privacy page](https://www.spotify.com/account/privacy/);

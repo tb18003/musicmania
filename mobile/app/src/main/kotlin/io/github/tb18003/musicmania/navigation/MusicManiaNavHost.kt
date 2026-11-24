@@ -36,6 +36,7 @@ import io.github.tb18003.musicmania.feature.home.navigation.homeScreen
 import io.github.tb18003.musicmania.feature.importer.navigation.ImportDestination
 import io.github.tb18003.musicmania.feature.importer.navigation.importScreen
 import io.github.tb18003.musicmania.feature.insights.navigation.insightsScreen
+import io.github.tb18003.musicmania.feature.leaderboard.navigation.leaderboardScreen
 import io.github.tb18003.musicmania.feature.recap.navigation.RecapDestination
 import io.github.tb18003.musicmania.feature.recap.navigation.recapScreen
 import io.github.tb18003.musicmania.feature.settings.navigation.SettingsDestination
@@ -99,6 +100,7 @@ fun MusicManiaNavHost(navController: NavHostController, snackbarHostState: Snack
                     onImport = openImport,
                 )
                 insightsScreen(onImport = openImport)
+                leaderboardScreen()
                 detailScreen(onBack = navController::popBackStack)
                 recapScreen(onClose = navController::popBackStack, onImport = openImport)
                 importScreen(onBack = navController::popBackStack)

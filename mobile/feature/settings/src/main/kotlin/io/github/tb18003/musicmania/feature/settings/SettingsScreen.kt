@@ -7,6 +7,7 @@
 package io.github.tb18003.musicmania.feature.settings
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -25,11 +26,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Logout
+import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.Code
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.FileDownload
@@ -51,11 +55,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
@@ -67,6 +74,7 @@ import io.github.tb18003.musicmania.core.designsystem.component.SegmentedSelecto
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.core.model.ThemeMode
 import io.github.tb18003.musicmania.core.ui.Formatters
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 private const val SOURCE_URL = "https://github.com/tb18003/musicmania"
@@ -81,6 +89,8 @@ fun SettingsRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     val resources = LocalResources.current
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri != null) viewModel.export { context.contentResolver.openOutputStream(uri) }
@@ -91,6 +101,8 @@ fun SettingsRoute(
                 is SettingsEvent.Exported -> resources.getString(R.string.feature_settings_exported, event.count)
                 SettingsEvent.ExportFailed -> resources.getString(R.string.feature_settings_export_failed)
                 SettingsEvent.DataDeleted -> resources.getString(R.string.feature_settings_deleted)
+                SettingsEvent.CloudDataDeleted -> resources.getString(R.string.feature_settings_cloud_deleted)
+                SettingsEvent.CloudFailed -> resources.getString(R.string.feature_settings_cloud_failed)
             }
             snackbarHostState.showSnackbar(message)
         }
@@ -107,6 +119,14 @@ fun SettingsRoute(
             onExport = { exportLauncher.launch("musicmania-history-${LocalDate.now()}.json") },
             onDeleteData = viewModel::deleteLocalData,
             onSignOut = viewModel::signOut,
+            onCloudSharing = viewModel::setCloudSharing,
+            onDeleteCloudData = viewModel::deleteCloudData,
+            onCopySpotifyId = { id ->
+                scope.launch {
+                    clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Spotify ID", id)))
+                    snackbarHostState.showSnackbar(resources.getString(R.string.feature_settings_spotify_id_copied))
+                }
+            },
             onOpenUrl = { url ->
                 try {
                     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
@@ -128,10 +148,13 @@ data class SettingsActions(
     val onExport: () -> Unit = {},
     val onDeleteData: () -> Unit = {},
     val onSignOut: () -> Unit = {},
+    val onCloudSharing: (Boolean) -> Unit = {},
+    val onDeleteCloudData: () -> Unit = {},
+    val onCopySpotifyId: (String) -> Unit = {},
     val onOpenUrl: (String) -> Unit = {},
 )
 
-private enum class PendingConfirmation { DELETE, SIGN_OUT }
+private enum class PendingConfirmation { DELETE, SIGN_OUT, DELETE_CLOUD }
 
 @Composable
 fun SettingsScreen(state: SettingsUiState, actions: SettingsActions, modifier: Modifier = Modifier) {
@@ -223,6 +246,10 @@ fun SettingsScreen(state: SettingsUiState, actions: SettingsActions, modifier: M
             }
         }
 
+        state.cloud?.let { cloud ->
+            rankingSection(cloud, state.profile?.id, actions) { confirmation = PendingConfirmation.DELETE_CLOUD }
+        }
+
         item { SectionTitle(R.string.feature_settings_about) }
         item {
             ActionRow(Icons.Rounded.Code, stringResource(R.string.feature_settings_source), SOURCE_URL) { actions.onOpenUrl(SOURCE_URL) }
@@ -266,29 +293,22 @@ fun SettingsScreen(state: SettingsUiState, actions: SettingsActions, modifier: M
     }
 
     confirmation?.let { pending ->
+        val (title, body) = when (pending) {
+            PendingConfirmation.DELETE -> R.string.feature_settings_delete to R.string.feature_settings_delete_confirm
+            PendingConfirmation.SIGN_OUT -> R.string.feature_settings_sign_out to R.string.feature_settings_sign_out_confirm
+            PendingConfirmation.DELETE_CLOUD -> R.string.feature_settings_cloud_delete to R.string.feature_settings_cloud_delete_confirm
+        }
         ConfirmDialog(
-            title = stringResource(
-                if (pending ==
-                    PendingConfirmation.DELETE
-                ) {
-                    R.string.feature_settings_delete
-                } else {
-                    R.string.feature_settings_sign_out
-                },
-            ),
-            body = stringResource(
-                if (pending ==
-                    PendingConfirmation.DELETE
-                ) {
-                    R.string.feature_settings_delete_confirm
-                } else {
-                    R.string.feature_settings_sign_out_confirm
-                },
-            ),
+            title = stringResource(title),
+            body = stringResource(body),
             onDismiss = { confirmation = null },
             onConfirm = {
                 confirmation = null
-                if (pending == PendingConfirmation.DELETE) actions.onDeleteData() else actions.onSignOut()
+                when (pending) {
+                    PendingConfirmation.DELETE -> actions.onDeleteData()
+                    PendingConfirmation.SIGN_OUT -> actions.onSignOut()
+                    PendingConfirmation.DELETE_CLOUD -> actions.onDeleteCloudData()
+                }
             },
         )
     }
@@ -406,4 +426,44 @@ private fun LicensesDialog(onDismiss: () -> Unit) {
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.ok)) } },
     )
+}
+
+/** Friends leaderboard: opt-in sharing, my Spotify id (to get allow-listed) and server-side deletion. */
+private fun LazyListScope.rankingSection(cloud: CloudSettings, spotifyUserId: String?, actions: SettingsActions, onDelete: () -> Unit) {
+    item { SectionTitle(R.string.feature_settings_ranking) }
+    if (cloud.notAllowlisted) {
+        item {
+            Text(
+                stringResource(R.string.feature_settings_cloud_not_allowlisted),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+        }
+    } else {
+        item {
+            SwitchRow(
+                R.string.feature_settings_cloud_sharing,
+                R.string.feature_settings_cloud_sharing_body,
+                checked = cloud.sharingEnabled == true,
+                onChange = { if (!cloud.busy && cloud.sharingEnabled != null) actions.onCloudSharing(it) },
+            )
+        }
+    }
+    spotifyUserId?.let { id ->
+        item {
+            ActionRow(Icons.Rounded.ContentCopy, stringResource(R.string.feature_settings_spotify_id), id) { actions.onCopySpotifyId(id) }
+        }
+    }
+    if (!cloud.notAllowlisted) {
+        item {
+            ActionRow(
+                Icons.Rounded.CloudOff,
+                stringResource(R.string.feature_settings_cloud_delete),
+                stringResource(R.string.feature_settings_cloud_delete_body),
+                enabled = !cloud.busy,
+                onClick = onDelete,
+            )
+        }
+    }
 }

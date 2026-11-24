@@ -11,8 +11,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.github.tb18003.musicmania.core.common.config.CloudConfig
 import io.github.tb18003.musicmania.core.common.config.SpotifyConfig
 import io.github.tb18003.musicmania.core.network.BuildConfig
+import io.github.tb18003.musicmania.core.network.CloudNetworkDataSource
+import io.github.tb18003.musicmania.core.network.MusicManiaCloudApi
+import io.github.tb18003.musicmania.core.network.RetrofitCloudNetworkDataSource
 import io.github.tb18003.musicmania.core.network.RetrofitSpotifyNetworkDataSource
 import io.github.tb18003.musicmania.core.network.SpotifyApi
 import io.github.tb18003.musicmania.core.network.SpotifyNetworkDataSource
@@ -20,6 +24,7 @@ import io.github.tb18003.musicmania.core.network.auth.AllowedApiHost
 import io.github.tb18003.musicmania.core.network.auth.AuthInterceptor
 import io.github.tb18003.musicmania.core.network.auth.SpotifyTokenRefresher
 import io.github.tb18003.musicmania.core.network.auth.TokenAuthenticator
+import io.github.tb18003.musicmania.core.network.auth.TokenRefreshCoordinator
 import io.github.tb18003.musicmania.core.network.auth.TokenRefresher
 import io.github.tb18003.musicmania.core.network.interceptor.RateLimitInterceptor
 import kotlinx.serialization.json.Json
@@ -42,6 +47,18 @@ annotation class TokenHttpClient
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class PublicHttpClient
+
+/**
+ * Client for the MusicMania cloud API. It carries the Spotify bearer token, but only to the
+ * configured API host (and to no host at all when the API is not configured).
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class CloudHttpClient
+
+/** The cloud API host when configured; otherwise a host that matches nothing (the token is never attached). */
+internal fun cloudAllowedHost(cloud: CloudConfig): AllowedApiHost =
+    AllowedApiHost(if (cloud.isConfigured) cloud.retrofitBaseUrl.toHttpUrl().host else "")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -99,6 +116,37 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
+    @CloudHttpClient
+    fun providesCloudClient(@PublicHttpClient base: OkHttpClient, coordinator: TokenRefreshCoordinator, cloud: CloudConfig): OkHttpClient {
+        // Same single-flight refresh as the Spotify client; a different, explicit allow-listed host.
+        val host = cloudAllowedHost(cloud)
+        return base.newBuilder()
+            .addInterceptor(AuthInterceptor(coordinator, host))
+            .authenticator(TokenAuthenticator(coordinator, host))
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(
+                        HttpLoggingInterceptor().apply {
+                            level = HttpLoggingInterceptor.Level.BASIC
+                            redactHeader("Authorization")
+                        },
+                    )
+                }
+            }
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun providesCloudApi(@CloudHttpClient client: OkHttpClient, json: Json, cloud: CloudConfig): MusicManiaCloudApi = Retrofit.Builder()
+        .baseUrl(cloud.retrofitBaseUrl)
+        .client(client)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+        .create(MusicManiaCloudApi::class.java)
+
+    @Provides
+    @Singleton
     fun providesSpotifyApi(client: OkHttpClient, json: Json, config: SpotifyConfig): SpotifyApi = Retrofit.Builder()
         .baseUrl(config.apiBaseUrl)
         .client(client)
@@ -115,4 +163,7 @@ internal abstract class NetworkBindingsModule {
 
     @Binds
     abstract fun bindsTokenRefresher(impl: SpotifyTokenRefresher): TokenRefresher
+
+    @Binds
+    abstract fun bindsCloudNetworkDataSource(impl: RetrofitCloudNetworkDataSource): CloudNetworkDataSource
 }
