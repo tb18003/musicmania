@@ -89,7 +89,7 @@ core:model / core:common: pure Kotlin, used by everyone. core:testing: fakes for
 | `core:testing` | JVM | In-memory fakes of every repository, `MainDispatcherRule`, `TestData` |
 | `sync:work` | Android lib | `SyncWorker`, `WorkManagerSyncScheduler`, `SyncObserver` multibinding |
 | `widget` | Compose lib | Glance home-screen widget |
-| `feature:*` | Compose lib | `auth`, `home`, `top`, `history`, `detail`, `insights`, `recap`, `importer`, `settings` |
+| `feature:*` | Compose lib | `auth`, `home`, `top`, `history`, `detail`, `insights`, `recap`, `importer`, `settings`, `leaderboard` (optional friends ranking, needs the cloud API) |
 
 ### Dependency rules (enforced by Konsist tests in `mobile/app/src/test`)
 - `feature:*` → only `core:domain`, `core:ui`, `core:designsystem`, `core:model`, `core:common`.
@@ -189,15 +189,18 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
    `state` validated, HTTPS **verified App Link** redirect.
 4. Tokens are stored **only** through `TokenStore` (Tink AES-256-GCM, keyset wrapped by an
    Android Keystore key). Do not use `EncryptedSharedPreferences` (deprecated) or plain prefs.
-5. The bearer token is attached **only** to the Spotify API host (`AllowedApiHost`); images use
-   `@PublicHttpClient`. Token refresh goes through `TokenRefreshCoordinator` (single flight).
+5. The bearer token is attached **only** to the Spotify API host and to the configured MusicMania
+   API host (`@CloudHttpClient`, its own `AllowedApiHost`; none when `MUSICMANIA_API_URL` is empty);
+   images use `@PublicHttpClient`. Token refresh goes through `TokenRefreshCoordinator` (single flight).
 6. Backups exclude the token store and the Tink keyset (`data_extraction_rules.xml`, `backup_rules.xml`).
    If you rename those files, update the rules.
 7. Network: HTTPS only (`network_security_config.xml`). No certificate pinning (documented decision).
 8. Treat imported files as **untrusted input**: SAF only, streamed parsing, size/entry limits
    (`ImportLimits`), never extract to disk, never store IP/location fields from the export.
 9. Sign-out wipes tokens **and** local data. Keep it that way.
-10. New dependencies require justification in the PR (licence must be GPL-3.0 compatible,
+10. Only **aggregates** (`SharedPeriodStats`) ever leave the device, and only after the user opts in
+    (sharing is off by default, never from demo mode). Raw play history is never uploaded.
+11. New dependencies require justification in the PR (licence must be GPL-3.0 compatible,
     actively maintained). Prefer the platform/AndroidX.
 
 ## 8. Testing strategy
