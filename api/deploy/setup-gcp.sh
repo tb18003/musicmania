@@ -106,7 +106,18 @@ step "Building and pushing the image (Docker in Cloud Shell)"
 TAG="${IMAGE}:initial-$(date +%Y%m%d%H%M%S)"
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 docker build --tag "${TAG}" api
-docker push "${TAG}"
+# Cloud Shell's network to the registry is occasionally flaky: retry, then fall back to Cloud Build.
+pushed=false
+for attempt in 1 2 3; do
+  if docker push "${TAG}"; then pushed=true; break; fi
+  echo "Push attempt ${attempt} failed; retrying in $((attempt * 10)) s..."
+  sleep $((attempt * 10))
+done
+if [[ "${pushed}" != true ]]; then
+  step "Docker push keeps failing: building with Cloud Build instead"
+  gcloud services enable cloudbuild.googleapis.com
+  gcloud builds submit api --tag "${TAG}"
+fi
 
 step "Deploying to Cloud Run"
 DATABASE_URL="jdbc:postgresql://${SUPABASE_POOLER_HOST}:5432/postgres?sslmode=verify-full&sslrootcert=/secrets/supabase/ca.crt"
