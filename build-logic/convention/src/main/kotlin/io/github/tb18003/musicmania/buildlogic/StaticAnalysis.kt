@@ -24,8 +24,9 @@ internal fun Project.configureStaticAnalysis() {
     extensions.configure<SpotlessExtension> {
         val ktlintVersion = libs.version("ktlint")
         kotlin {
-            target("src/**/*.kt")
-            targetExclude("**/build/**")
+            // A tree rooted at src/: a "src/**" pattern makes Gradle walk the whole module,
+            // build/ included, which parallel tasks rewrite ("Could not read path …/build/…").
+            target(fileTree("src") { include("**/*.kt") })
             // Rules are configured in the root .editorconfig.
             ktlint(ktlintVersion).setEditorConfigPath(rootProject.file(".editorconfig"))
             licenseHeaderFile(rootProject.file("spotless/copyright.kt"))
