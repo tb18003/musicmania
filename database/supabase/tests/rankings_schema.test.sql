@@ -105,12 +105,16 @@ exception when others then
     null; -- already a member, or a superuser
 end
 $$;
+-- pgTAP lives in the `extensions` schema, which the API role cannot see, so the statement runs
+-- as the API role and the assertion runs after switching back. A privilege error would abort.
 set local role musicmania_api;
-select lives_ok(
-    $$update musicmania.stat_periods set minutes = 501 where spotify_user_id = 't_one'$$,
+update musicmania.stat_periods set minutes = 501 where spotify_user_id = 't_one';
+reset role;
+select is(
+    (select minutes from musicmania.stat_periods where spotify_user_id = 't_one'),
+    501,
     'API role can update stats (row-level security policies allow it)'
 );
-reset role;
 
 -- ---------------------------------------------------------------- cascade
 delete from musicmania.allowlist where spotify_user_id = 't_one';
