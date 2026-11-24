@@ -9,6 +9,8 @@ package io.github.tb18003.musicmania.feature.detail.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import io.github.tb18003.musicmania.core.designsystem.theme.ProvideEntranceOnce
 import io.github.tb18003.musicmania.core.ui.ProvideNavAnimatedScope
 import io.github.tb18003.musicmania.feature.detail.DetailKind
 import io.github.tb18003.musicmania.feature.detail.DetailRoute
@@ -37,5 +39,11 @@ fun NavController.navigateToAlbum(id: String?, name: String, artist: String, ima
     navigate(DetailDestination(DetailKind.ALBUM.key, id, name, artist, imageUrl))
 
 fun NavGraphBuilder.detailScreen(onBack: () -> Unit) {
-    composable<DetailDestination> { ProvideNavAnimatedScope { DetailRoute(onBack) } }
+    composable<DetailDestination> { entry ->
+        // Keyed per item: each track/artist/album animates the first time it is opened in the session.
+        val destination = entry.toRoute<DetailDestination>()
+        ProvideEntranceOnce("detail|${destination.kind}|${destination.id ?: destination.name}") {
+            ProvideNavAnimatedScope { DetailRoute(onBack) }
+        }
+    }
 }

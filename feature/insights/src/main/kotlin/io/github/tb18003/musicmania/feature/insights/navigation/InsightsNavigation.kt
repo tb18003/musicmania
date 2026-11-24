@@ -8,6 +8,7 @@ package io.github.tb18003.musicmania.feature.insights.navigation
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import io.github.tb18003.musicmania.core.designsystem.theme.ProvideEntranceOnce
 import io.github.tb18003.musicmania.feature.insights.InsightsRoute
 import kotlinx.serialization.Serializable
 
@@ -15,5 +16,5 @@ import kotlinx.serialization.Serializable
 data object InsightsDestination
 
 fun NavGraphBuilder.insightsScreen(onImport: () -> Unit) {
-    composable<InsightsDestination> { InsightsRoute(onImport) }
+    composable<InsightsDestination> { ProvideEntranceOnce("insights") { InsightsRoute(onImport) } }
 }

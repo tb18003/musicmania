@@ -29,6 +29,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -41,7 +42,9 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import io.github.tb18003.musicmania.core.designsystem.theme.LocalEntranceRegistry
 import io.github.tb18003.musicmania.core.designsystem.theme.Motion
+import io.github.tb18003.musicmania.core.designsystem.theme.rememberEntranceRegistry
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.feature.auth.AuthRoute
 import io.github.tb18003.musicmania.navigation.MusicManiaNavHost
@@ -51,6 +54,14 @@ import io.github.tb18003.musicmania.navigation.navigateToTopLevel
 /** Root composable: switches between onboarding and the main app with a cross-fade. */
 @Composable
 fun MusicManiaApp(session: SessionState) {
+    // Remembers which screens already played their entrance animation in this session.
+    CompositionLocalProvider(LocalEntranceRegistry provides rememberEntranceRegistry()) {
+        MusicManiaStages(session)
+    }
+}
+
+@Composable
+private fun MusicManiaStages(session: SessionState) {
     AnimatedContent(
         // Exposes test tags to UiAutomator (baseline profile generator, macrobenchmarks).
         modifier = Modifier.semantics { testTagsAsResourceId = true },
