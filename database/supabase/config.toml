@@ -1,0 +1,22 @@
+# Supabase CLI configuration for local development and CI (`supabase db start`, `supabase test db`).
+# Production settings are managed in the Supabase dashboard; never put secrets in this file.
+project_id = "musicmania"
+
+[api]
+enabled = true
+port = 54321
+# The `musicmania` schema is deliberately NOT listed: it must never be reachable through the
+# Data API (PostgREST). Only the MusicMania API, with its own database role, reads it.
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.seed]
+# Fictional users for local development only (`supabase db push --remote` never seeds).
+enabled = true
+sql_paths = ["./seed.sql"]
