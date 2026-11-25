@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { GetItemDetail } from '$lib/domain/detail'
 import { GetInsights } from '$lib/domain/insights'
 import { GetLeaderboard, PublishListeningStats } from '$lib/domain/leaderboard'
 import type {
@@ -35,6 +36,7 @@ export interface Container {
   sync: HistorySync
   top: GetTopItems
   insights: GetInsights
+  detail: GetItemDetail
   importer: StreamingHistoryImporter
   cloud: CloudRepository
   leaderboard: GetLeaderboard
@@ -71,6 +73,7 @@ export function createContainer(): Container {
     sync: new HistorySync({ remote, history, appState: new DexieAppStateRepository(db), now }),
     top: new GetTopItems({ top: new CachedTopItemsRepository(db, remote, now), history, now }),
     insights: new GetInsights({ history, now }),
+    detail: new GetItemDetail({ history, remote, now }),
     importer: new WorkerStreamingHistoryImporter(),
     cloud,
     leaderboard: new GetLeaderboard({ cloud, now }),

@@ -15,6 +15,7 @@ import type {
 } from '$lib/model/leaderboard'
 import { dedupeKeyOf } from '$lib/domain/stats'
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
+import type { ArtistInfo } from '$lib/model/detail'
 import type { ApiTimeRange, TopArtist, TopTrack } from '$lib/model/top'
 import { success, type AppError, type DataResult } from '$lib/model/result'
 
@@ -81,6 +82,8 @@ export class FakeSpotifyRemote implements SpotifyRemote {
   readonly tracks: Partial<Record<ApiTimeRange, DataResult<TopTrack[]>[]>> = {}
   readonly artists: Partial<Record<ApiTimeRange, DataResult<TopArtist[]>[]>> = {}
   readonly topCalls: string[] = []
+  readonly artistInfo: Map<string, ArtistInfo> = new Map()
+  readonly artistCalls: string[] = []
 
   me = async () => this.profile
   nowPlaying = async () => this.playing
@@ -88,6 +91,12 @@ export class FakeSpotifyRemote implements SpotifyRemote {
   async topTracks(range: ApiTimeRange): Promise<DataResult<TopTrack[]>> {
     this.topCalls.push(`tracks:${range}`)
     return this.tracks[range]?.shift() ?? success([])
+  }
+
+  async artist(id: string): Promise<DataResult<ArtistInfo>> {
+    this.artistCalls.push(id)
+    const info = this.artistInfo.get(id)
+    return info ? success(info) : { ok: false, error: { kind: 'notFound' } }
   }
 
   async topArtists(range: ApiTimeRange): Promise<DataResult<TopArtist[]>> {

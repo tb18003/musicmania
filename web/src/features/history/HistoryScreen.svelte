@@ -10,6 +10,7 @@
   import ScreenHeader from '$lib/ui/components/ScreenHeader.svelte'
   import { useUi } from '$lib/ui/context'
   import { formatDay, formatTime } from '$lib/ui/format'
+  import { detailHref } from '$lib/ui/links'
   import type { HistoryState } from './HistoryViewModel.svelte'
 
   interface Props {
@@ -43,12 +44,23 @@
       <ul>
         {#each day.plays as play (play.playedAt + play.trackName)}
           <li>
-            <Artwork imageUrl={play.imageUrl} title={play.trackName} size={44} />
-            <div class="text">
-              <strong>{play.trackName}</strong>
-              <span>{play.artistName}</span>
-            </div>
-            <time datetime={new Date(play.playedAt).toISOString()}>{formatTime(play.playedAt, ui.locale)}</time>
+            <a
+              class="row"
+              href={detailHref({
+                kind: 'track',
+                name: play.trackName,
+                artist: play.artistName,
+                id: play.trackId,
+                imageUrl: play.imageUrl,
+              })}
+            >
+              <Artwork imageUrl={play.imageUrl} title={play.trackName} size={44} />
+              <div class="text">
+                <strong>{play.trackName}</strong>
+                <span>{play.artistName}</span>
+              </div>
+              <time datetime={new Date(play.playedAt).toISOString()}>{formatTime(play.playedAt, ui.locale)}</time>
+            </a>
           </li>
         {/each}
       </ul>
@@ -80,11 +92,13 @@
     flex-direction: column;
     gap: var(--space-2);
   }
-  li {
+  .row {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     min-height: var(--touch);
+    color: inherit;
+    text-decoration: none;
   }
   .text {
     flex: 1;

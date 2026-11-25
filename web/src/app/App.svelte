@@ -5,6 +5,8 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte'
+  import DetailScreen from '$features/detail/DetailScreen.svelte'
+  import { DetailViewModel } from '$features/detail/DetailViewModel.svelte'
   import HistoryScreen from '$features/history/HistoryScreen.svelte'
   import { HistoryViewModel } from '$features/history/HistoryViewModel.svelte'
   import HomeScreen from '$features/home/HomeScreen.svelte'
@@ -24,6 +26,7 @@
   import type { AppError } from '$lib/model/result'
   import BottomNav from '$lib/ui/components/BottomNav.svelte'
   import { provideUi } from '$lib/ui/context'
+  import { detailHref, detailTarget } from '$lib/ui/links'
   import type { MessageKey } from '$lib/ui/i18n/en'
   import type { InstallPlatform } from '$lib/ui/platform'
   import { applyToDocument, type Preferences } from '$lib/ui/preferences.svelte'
@@ -58,6 +61,7 @@
     sync,
     top,
     insights,
+    detail,
     importer,
     cloud,
     leaderboard,
@@ -70,6 +74,8 @@
   const historyVm = new HistoryViewModel(history)
   const topVm = new TopViewModel(top)
   const insightsVm = new InsightsViewModel(insights)
+  const detailVm = new DetailViewModel(detail)
+  let openedDetail = ''
   let insightsLoaded = false
   const rankingVm = new LeaderboardViewModel({ cloud, leaderboard, publish, spotifyUserId })
   const cloudSettingsVm = new CloudSettingsViewModel({ cloud, publish, spotifyUserId })
@@ -82,6 +88,21 @@
     void historyVm.refresh()
     if (topLoaded) void topVm.load()
     if (insightsLoaded) void insightsVm.load()
+  })
+
+  // The detail screen opens whatever the (validated) link says; a broken link goes home.
+  $effect(() => {
+    if (session !== 'signedIn' || router.current !== '/detail') return
+    const target = detailTarget(router.params)
+    if (!target) {
+      router.navigate('/')
+      return
+    }
+    const key = detailHref(target)
+    if (key !== openedDetail) {
+      openedDetail = key
+      void detailVm.open(target)
+    }
   })
 
   // Screens that call Spotify or the API load the first time they are opened.
@@ -197,7 +218,7 @@
       : []),
   ])
   const currentTab = $derived<Tab | null>(
-    router.current === '/settings'
+    router.current === '/settings' || router.current === '/detail'
       ? null
       : router.current === '/top' ||
           router.current === '/ranking' ||
@@ -246,6 +267,8 @@
       onretry={() => rankingVm.load()}
       oncopy={copy}
     />
+  {:else if router.current === '/detail'}
+    <DetailScreen state={detailVm.state} onback={() => router.back()} />
   {:else if router.current === '/insights'}
     <InsightsScreen
       state={insightsVm.state}
