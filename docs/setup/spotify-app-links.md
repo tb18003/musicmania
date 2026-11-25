@@ -17,8 +17,13 @@ The file `/.well-known/assetlinks.json` must be served from the **root** of the 
 
 A *project* GitHub Pages site (`<you>.github.io/musicmania`) cannot serve the root file by
 itself — use the user site repository for the `.well-known` folder.
-Do not enable GitHub Pages on the `musicmania` repository itself while the callback lives at
-`<you>.github.io/musicmania/…`: a project site takes over that path and would shadow the callback page.
+
+The `musicmania` repository publishes the **web client** as a project site
+(see [web-deploy.md](web-deploy.md)), which takes over every `<you>.github.io/musicmania/…` path.
+That is fine: the web build ships the same fallback page at `/musicmania/callback`
+(`web/public/callback.html`), so the redirect URL keeps working, and `assetlinks.json` stays on the
+user site at the root. Keep the two copies of the fallback page identical; the web client signs in
+through its own redirect (`/musicmania/auth/callback`).
 
 ## 2. Get your signing certificate fingerprint(s)
 

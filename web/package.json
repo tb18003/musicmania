@@ -1,0 +1,56 @@
+{
+  "name": "musicmania-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MusicMania for the web: an installable PWA for iPhone and any modern browser.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "lint": "eslint . && prettier --check . && node scripts/check-license.mjs",
+    "format": "prettier --write . && node scripts/check-license.mjs --fix",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "icons": "node scripts/render-icons.mjs",
+    "api:types": "openapi-typescript ../api/openapi.yaml -o src/lib/data/cloud/schema.d.ts",
+    "api:check": "node scripts/check-api-types.mjs",
+    "verify": "npm run lint && npm run check && npm run api:check && npm test && npm run build && npm run test:e2e"
+  },
+  "dependencies": {
+    "dexie": "4.4.7",
+    "fflate": "0.8.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.1",
+    "@sveltejs/vite-plugin-svelte": "7.3.2",
+    "@testing-library/svelte": "5.4.2",
+    "@types/node": "24.19.3",
+    "@vitest/coverage-v8": "5.1.1",
+    "eslint": "10.15.0",
+    "eslint-plugin-svelte": "3.24.1",
+    "fake-indexeddb": "6.2.8",
+    "globals": "17.14.0",
+    "jsdom": "31.0.1",
+    "openapi-typescript": "7.13.0",
+    "prettier": "3.10.1",
+    "prettier-plugin-svelte": "4.2.0",
+    "svelte": "5.59.1",
+    "svelte-check": "4.7.8",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.74.0",
+    "vite": "8.3.8",
+    "vite-plugin-pwa": "2.0.0",
+    "vitest": "5.1.1"
+  },
+  "overrides": {
+    "glob": "14.0.6"
+  }
+}

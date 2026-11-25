@@ -29,6 +29,7 @@ jobs:
       mobile: ${{ steps.filter.outputs.mobile }}
       database: ${{ steps.filter.outputs.database }}
       api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -43,6 +44,7 @@ jobs:
             echo "mobile=true" >> "$GITHUB_OUTPUT"
             echo "database=true" >> "$GITHUB_OUTPUT"
             echo "api=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           changed=$(git diff --name-only "$BASE_SHA"...HEAD)
@@ -53,6 +55,8 @@ jobs:
           echo "database=$(touched '^(database/|\.github/)')" >> "$GITHUB_OUTPUT"
           # The API tests apply the database migrations, so schema changes re-run them too.
           echo "api=$(touched '^(api/|database/|config/|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
+          # The web client's types are generated from the API contract, so openapi.yaml changes re-run it.
+          echo "web=$(touched '^(web/|api/openapi\.yaml$|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
 
   secrets-scan:
     name: Secret scanning
@@ -298,6 +302,51 @@ jobs:
             api/build/reports/detekt/
           retention-days: 7
 
+  # ---------------------------------------------------------------- web
+
+  web-checks:
+    name: Web · Lint, types, tests and build
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: ESLint (layer rules), Prettier and licence headers
+        run: npm run lint
+      - name: Type check (svelte-check)
+        run: npm run check
+      - name: API types match api/openapi.yaml
+        run: npm run api:check
+      - name: Unit and component tests with coverage
+        run: npm test
+      - name: Production build
+        run: npm run build
+      # Safari's engine: what iPhone users actually run.
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+      - name: End-to-end tests (WebKit, iPhone 15)
+        run: npm run test:e2e
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-reports
+          path: |
+            web/coverage/
+            web/playwright-report/
+          retention-days: 7
+
   # ---------------------------------------------------------------- gate
 
   # The only check the branch rules need to require: it fails if any job failed or was
@@ -315,6 +364,7 @@ jobs:
       - mobile-instrumented
       - database-tests
       - api-checks
+      - web-checks
     runs-on: ubuntu-latest
     steps:
       - name: All jobs passed or were skipped
