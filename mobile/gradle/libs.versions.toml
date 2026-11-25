@@ -31,7 +31,7 @@ androidxTestServices = "1.6.0"
 androidxBenchmark = "1.5.0"
 androidxUiAutomator = "2.4.1"
 androidxProfileInstaller = "1.4.1"
-composeBom = "2025.12.00"
+composeBom = "2026.11.01"
 # DI
 hilt = "2.60.1"
 # Kotlin libs
