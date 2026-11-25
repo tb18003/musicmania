@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import type { ArtistInfo } from '$lib/model/detail'
 import type {
   CloudProfile,
   FriendStats,
@@ -49,6 +50,8 @@ export interface SpotifyRemote {
   nowPlaying(): Promise<DataResult<NowPlaying | null>>
   topTracks(range: ApiTimeRange): Promise<DataResult<TopTrack[]>>
   topArtists(range: ApiTimeRange): Promise<DataResult<TopArtist[]>>
+  /** Genres and picture of one artist (`GET /v1/artists/{id}`; batch endpoints are gone for Dev Mode). */
+  artist(id: string): Promise<DataResult<ArtistInfo>>
 }
 
 /** What a cached read returns: the best list we have, and why it may be old. */

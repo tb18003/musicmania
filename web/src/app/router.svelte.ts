@@ -4,15 +4,9 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-/** Every destination, like the @Serializable routes in MusicManiaNavHost. */
-export const ROUTES = ['/', '/top', '/ranking', '/history', '/insights', '/import', '/install', '/settings'] as const
-export type Route = (typeof ROUTES)[number]
+import { parseHash, type Route } from './location'
 
-/** "#/settings" → "/settings". Anything unknown (or tampered with) goes home. */
-export function parseHash(hash: string): Route {
-  const path = hash.replace(/^#/, '') || '/'
-  return (ROUTES as readonly string[]).includes(path) ? (path as Route) : '/'
-}
+export { parseHash, ROUTES, type Location, type Route } from './location'
 
 /**
  * Hash routing: GitHub Pages serves a single index.html, so there are no 404s to work around
@@ -20,15 +14,22 @@ export function parseHash(hash: string): Route {
  */
 export class Router {
   current = $state<Route>('/')
+  params = $state<Readonly<Record<string, string>>>({})
   readonly #win: Window
 
   constructor(win: Window) {
     this.#win = win
-    this.current = parseHash(win.location.hash)
+    this.#read()
     win.addEventListener('hashchange', () => {
-      this.current = parseHash(win.location.hash)
+      this.#read()
       win.scrollTo(0, 0)
     })
+  }
+
+  #read() {
+    const { path, params } = parseHash(this.#win.location.hash)
+    this.current = path
+    this.params = params
   }
 
   navigate(route: Route) {

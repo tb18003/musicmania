@@ -22,6 +22,7 @@ const row = (rank: number, title: string, movement: TopState['rows'][number]['ra
   subtitle: 'Coral Echo',
   imageUrl: null,
   ranked: { rank, item: null, movement, streams: null, listenedMs: null },
+  detail: { kind: 'track' as const, name: title, artist: 'Coral Echo', id: null, imageUrl: null },
 })
 
 const state = (overrides: Partial<TopState> = {}): TopState => ({
