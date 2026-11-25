@@ -12,6 +12,13 @@ const CORS = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 }
 
+export interface CloudMock {
+  sharing: boolean
+  /** Bodies of PUT /v1/me/stats. */
+  uploads: unknown[]
+  deleted: boolean
+}
+
 export interface SpotifyMock {
   /** Bearer tokens seen by api.spotify.com. */
   bearers: string[]
@@ -19,6 +26,8 @@ export interface SpotifyMock {
   tokenRequests: URLSearchParams[]
   /** Hosts that received an Authorization header. */
   authorizedHosts: Set<string>
+  /** The fake MusicMania API. */
+  cloud: CloudMock
 }
 
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString()
@@ -43,7 +52,12 @@ export async function signIn(page: Page) {
 
 /** A fake Spotify (accounts + Web API) good enough for the whole sign-in and sync flow. */
 export async function mockSpotify(page: Page): Promise<SpotifyMock> {
-  const mock: SpotifyMock = { bearers: [], tokenRequests: [], authorizedHosts: new Set() }
+  const mock: SpotifyMock = {
+    bearers: [],
+    tokenRequests: [],
+    authorizedHosts: new Set(),
+    cloud: { sharing: false, uploads: [], deleted: false },
+  }
 
   await page.route('**/*', async (route: Route) => {
     const request = route.request()
@@ -52,8 +66,11 @@ export async function mockSpotify(page: Page): Promise<SpotifyMock> {
     if (authorization) mock.authorizedHosts.add(url.host)
     // The app under test is served locally; nothing else may leave the machine.
     if (url.hostname === '127.0.0.1' || url.protocol === 'blob:' || url.protocol === 'data:') return route.continue()
-    if (url.host !== 'accounts.spotify.com' && url.host !== 'api.spotify.com') return route.abort()
+    const hosts = ['accounts.spotify.com', 'api.spotify.com', 'api.musicmania.test']
+    if (!hosts.includes(url.host)) return route.abort()
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS })
+    if (url.host === 'api.musicmania.test')
+      return fakeCloud(route, url, request.method(), request.postData(), mock.cloud)
 
     if (url.host === 'accounts.spotify.com' && url.pathname === '/authorize') {
       const back = new URL(url.searchParams.get('redirect_uri') ?? '')
@@ -113,4 +130,50 @@ export async function mockSpotify(page: Page): Promise<SpotifyMock> {
     return route.fulfill({ status: 404, headers: CORS })
   })
   return mock
+}
+
+const FRIEND = {
+  spotifyUserId: 'ana',
+  displayName: 'Ana',
+  kind: 'week',
+  start: '2026-11-23',
+  minutes: 1_510,
+  streams: 520,
+  uniqueArtists: 33,
+  uniqueTracks: 200,
+  currentStreak: 30,
+  longestStreak: 41,
+  topArtists: [{ name: 'Friend Favourite' }],
+  topTracks: [{ name: 'Friend Anthem' }],
+}
+
+/** The MusicMania API for one signed-in user, with one friend who shares. */
+function fakeCloud(route: Route, url: URL, method: string, body: string | null, cloud: CloudMock) {
+  const me = () => ({ spotifyUserId: 'e2e', displayName: 'E2E Tester', role: 'member', sharingEnabled: cloud.sharing })
+  const ok = (json: unknown) => route.fulfill({ headers: CORS, json })
+  const empty = () => route.fulfill({ status: 204, headers: CORS })
+  switch (`${method} ${url.pathname}`) {
+    case 'GET /v1/me':
+      return ok(me())
+    case 'PUT /v1/me/settings':
+      cloud.sharing = (JSON.parse(body ?? '{}') as { sharingEnabled: boolean }).sharingEnabled
+      return ok(me())
+    case 'PUT /v1/me/stats':
+      cloud.uploads.push(JSON.parse(body ?? 'null'))
+      return empty()
+    case 'DELETE /v1/me':
+      cloud.sharing = false
+      cloud.deleted = true
+      return empty()
+    case 'GET /v1/leaderboards': {
+      const entries = [{ rank: 1, spotifyUserId: 'ana', displayName: 'Ana', value: 1_510, isMe: false }]
+      if (cloud.sharing && cloud.uploads.length > 0)
+        entries.push({ rank: 2, spotifyUserId: 'e2e', displayName: 'E2E Tester', value: 10, isMe: true })
+      return ok({ metric: url.searchParams.get('metric'), period: url.searchParams.get('period'), entries })
+    }
+    case 'GET /v1/users/ana/stats':
+      return ok(FRIEND)
+    default:
+      return route.fulfill({ status: 404, headers: CORS })
+  }
 }

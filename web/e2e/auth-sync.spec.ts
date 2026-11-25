@@ -36,8 +36,8 @@ test('sign in with Spotify (PKCE), sync the last plays and see them, then sign o
   await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
   await expect(page.getByText('Night Drive')).toBeVisible()
 
-  // The bearer token went to Spotify's API only.
-  expect([...spotify.authorizedHosts]).toEqual(['api.spotify.com'])
+  // The bearer token only ever went to Spotify's API and the configured MusicMania API.
+  expect([...spotify.authorizedHosts].sort()).toEqual(['api.musicmania.test', 'api.spotify.com'])
   expect(spotify.bearers.every((bearer) => bearer === 'Bearer e2e-access')).toBe(true)
 
   // The refresh token is encrypted in IndexedDB; nothing sensitive in localStorage.

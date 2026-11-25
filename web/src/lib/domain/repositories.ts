@@ -4,6 +4,14 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import type {
+  CloudProfile,
+  FriendStats,
+  LeaderboardEntry,
+  LeaderboardMetric,
+  LeaderboardPeriod,
+  SharedPeriodStats,
+} from '$lib/model/leaderboard'
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
 import type { AppError, DataResult } from '$lib/model/result'
 import type { ApiTimeRange, ImportProgress, TopArtist, TopList, TopTrack } from '$lib/model/top'
@@ -72,6 +80,21 @@ export interface AuthRepository {
   /** Handles the redirect back from Spotify (validates state, exchanges the code). */
   completeLogin(callbackUrl: string): Promise<DataResult<void>>
   isSignedIn(): Promise<boolean>
+}
+
+/** The MusicMania API (friends ranking). Disabled, and never touching the network, without a URL. */
+export interface CloudRepository {
+  readonly enabled: boolean
+  me(): Promise<DataResult<CloudProfile>>
+  setSharing(enabled: boolean): Promise<DataResult<CloudProfile>>
+  publish(stats: readonly SharedPeriodStats[]): Promise<DataResult<void>>
+  leaderboard(
+    metric: LeaderboardMetric,
+    period: LeaderboardPeriod,
+    start: string,
+  ): Promise<DataResult<LeaderboardEntry[]>>
+  friendStats(spotifyUserId: string, period: LeaderboardPeriod, start: string): Promise<DataResult<FriendStats>>
+  deleteMyData(): Promise<DataResult<void>>
 }
 
 export interface SessionRepository {

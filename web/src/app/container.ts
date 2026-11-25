@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { GetLeaderboard, PublishListeningStats } from '$lib/domain/leaderboard'
 import type {
   AuthRepository,
+  CloudRepository,
   HistoryRepository,
   SessionRepository,
   SpotifyRemote,
@@ -13,6 +15,7 @@ import type {
 } from '$lib/domain/repositories'
 import { HistorySync } from '$lib/domain/sync'
 import { GetTopItems } from '$lib/domain/top'
+import { MusicManiaCloudClient } from '$lib/data/cloud/client'
 import { spotifyConfigFrom } from '$lib/data/config'
 import { MusicManiaDatabase } from '$lib/data/db/database'
 import { DexieAppStateRepository, DexieHistoryRepository } from '$lib/data/db/repositories'
@@ -31,6 +34,11 @@ export interface Container {
   sync: HistorySync
   top: GetTopItems
   importer: StreamingHistoryImporter
+  cloud: CloudRepository
+  leaderboard: GetLeaderboard
+  publish: PublishListeningStats
+  /** My Spotify user ID (asked once per session). */
+  spotifyUserId: () => Promise<string | null>
   session: SessionRepository
   now: () => number
 }
@@ -50,6 +58,10 @@ export function createContainer(): Container {
   const remote = new SpotifyApiClient(auth, (...args) => fetch(...args))
   const history = new DexieHistoryRepository(db)
   const now = () => Date.now()
+  const cloud = new MusicManiaCloudClient(import.meta.env.VITE_MUSICMANIA_API_URL || null, auth, (...args) =>
+    fetch(...args),
+  )
+  let myId: Promise<string | null> | null = null
   return {
     auth,
     remote,
@@ -57,6 +69,10 @@ export function createContainer(): Container {
     sync: new HistorySync({ remote, history, appState: new DexieAppStateRepository(db), now }),
     top: new GetTopItems({ top: new CachedTopItemsRepository(db, remote, now), history, now }),
     importer: new WorkerStreamingHistoryImporter(),
+    cloud,
+    leaderboard: new GetLeaderboard({ cloud, now }),
+    publish: new PublishListeningStats({ cloud, history, now }),
+    spotifyUserId: () => (myId ??= remote.me().then((me) => (me.ok ? me.data.id : null))),
     session: new DefaultSessionRepository(db, () => auth.forget()),
     now,
   }

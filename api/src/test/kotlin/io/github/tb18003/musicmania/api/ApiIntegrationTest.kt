@@ -13,11 +13,14 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.options
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -101,12 +104,12 @@ class ApiIntegrationTest {
         postgres.postgresDatabase.connection.use { c -> c.createStatement().use { it.execute(sql) } }
     }
 
-    private fun api(test: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
+    private fun api(corsOrigins: List<String> = emptyList(), test: suspend ApplicationTestBuilder.(HttpClient) -> Unit) = testApplication {
         val config = AppConfig(
             port = 0,
             database = DatabaseConfig("unused", "unused", "unused"),
             spotifyApiBaseUrl = spotify.url("/").toString().trimEnd('/'),
-            corsOrigins = emptyList(),
+            corsOrigins = corsOrigins,
         )
         application { musicManiaApi(Dependencies.create(config, database, clock)) }
         test(client)
@@ -247,6 +250,44 @@ class ApiIntegrationTest {
 
         val metric = client.get("/v1/leaderboards?metric=followers") { bearerAuth("token-ana") }
         assertEquals("invalid_metric", metric.json()["code"]?.jsonPrimitive?.content)
+    }
+
+    // ---------------------------------------------------------------- browser clients (CORS)
+
+    @Test
+    fun `the web app's origin may call the API from the browser, any other origin may not`() =
+        api(corsOrigins = listOf("https://tb18003.github.io")) { client ->
+            val preflight = client.options("/v1/me/stats") {
+                header(HttpHeaders.Origin, "https://tb18003.github.io")
+                header(HttpHeaders.AccessControlRequestMethod, "PUT")
+                header(HttpHeaders.AccessControlRequestHeaders, "authorization,content-type")
+            }
+            assertEquals(HttpStatusCode.OK, preflight.status)
+            assertEquals("https://tb18003.github.io", preflight.headers[HttpHeaders.AccessControlAllowOrigin])
+            val allowed = preflight.headers[HttpHeaders.AccessControlAllowHeaders].orEmpty().lowercase()
+            assertTrue("authorization" in allowed && "content-type" in allowed)
+
+            val actual = client.get("/v1/me") {
+                header(HttpHeaders.Origin, "https://tb18003.github.io")
+                bearerAuth("token-ana")
+            }
+            assertEquals(HttpStatusCode.OK, actual.status)
+            assertEquals("https://tb18003.github.io", actual.headers[HttpHeaders.AccessControlAllowOrigin])
+
+            val stranger = client.options("/v1/me") {
+                header(HttpHeaders.Origin, "https://evil.example")
+                header(HttpHeaders.AccessControlRequestMethod, "GET")
+            }
+            assertEquals(null, stranger.headers[HttpHeaders.AccessControlAllowOrigin])
+        }
+
+    @Test
+    fun `without CORS_ORIGINS no browser origin is allowed`() = api { client ->
+        val response = client.get("/v1/me") {
+            header(HttpHeaders.Origin, "https://tb18003.github.io")
+            bearerAuth("token-ana")
+        }
+        assertEquals(null, response.headers[HttpHeaders.AccessControlAllowOrigin])
     }
 
     @Test

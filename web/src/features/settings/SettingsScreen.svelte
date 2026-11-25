@@ -10,6 +10,8 @@
   import SegmentedControl from '$lib/ui/components/SegmentedControl.svelte'
   import { useUi } from '$lib/ui/context'
   import { entrances } from '$lib/ui/motion'
+  import Notice from '$lib/ui/components/Notice.svelte'
+  import type { CloudSettingsState } from './CloudSettingsViewModel.svelte'
   import type { LanguagePreference, MotionPreference, ThemePreference } from '$lib/ui/preferences.svelte'
 
   interface Props {
@@ -21,12 +23,32 @@
     onsignout?: () => void
     onimport?: () => void
     onexport?: () => void
+    /** The ranking section; null when the ranking is not configured (or signed out). */
+    cloud?: CloudSettingsState | null
+    onsharing?: (enabled: boolean) => void
+    ondeletecloud?: () => void
+    oncopy?: (text: string) => Promise<boolean>
   }
 
-  let { version, account, onback, onsignout, onimport, onexport }: Props = $props()
+  let {
+    version,
+    account,
+    onback,
+    onsignout,
+    onimport,
+    onexport,
+    cloud = null,
+    onsharing,
+    ondeletecloud,
+    oncopy,
+  }: Props = $props()
 
   const ui = useUi()
   const play = !ui.reduceMotion && entrances.shouldPlay('settings')
+
+  function deleteCloud() {
+    if (window.confirm(ui.t('settings_cloud_delete_confirm'))) ondeletecloud?.()
+  }
 
   function signOut() {
     // Destructive and irreversible: always confirm (native dialog, accessible everywhere).
@@ -60,6 +82,43 @@
         {/if}
         <Button variant="tonal" onclick={signOut}>{ui.t('settings_sign_out')}</Button>
       </Card>
+      {#if cloud?.loaded}
+        <Card title={ui.t('settings_cloud')} {play} index={0}>
+          {#if cloud.notAllowlisted}
+            <p>{ui.t('settings_cloud_not_allowlisted')}</p>
+          {:else}
+            <label class="switch">
+              <span>
+                <strong>{ui.t('settings_cloud_sharing')}</strong>
+                <small>{ui.t('settings_cloud_sharing_body')}</small>
+              </span>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={cloud.sharingEnabled}
+                disabled={cloud.busy}
+                onchange={(event) => onsharing?.(event.currentTarget.checked)}
+              />
+            </label>
+          {/if}
+          {#if cloud.spotifyUserId}
+            <p class="id">
+              {ui.t('settings_cloud_spotify_id', { id: cloud.spotifyUserId })}
+              <Button variant="text" onclick={() => cloud.spotifyUserId && oncopy?.(cloud.spotifyUserId)}>
+                {ui.t('ranking_copy_id')}
+              </Button>
+            </p>
+          {/if}
+          {#if !cloud.notAllowlisted}
+            <Button variant="tonal" disabled={cloud.busy} onclick={deleteCloud}>{ui.t('settings_cloud_delete')}</Button>
+          {/if}
+          {#if cloud.message}
+            <div class="message">
+              <Notice tone={cloud.message === 'settings_cloud_failed' ? 'error' : 'info'}>{ui.t(cloud.message)}</Notice>
+            </div>
+          {/if}
+        </Card>
+      {/if}
       <Card title={ui.t('settings_data')} {play} index={0}>
         <div class="buttons">
           <Button variant="tonal" onclick={() => onimport?.()}>{ui.t('settings_import')}</Button>
@@ -103,6 +162,64 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+  .switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: var(--touch);
+    margin-bottom: var(--space-3);
+    cursor: pointer;
+  }
+  .switch span {
+    display: flex;
+    flex-direction: column;
+  }
+  .switch small {
+    color: var(--on-surface-variant);
+    font-size: 0.85rem;
+  }
+  .switch input {
+    flex: none;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 52px;
+    height: 32px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--surface-highest);
+    position: relative;
+    cursor: pointer;
+    transition: background var(--duration-short);
+  }
+  .switch input::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--on-surface-variant);
+    transition: transform var(--duration-short) var(--easing-emphasized);
+  }
+  .switch input:checked {
+    background: var(--primary);
+  }
+  .switch input:checked::after {
+    transform: translateX(20px);
+    background: var(--on-primary);
+  }
+  .id {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    word-break: break-all;
+  }
+  .message {
+    margin-top: var(--space-3);
   }
   .buttons {
     display: flex;

@@ -4,11 +4,19 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import type { AppStateRepository, HistoryRepository, SpotifyRemote } from '$lib/domain/repositories'
+import type { AppStateRepository, CloudRepository, HistoryRepository, SpotifyRemote } from '$lib/domain/repositories'
+import type {
+  CloudProfile,
+  FriendStats,
+  LeaderboardEntry,
+  LeaderboardMetric,
+  LeaderboardPeriod,
+  SharedPeriodStats,
+} from '$lib/model/leaderboard'
 import { dedupeKeyOf } from '$lib/domain/stats'
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
 import type { ApiTimeRange, TopArtist, TopTrack } from '$lib/model/top'
-import { success, type DataResult } from '$lib/model/result'
+import { success, type AppError, type DataResult } from '$lib/model/result'
 
 /** Behavioural in-memory history (dedupes like the real one), like InMemoryHistoryRepository. */
 export class InMemoryHistoryRepository implements HistoryRepository {
@@ -87,4 +95,54 @@ export class FakeSpotifyRemote implements SpotifyRemote {
     this.calls.push(after)
     return this.pages.shift() ?? success({ plays: [], nextAfter: null })
   }
+}
+
+/** In-memory MusicMania API for one user, recording what was sent (like FakeCloudRepository). */
+export class FakeCloudRepository implements CloudRepository {
+  enabled = true
+  profile: CloudProfile = { spotifyUserId: 'me', displayName: 'Me', sharingEnabled: false }
+  /** When set, every call fails with it (e.g. notAllowlisted). */
+  failure: AppError | null = null
+  /** When set, only uploads fail. */
+  publishFailure: AppError | null = null
+  entries: LeaderboardEntry[] = []
+  friends = new Map<string, FriendStats>()
+  readonly published: (readonly SharedPeriodStats[])[] = []
+  readonly leaderboardRequests: [LeaderboardMetric, LeaderboardPeriod, string][] = []
+  deleted = false
+
+  #respond<T>(value: () => T): DataResult<T> {
+    return this.failure ? { ok: false, error: this.failure } : success(value())
+  }
+
+  me = async () => this.#respond(() => this.profile)
+
+  setSharing = async (enabled: boolean) =>
+    this.#respond(() => {
+      this.profile = { ...this.profile, sharingEnabled: enabled }
+      return this.profile
+    })
+
+  publish = async (stats: readonly SharedPeriodStats[]): Promise<DataResult<void>> =>
+    this.publishFailure
+      ? { ok: false, error: this.publishFailure }
+      : this.#respond(() => void this.published.push(stats))
+
+  leaderboard = async (metric: LeaderboardMetric, period: LeaderboardPeriod, start: string) =>
+    this.#respond(() => {
+      this.leaderboardRequests.push([metric, period, start])
+      return this.entries
+    })
+
+  friendStats = async (id: string): Promise<DataResult<FriendStats>> => {
+    if (this.failure) return { ok: false, error: this.failure }
+    const stats = this.friends.get(id)
+    return stats ? success(stats) : { ok: false, error: { kind: 'notFound' } }
+  }
+
+  deleteMyData = async () =>
+    this.#respond(() => {
+      this.deleted = true
+      this.profile = { ...this.profile, sharingEnabled: false }
+    })
 }

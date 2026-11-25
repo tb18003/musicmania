@@ -12,6 +12,9 @@
   import ImportScreen from '$features/importer/ImportScreen.svelte'
   import { ImportViewModel } from '$features/importer/ImportViewModel.svelte'
   import InstallGuide from '$features/install/InstallGuide.svelte'
+  import LeaderboardScreen from '$features/leaderboard/LeaderboardScreen.svelte'
+  import { LeaderboardViewModel } from '$features/leaderboard/LeaderboardViewModel.svelte'
+  import { CloudSettingsViewModel } from '$features/settings/CloudSettingsViewModel.svelte'
   import SettingsScreen from '$features/settings/SettingsScreen.svelte'
   import TopScreen from '$features/top/TopScreen.svelte'
   import { TopViewModel } from '$features/top/TopViewModel.svelte'
@@ -46,11 +49,27 @@
   let now = $state(Date.now())
 
   // svelte-ignore state_referenced_locally
-  const { auth, history, remote, sync, top, importer, session: sessionRepository } = container
+  const {
+    auth,
+    history,
+    remote,
+    sync,
+    top,
+    importer,
+    cloud,
+    leaderboard,
+    publish,
+    spotifyUserId,
+    session: sessionRepository,
+  } = container
   // svelte-ignore state_referenced_locally
   const home = new HomeViewModel({ history, remote, sync, runSync, now: container.now })
   const historyVm = new HistoryViewModel(history)
   const topVm = new TopViewModel(top)
+  const rankingVm = new LeaderboardViewModel({ cloud, leaderboard, publish, spotifyUserId })
+  const cloudSettingsVm = new CloudSettingsViewModel({ cloud, publish, spotifyUserId })
+  let rankingLoaded = false
+  let cloudSettingsLoaded = false
   let topLoaded = false
   // After an import: every screen that reads local history recomputes.
   const importVm = new ImportViewModel(importer, () => {
@@ -59,18 +78,41 @@
     if (topLoaded) void topVm.load()
   })
 
-  // The top lists are loaded the first time the tab is opened (they may call Spotify).
+  // Screens that call Spotify or the API load the first time they are opened.
   $effect(() => {
-    if (session === 'signedIn' && router.current === '/top' && !topLoaded) {
+    if (session !== 'signedIn') return
+    if (router.current === '/top' && !topLoaded) {
       topLoaded = true
       void topVm.load()
     }
+    if (router.current === '/ranking' && !rankingLoaded && cloud.enabled) {
+      rankingLoaded = true
+      void rankingVm.load()
+    }
+    if (router.current === '/settings' && !cloudSettingsLoaded && cloud.enabled) {
+      cloudSettingsLoaded = true
+      void cloudSettingsVm.load()
+    }
   })
+
+  async function copy(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      return false
+    }
+  }
 
   /** Every sync goes through here, so an expired session always lands back on the welcome screen. */
   async function runSync(force: boolean): Promise<AppError | null> {
     const result = await sync.run({ force })
-    if (result.ok) return null
+    if (result.ok) {
+      // Like CloudSyncObserver: fresh plays → fresh aggregates for the ranking, if I share.
+      // Failures are fine to ignore: the next sync publishes again.
+      if (!result.data.skipped && cloud.enabled) void publish.run()
+      return null
+    }
     if (result.error.kind === 'sessionExpired') {
       session = 'signedOut'
       welcomeMessage = 'welcome_session_expired'
@@ -123,10 +165,19 @@
     window.location.reload()
   }
 
-  type Tab = Extract<Route, '/' | '/top' | '/history' | '/settings'>
+  type Tab = Extract<Route, '/' | '/top' | '/ranking' | '/history' | '/settings'>
   const tabs = $derived<{ value: Tab; label: string; icon: string }[]>([
     { value: '/', label: preferences.t('nav_home'), icon: 'M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z' },
     { value: '/top', label: preferences.t('nav_top'), icon: 'M6 20V11M12 20V4M18 20v-6' },
+    ...(cloud.enabled
+      ? [
+          {
+            value: '/ranking' as const,
+            label: preferences.t('nav_ranking'),
+            icon: 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4',
+          },
+        ]
+      : []),
     { value: '/history', label: preferences.t('nav_history'), icon: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z' },
     {
       value: '/settings',
@@ -135,7 +186,12 @@
     },
   ])
   const currentTab = $derived<Tab>(
-    router.current === '/top' || router.current === '/history' || router.current === '/settings' ? router.current : '/',
+    router.current === '/top' ||
+      router.current === '/ranking' ||
+      router.current === '/history' ||
+      router.current === '/settings'
+      ? router.current
+      : '/',
   )
 </script>
 
@@ -167,6 +223,16 @@
       onrefresh={() => topVm.refresh()}
       onimport={() => router.navigate('/import')}
     />
+  {:else if router.current === '/ranking' && cloud.enabled}
+    <LeaderboardScreen
+      state={rankingVm.state}
+      onmetric={(metric) => rankingVm.selectMetric(metric)}
+      onperiod={(period) => rankingVm.selectPeriod(period)}
+      onenablesharing={() => rankingVm.enableSharing()}
+      onfriend={(id) => rankingVm.toggleFriend(id)}
+      onretry={() => rankingVm.load()}
+      oncopy={copy}
+    />
   {:else if router.current === '/import'}
     <ImportScreen state={importVm.state} onfiles={(files) => importVm.start(files)} onback={() => router.back()} />
   {:else if router.current === '/history'}
@@ -178,6 +244,10 @@
       onsignout={signOut}
       onimport={() => router.navigate('/import')}
       onexport={() => exportHistory(history, Date.now())}
+      cloud={cloud.enabled ? cloudSettingsVm.state : null}
+      onsharing={(enabled) => cloudSettingsVm.setSharing(enabled)}
+      ondeletecloud={() => cloudSettingsVm.deleteData()}
+      oncopy={copy}
     />
   {:else}
     <HomeScreen state={home.state} {now} onsync={() => home.syncNow()} onimport={() => router.navigate('/import')} />
