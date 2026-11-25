@@ -122,6 +122,7 @@ It prints the service URL and the values for step 8.
 |---|---|
 | Logs | `gcloud run services logs read musicmania-api --region=europe-southwest1 --limit=50` |
 | Roll back | `gcloud run revisions list --service=musicmania-api --region=europe-southwest1`, then `gcloud run services update-traffic musicmania-api --region=europe-southwest1 --to-revisions=<revision>=100` |
+| Allow the web app (browser calls) | `gcloud run services update musicmania-api --region=europe-southwest1 --update-env-vars=CORS_ORIGINS=https://<owner>.github.io` (comma-separated origins; unset = no browser access). See [web-deploy.md](web-deploy.md) |
 | Rotate the DB password | `alter role ...` in Supabase, then `printf '%s' 'new' \| gcloud secrets versions add musicmania-db-password --data-file=-` and redeploy |
 | Revoke a user | `update musicmania.allowlist set enabled = false where email = '...';` |
 | New migration | `npx --yes supabase@3.1.0 db push --remote` from `database/` |

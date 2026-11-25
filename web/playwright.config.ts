@@ -8,6 +8,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 const PORT = 4173
 export const E2E_CLIENT_ID = 'e2e-client-id'
+export const E2E_API_URL = 'https://api.musicmania.test'
 
 /**
  * End-to-end tests run against the production build (CSP and service worker included),
@@ -35,7 +36,7 @@ export default defineConfig({
     env: {
       VITE_SPOTIFY_CLIENT_ID: E2E_CLIENT_ID,
       VITE_SPOTIFY_REDIRECT_URI: `http://127.0.0.1:${PORT}/musicmania/auth/callback`,
-      VITE_MUSICMANIA_API_URL: '',
+      VITE_MUSICMANIA_API_URL: E2E_API_URL,
     },
   },
 })
