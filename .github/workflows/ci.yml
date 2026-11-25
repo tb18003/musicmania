@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  # Every pull request, whatever its base: stacked PRs (based on another feature branch) are
+  # checked too. The required "CI success" status lives on the head commit, so it still counts
+  # once the PR is retargeted to develop.
   pull_request:
-    branches: [develop, master]
   push:
     branches: [develop, master]
   # Manual run (Actions > CI > Run workflow): checks every part of the repository.
