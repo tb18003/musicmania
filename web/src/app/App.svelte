@@ -4,7 +4,7 @@
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <script lang="ts">
-  import { onMount } from 'svelte'
+  import { onMount, untrack } from 'svelte'
   import DetailScreen from '$features/detail/DetailScreen.svelte'
   import { DetailViewModel } from '$features/detail/DetailViewModel.svelte'
   import HistoryScreen from '$features/history/HistoryScreen.svelte'
@@ -19,6 +19,8 @@
   import LeaderboardScreen from '$features/leaderboard/LeaderboardScreen.svelte'
   import { LeaderboardViewModel } from '$features/leaderboard/LeaderboardViewModel.svelte'
   import { CloudSettingsViewModel } from '$features/settings/CloudSettingsViewModel.svelte'
+  import RecapScreen from '$features/recap/RecapScreen.svelte'
+  import { RecapViewModel } from '$features/recap/RecapViewModel.svelte'
   import SettingsScreen from '$features/settings/SettingsScreen.svelte'
   import TopScreen from '$features/top/TopScreen.svelte'
   import { TopViewModel } from '$features/top/TopViewModel.svelte'
@@ -75,6 +77,8 @@
   const topVm = new TopViewModel(top)
   const insightsVm = new InsightsViewModel(insights)
   const detailVm = new DetailViewModel(detail)
+  // svelte-ignore state_referenced_locally
+  const recapVm = new RecapViewModel({ history, now: container.now })
   let openedDetail = ''
   let insightsLoaded = false
   const rankingVm = new LeaderboardViewModel({ cloud, leaderboard, publish, spotifyUserId })
@@ -101,29 +105,38 @@
     const key = detailHref(target)
     if (key !== openedDetail) {
       openedDetail = key
-      void detailVm.open(target)
+      untrack(() => void detailVm.open(target))
     }
   })
 
-  // Screens that call Spotify or the API load the first time they are opened.
+  // Screens that call Spotify or the API load the first time they are opened. Loads run untracked:
+  // they read and write view-model state, which must not make this effect re-run (an endless loop).
+  let lastRoute: Route | null = null
   $effect(() => {
+    const route = router.current
     if (session !== 'signedIn') return
-    if (router.current === '/top' && !topLoaded) {
-      topLoaded = true
-      void topVm.load()
-    }
-    if (router.current === '/insights' && !insightsLoaded) {
-      insightsLoaded = true
-      void insightsVm.load()
-    }
-    if (router.current === '/ranking' && !rankingLoaded && cloud.enabled) {
-      rankingLoaded = true
-      void rankingVm.load()
-    }
-    if (router.current === '/settings' && !cloudSettingsLoaded && cloud.enabled) {
-      cloudSettingsLoaded = true
-      void cloudSettingsVm.load()
-    }
+    const entered = route !== lastRoute
+    lastRoute = route
+    untrack(() => {
+      if (route === '/top' && !topLoaded) {
+        topLoaded = true
+        void topVm.load()
+      }
+      // The recap is recomputed each time it is opened (the period may have rolled over).
+      if (route === '/recap' && entered) void recapVm.load()
+      if (route === '/insights' && !insightsLoaded) {
+        insightsLoaded = true
+        void insightsVm.load()
+      }
+      if (route === '/ranking' && !rankingLoaded && cloud.enabled) {
+        rankingLoaded = true
+        void rankingVm.load()
+      }
+      if (route === '/settings' && !cloudSettingsLoaded && cloud.enabled) {
+        cloudSettingsLoaded = true
+        void cloudSettingsVm.load()
+      }
+    })
   })
 
   async function copy(text: string): Promise<boolean> {
@@ -267,6 +280,13 @@
       onretry={() => rankingVm.load()}
       oncopy={copy}
     />
+  {:else if router.current === '/recap'}
+    <RecapScreen
+      state={recapVm.state}
+      onperiod={(period) => recapVm.select(period)}
+      onclose={() => router.back()}
+      onimport={() => router.navigate('/import')}
+    />
   {:else if router.current === '/detail'}
     <DetailScreen state={detailVm.state} onback={() => router.back()} />
   {:else if router.current === '/insights'}
@@ -303,7 +323,7 @@
   {/if}
 </div>
 
-{#if session === 'signedIn' && router.current !== '/install' && router.current !== '/import'}
+{#if session === 'signedIn' && router.current !== '/install' && router.current !== '/import' && router.current !== '/recap'}
   <BottomNav
     label={preferences.t('nav_label')}
     items={tabs}

@@ -12,6 +12,7 @@ export const ROUTES = [
   '/history',
   '/insights',
   '/detail',
+  '/recap',
   '/import',
   '/install',
   '/settings',
