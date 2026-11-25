@@ -44,7 +44,12 @@ export default defineConfig(({ mode }) => {
     base: BASE,
     define: { __APP_VERSION__: JSON.stringify(pkg.version) },
     resolve: {
-      alias: { $lib: src('./src/lib'), $features: src('./src/features'), $app: src('./src/app') },
+      alias: {
+        $lib: src('./src/lib'),
+        $features: src('./src/features'),
+        $app: src('./src/app'),
+        $testing: src('./src/testing'),
+      },
     },
     plugins: [
       svelte(),
@@ -58,7 +63,7 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // Only the static app shell is cached. Spotify and API responses never are.
           globPatterns: ['**/*.{js,css,html,svg,png,ttf,webmanifest}'],
-          globIgnores: ['callback.html'],
+          globIgnores: ['callback.html', 'auth/**'],
           navigateFallback: null,
           runtimeCaching: [],
           cleanupOutdatedCaches: true,
@@ -68,6 +73,10 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'es2023',
       sourcemap: true,
+      rollupOptions: {
+        // The app, and the web sign-in redirect served at /musicmania/auth/callback.
+        input: { main: src('./index.html'), callback: src('./auth/callback.html') },
+      },
     },
     test: {
       environment: 'jsdom',
@@ -77,7 +86,14 @@ export default defineConfig(({ mode }) => {
       coverage: {
         provider: 'v8',
         include: ['src/**/*.{ts,svelte}'],
-        exclude: ['src/**/*.test.ts', 'src/test-setup.ts', 'src/main.ts', 'src/**/*.d.ts'],
+        exclude: [
+          'src/**/*.test.ts',
+          'src/test-setup.ts',
+          'src/testing/**',
+          'src/lib/data/testing.ts',
+          'src/main.ts',
+          'src/**/*.d.ts',
+        ],
         reporter: ['text-summary', 'html', 'lcov'],
       },
     },

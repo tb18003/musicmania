@@ -4,6 +4,7 @@
   SPDX-License-Identifier: GPL-3.0-or-later
 -->
 <script lang="ts">
+  import Button from '$lib/ui/components/Button.svelte'
   import Card from '$lib/ui/components/Card.svelte'
   import ScreenHeader from '$lib/ui/components/ScreenHeader.svelte'
   import SegmentedControl from '$lib/ui/components/SegmentedControl.svelte'
@@ -13,12 +14,22 @@
 
   interface Props {
     version: string
-    onback: () => void
+    /** Signed-in account, or null when signed out. */
+    account: { displayName: string | null } | null
+    /** Shown as a back button when the screen is reached from the welcome screen. */
+    onback?: () => void
+    onsignout?: () => void
   }
 
-  let { version, onback }: Props = $props()
+  let { version, account, onback, onsignout }: Props = $props()
+
   const ui = useUi()
   const play = !ui.reduceMotion && entrances.shouldPlay('settings')
+
+  function signOut() {
+    // Destructive and irreversible: always confirm (native dialog, accessible everywhere).
+    if (window.confirm(ui.t('settings_sign_out_confirm'))) onsignout?.()
+  }
 
   const themes = $derived<{ value: ThemePreference; label: string }[]>([
     { value: 'system', label: ui.t('settings_theme_system') },
@@ -40,7 +51,15 @@
 <main>
   <ScreenHeader title={ui.t('settings_title')} backLabel={ui.t('common_back')} {onback} />
   <div class="cards">
-    <Card title={ui.t('settings_appearance')} {play} index={0}>
+    {#if account}
+      <Card title={ui.t('settings_account')} {play} index={0}>
+        {#if account.displayName}
+          <p>{ui.t('settings_signed_in_as', { name: account.displayName })}</p>
+        {/if}
+        <Button variant="tonal" onclick={signOut}>{ui.t('settings_sign_out')}</Button>
+      </Card>
+    {/if}
+    <Card title={ui.t('settings_appearance')} {play} index={1}>
       <SegmentedControl
         label={ui.t('settings_theme')}
         options={themes}
@@ -60,7 +79,7 @@
         onchange={(value) => ui.setMotion(value)}
       />
     </Card>
-    <Card title={ui.t('settings_about')} {play} index={1}>
+    <Card title={ui.t('settings_about')} {play} index={2}>
       <p>{ui.t('settings_version', { version })}</p>
       <p>
         <a href="https://github.com/tb18003/musicmania" target="_blank" rel="noopener noreferrer">

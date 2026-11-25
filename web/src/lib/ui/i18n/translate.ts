@@ -26,3 +26,19 @@ export function translate(locale: Locale, key: MessageKey, params: Record<string
     name in params ? String(params[name]) : match,
   )
 }
+
+/** Keys that come in `_one` / `_other` pairs, addressed by their common base. */
+export type PluralBase = {
+  [K in MessageKey]: K extends `${infer Base}_one` ? (`${Base}_other` extends MessageKey ? Base : never) : never
+}[MessageKey]
+
+/** Picks the plural form with the locale's rules (CLDR); anything but "one" uses "other". */
+export function translatePlural(
+  locale: Locale,
+  base: PluralBase,
+  count: number,
+  params: Record<string, string | number> = {},
+): string {
+  const form = new Intl.PluralRules(locale).select(count) === 'one' ? 'one' : 'other'
+  return translate(locale, `${base}_${form}` as MessageKey, { count, ...params })
+}

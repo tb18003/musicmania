@@ -16,7 +16,10 @@ const preferences = () =>
 describe('SettingsScreen', () => {
   it('changing the language translates the screen right away', async () => {
     const prefs = preferences()
-    render(SettingsScreen, { props: { version: '0.1.0', onback: vi.fn() }, context: uiContextFor(prefs) })
+    render(SettingsScreen, {
+      props: { version: '0.1.0', account: null, onback: vi.fn() },
+      context: uiContextFor(prefs),
+    })
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeTruthy()
 
     await fireEvent.click(screen.getByLabelText('Español'))
@@ -28,7 +31,10 @@ describe('SettingsScreen', () => {
 
   it('theme and animation choices are radio groups with the current value checked', async () => {
     const prefs = preferences()
-    render(SettingsScreen, { props: { version: '0.1.0', onback: vi.fn() }, context: uiContextFor(prefs) })
+    render(SettingsScreen, {
+      props: { version: '0.1.0', account: null, onback: vi.fn() },
+      context: uiContextFor(prefs),
+    })
 
     await fireEvent.click(screen.getByLabelText('Dark'))
     await fireEvent.click(screen.getByLabelText('Full'))
@@ -40,8 +46,24 @@ describe('SettingsScreen', () => {
 
   it('the back button has an accessible name', async () => {
     const onback = vi.fn()
-    render(SettingsScreen, { props: { version: '0.1.0', onback }, context: uiContextFor(preferences()) })
+    render(SettingsScreen, { props: { version: '0.1.0', account: null, onback }, context: uiContextFor(preferences()) })
     await fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     expect(onback).toHaveBeenCalledOnce()
+  })
+
+  it('signing out asks for confirmation first', async () => {
+    const onsignout = vi.fn()
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
+    render(SettingsScreen, {
+      props: { version: '0.1.0', account: { displayName: 'Ana' }, onsignout },
+      context: uiContextFor(preferences()),
+    })
+    expect(screen.getByText('Signed in as Ana')).toBeTruthy()
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    expect(onsignout).not.toHaveBeenCalled()
+    await fireEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+    expect(onsignout).toHaveBeenCalledOnce()
+    expect(confirm).toHaveBeenCalledWith('Sign out and delete all MusicMania data from this device?')
   })
 })
