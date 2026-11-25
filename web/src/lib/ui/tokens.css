@@ -183,3 +183,15 @@ a {
   --duration-medium: 0ms;
   --duration-long: 0ms;
 }
+
+/* The sign-in redirect page (auth/callback.html): a centred message. */
+#callback {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
+}

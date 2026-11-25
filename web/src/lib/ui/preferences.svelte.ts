@@ -5,7 +5,7 @@
  */
 
 import type { MessageKey } from './i18n/en'
-import { detectLocale, translate, type Locale } from './i18n/translate'
+import { detectLocale, translate, translatePlural, type Locale, type PluralBase } from './i18n/translate'
 
 export type ThemePreference = 'system' | 'light' | 'dark'
 export type LanguagePreference = 'system' | Locale
@@ -84,6 +84,10 @@ export class Preferences {
   }
 
   t = (key: MessageKey, params?: Record<string, string | number>): string => translate(this.locale, key, params)
+
+  /** Plural-aware string: `count` is also available as the {count} placeholder. */
+  tp = (base: PluralBase, count: number, params?: Record<string, string | number>): string =>
+    translatePlural(this.locale, base, count, params)
 
   setTheme(theme: ThemePreference) {
     this.theme = theme

@@ -6,6 +6,7 @@
 
 import { mount } from 'svelte'
 import App from './app/App.svelte'
+import { createContainer } from './app/container'
 import { Router } from './app/router.svelte'
 import { installPlatform, isStandalone } from './lib/ui/platform'
 import { Preferences } from './lib/ui/preferences.svelte'
@@ -31,6 +32,7 @@ mount(App, {
       prefersReducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     }),
     router: new Router(window),
+    container: createContainer(),
     platform: installPlatform(navigator),
     installed: isStandalone(window, navigator),
     version: __APP_VERSION__,

@@ -7,17 +7,25 @@
   import BrandMark from '$lib/ui/components/BrandMark.svelte'
   import Button from '$lib/ui/components/Button.svelte'
   import Card from '$lib/ui/components/Card.svelte'
+  import Notice from '$lib/ui/components/Notice.svelte'
   import { useUi } from '$lib/ui/context'
+  import type { MessageKey } from '$lib/ui/i18n/en'
   import { entrance, entrances } from '$lib/ui/motion'
 
   interface Props {
     /** Already running from the home screen: no need to explain how to install. */
     installed: boolean
+    /** A Spotify Client ID is configured in this build. */
+    canSignIn: boolean
+    signingIn: boolean
+    /** Why the user is here again (expired session, failed sign-in), if anything. */
+    message: MessageKey | null
+    onsignin: () => void
     oninstall: () => void
     onsettings: () => void
   }
 
-  let { installed, oninstall, onsettings }: Props = $props()
+  let { installed, canSignIn, signingIn, message, onsignin, oninstall, onsettings }: Props = $props()
   const ui = useUi()
   const play = !ui.reduceMotion && entrances.shouldPlay('welcome')
 </script>
@@ -30,9 +38,13 @@
     <p class="subtitle">{ui.t('welcome_subtitle')}</p>
   </div>
 
+  {#if message}
+    <Notice tone="warning">{ui.t(message)}</Notice>
+  {/if}
+
   <div class="actions" use:entrance={{ play, index: 1 }}>
-    <Button disabled>{ui.t('welcome_sign_in')}</Button>
-    <p class="hint">{ui.t('welcome_sign_in_soon')}</p>
+    <Button disabled={!canSignIn || signingIn} onclick={onsignin}>{ui.t('welcome_sign_in')}</Button>
+    {#if !canSignIn}<p class="hint">{ui.t('welcome_not_configured')}</p>{/if}
   </div>
 
   {#if !installed}

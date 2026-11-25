@@ -5,7 +5,7 @@
  */
 
 /** Every destination, like the @Serializable routes in MusicManiaNavHost. */
-export const ROUTES = ['/', '/install', '/settings'] as const
+export const ROUTES = ['/', '/history', '/install', '/settings'] as const
 export type Route = (typeof ROUTES)[number]
 
 /** "#/settings" → "/settings". Anything unknown (or tampered with) goes home. */

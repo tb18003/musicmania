@@ -7,3 +7,4 @@ playwright-report/
 package-lock.json
 public/callback.html
 src/lib/data/cloud/schema.d.ts
+dist-e2e/

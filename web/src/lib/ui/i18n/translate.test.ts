@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest'
 import { en } from './en'
 import { es } from './es'
-import { detectLocale, translate } from './translate'
+import { detectLocale, translate, translatePlural } from './translate'
 
 describe('translate', () => {
   it('every English key has a Spanish translation and vice versa', () => {
@@ -31,5 +31,14 @@ describe('translate', () => {
     expect(detectLocale(['fr-FR', 'en-GB'])).toBe('en')
     expect(detectLocale(['de-DE'])).toBe('en')
     expect(detectLocale([])).toBe('en')
+  })
+
+  it('plural forms follow each language', () => {
+    expect(translatePlural('en', 'home_days_unit', 1)).toBe('day')
+    expect(translatePlural('en', 'home_days_unit', 0)).toBe('days')
+    expect(translatePlural('es', 'home_streak_best', 1)).toBe('Mejor: 1 día')
+    expect(translatePlural('es', 'home_streak_best', 3)).toBe('Mejor: 3 días')
+    // A formatted count can replace the raw number.
+    expect(translatePlural('es', 'home_streak_best', 1000, { count: '1.000' })).toBe('Mejor: 1.000 días')
   })
 })

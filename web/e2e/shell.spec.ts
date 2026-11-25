@@ -42,6 +42,13 @@ test('the install guide and settings are reachable, and the language can change'
   await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible()
 })
 
+test('a service worker is generated and caches only the static shell', async ({ request }) => {
+  const sw = await (await request.get('/musicmania/sw.js')).text()
+  expect(sw).toContain('precacheAndRoute')
+  expect(sw).not.toContain('spotify.com')
+  expect(sw).not.toContain('auth/callback')
+})
+
 test('the manifest makes it installable from the home screen', async ({ page, request }) => {
   await page.goto('./')
   const href = await page.locator('link[rel="manifest"]').getAttribute('href')

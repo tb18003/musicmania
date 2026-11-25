@@ -6,10 +6,10 @@
 <script lang="ts">
   interface Props {
     title: string
-    subtitle?: string
+    subtitle?: string | undefined
     /** Shows a back button with this accessible label. */
-    backLabel?: string
-    onback?: () => void
+    backLabel?: string | undefined
+    onback?: (() => void) | undefined
   }
 
   let { title, subtitle, backLabel, onback }: Props = $props()

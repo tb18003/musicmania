@@ -22,7 +22,9 @@ const layer = (files, forbidden, message) => ({
 })
 
 export default ts.config(
-  { ignores: ['dist/', 'dev-dist/', 'coverage/', 'test-results/', 'playwright-report/', '**/schema.d.ts'] },
+  {
+    ignores: ['dist/', 'dist-e2e/', 'dev-dist/', 'coverage/', 'test-results/', 'playwright-report/', '**/schema.d.ts'],
+  },
   js.configs.recommended,
   ...ts.configs.strict,
   ...svelte.configs.recommended,
@@ -33,6 +35,7 @@ export default ts.config(
       eqeqeq: 'error',
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', ignoreRestSiblings: true }],
     },
   },
   {
