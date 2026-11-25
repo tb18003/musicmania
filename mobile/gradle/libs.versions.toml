@@ -49,7 +49,7 @@ appauth = "0.11.1"
 junit4 = "4.13.2"
 turbine = "1.2.1"
 mockk = "1.14.12"
-robolectric = "4.18"
+robolectric = "4.18.1"
 roborazzi = "1.79.0"
 konsist = "0.18.1"
 # Static analysis
