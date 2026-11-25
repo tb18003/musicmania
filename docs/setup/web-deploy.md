@@ -73,6 +73,18 @@ and checks that both the app and `callback.html` are online.
 - `https://<owner>.github.io/musicmania/callback` shows the "Almost there" page.
 - Sign in from the Android app: it must still return to the app.
 
+Then send your friends the one-page guide: [English](../guides/iphone-en.md) · [Español](../guides/iphone-es.md).
+
+## Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| Deploy job fails with *"Tag … is not allowed to deploy to github-pages due to environment protection rules"* | Add the `web-v*` tag rule to the `github-pages` environment (step 3) and re-run the job |
+| Sign-in page says *INVALID_CLIENT: Invalid redirect URI* | The web redirect is missing from the Spotify dashboard, or `SPOTIFY_REDIRECT_URI_WEB` differs from it by a character (step 1) |
+| Spotify says the account is not allowed | Add the account under *User Management* in the dashboard (5 users max) |
+| Ranking shows a connection error | `CORS_ORIGINS` not set on Cloud Run (step 4), or `MUSICMANIA_API_URL` wrong (it is baked into the build and the CSP: redeploy after changing it) |
+| *"You are not on the list yet"* | Add the Spotify ID the app shows to the allowlist (`database/README.md`) |
+
 ## Operations
 
 | Task | How |

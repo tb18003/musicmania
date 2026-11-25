@@ -3,10 +3,11 @@
 **Your music, beautifully decoded.** An open-source Android app that turns your Spotify
 listening into rich, animated statistics — tops with live ranking changes, your lifetime
 history, a 24-hour listening clock, streaks, milestones and a story-style recap you can
-open any day of the year.
+open any day of the year. On iPhone (or any browser), the same stats run as an installable
+**web app**.
 
-Private by design: everything is computed and stored **on your device**. No servers, no
-tracking, no ads.
+Private by design: everything is computed and stored **on your device**. No tracking, no ads.
+The only server is the optional friends ranking, which receives opt-in totals, never your history.
 
 > MusicMania is an independent project, not affiliated with or endorsed by Spotify AB.
 
@@ -25,6 +26,8 @@ tracking, no ads.
 | 📱 **Widget** | Today's minutes and this week's top artist on your home screen |
 | 🎨 **Design** | Dark-first minimal UI, shared-element transitions, animated charts, Material You option, *reduce motion* support, English & Spanish |
 | 🧪 **Demo mode** | Explore everything with generated sample data, no account needed |
+| 🥇 **Friends ranking** | Optional: compare minutes, streams, streaks and artists with up to five friends (opt-in totals only) |
+| 🍏 **iPhone** | The installable web app: home, tops, history, lifetime import and the ranking, no App Store needed |
 
 ## Getting started
 
@@ -38,6 +41,7 @@ tracking, no ads.
 | [`mobile/`](mobile) | The Android app (Gradle project). Open this folder in Android Studio. |
 | [`api/`](api) | Kotlin/Ktor API for the optional friends leaderboard; authenticates with the user's Spotify token. |
 | [`database/`](database) | Cloud database schema for the optional friends leaderboard (Supabase/Postgres migrations + pgTAP tests). |
+| [`web/`](web) | The installable web app (PWA) for iPhone and browsers: TypeScript + Svelte, published to GitHub Pages. |
 | [`config/`](config) | Static-analysis configuration shared by every Kotlin project (Detekt, license header). |
 | [`docs/`](docs) | Architecture decisions (ADRs) and setup guides. |
 
@@ -79,8 +83,17 @@ and all time are uploaded (minutes, streams, streaks, unique artists, top 10) �
 You can stop sharing and delete your server data any time in *Settings → Friends ranking*.
 Without the URL, MusicMania stays 100 % local.
 
+### Use MusicMania on iPhone
+The web app lives at `https://<you>.github.io/musicmania/` once deployed
+([`docs/setup/web-deploy.md`](docs/setup/web-deploy.md)). Open it in Safari, tap **Share → Add to
+Home Screen**, and sign in with Spotify. A one-page guide to send to friends:
+[English](docs/guides/iphone-en.md) · [Español](docs/guides/iphone-es.md).
+
+iOS lets web apps do no background work, so the web app saves Spotify's last 50 plays each time
+it is opened; importing the Spotify data export fills any gap. Development: [`web/README.md`](web/README.md).
+
 ### Import your lifetime history
-In the app: *Settings → Import streaming history* and follow the steps. Request
+In the app (Android or web): *Settings → Import* and follow the steps. Request
 **Extended streaming history** on Spotify's [privacy page](https://www.spotify.com/account/privacy/);
 the export can take a few days to arrive.
 
@@ -126,8 +139,9 @@ Regenerate it after significant UI changes and measure cold start with Macrobenc
 ## Security
 
 Tokens are encrypted with Google Tink (AES-256-GCM) under an Android Keystore key, never
-logged and excluded from backups. Read [`SECURITY.md`](SECURITY.md) for the threat model and
-how to report vulnerabilities.
+logged and excluded from backups; the web app keeps its refresh token under a non-extractable
+WebCrypto key and runs under a strict Content Security Policy. Read [`SECURITY.md`](SECURITY.md)
+for the threat model (app, ranking API and web) and how to report vulnerabilities.
 
 ## Contributing
 

@@ -13,10 +13,11 @@ with Jetpack Compose, that shows rich statistics about a user's Spotify listenin
 spirit of stats.fm: top tracks/artists/albums/genres with ranking movement, listening
 history, a 24 h listening clock, heatmaps, streaks, milestones, a story-style "Recap"
 (Wrapped any time), a home-screen widget, and **free on-device import of Spotify's
-Extended Streaming History** for lifetime stats.
+Extended Streaming History** for lifetime stats. An optional **friends ranking** (own API +
+cloud database) and an installable **web app** for iPhone (`web/`, ADR 0012) complete it.
 
-Principles: **privacy first** (everything is computed and stored on the device, there is
-no backend), **offline first** (the UI always reads the local database), **secure by
+Principles: **privacy first** (everything is computed and stored on the device; the only
+server is the optional ranking, which receives opt-in aggregates), **offline first** (the UI always reads the local database), **secure by
 default**, and **delightful motion** that respects accessibility.
 
 - Repository: `tb18003/musicmania` · App name: `MusicMania` · Package: `io.github.tb18003.musicmania`
@@ -37,8 +38,9 @@ These constraints shape the product. Do not design features that depend on remov
   `/me/player/recently-played` (**last 50 plays only**), `/me/player/currently-playing`,
   `/me/tracks`, `/me/playlists`, `POST /me/playlists`, `POST /playlists/{id}/items`,
   `/tracks/{id}`, `/artists/{id}` (has `genres`), `/albums/{id}`, search (limit ≤ 10).
-- **Redirect URIs must be HTTPS** (custom schemes are rejected). We use a verified Android
-  App Link (see `docs/setup/spotify-app-links.md`).
+- **Redirect URIs must be HTTPS** (custom schemes are rejected; loopback `http://127.0.0.1` is
+  allowed for local web development). Android uses a verified App Link
+  (`docs/setup/spotify-app-links.md`); the web app uses `/musicmania/auth/callback`.
 - **429 `QUOTA_EXCEEDED`**: quota is shared by all Client IDs of a developer account.
   Poll sparingly, cache aggressively, honour `Retry-After`.
 
@@ -57,6 +59,7 @@ Consequences baked into the design:
 | `mobile/` | Android app (Gradle root: run every `./gradlew` command from here; open it in Android Studio) |
 | `api/` | Kotlin/Ktor service (own Gradle build, `./gradlew` from `api/`): Spotify-token auth + allowlist, `/v1` endpoints, JDBC repositories, `openapi.yaml`; integration tests on embedded Postgres 17 with the real migrations; `Dockerfile` for Cloud Run |
 | `database/` | Supabase/Postgres schema for the friends leaderboard: `supabase/migrations` (portable SQL, never edit a pushed one), pgTAP tests in `supabase/tests`, `README.md` (access model, manual allowlist). CLI v3 is local by default; hosted changes need `--remote` |
+| `web/` | Installable web app (PWA) for iPhone: TypeScript + Svelte 5 + Vite, own `package.json` (`npm` from `web/`), layers `src/lib/{model,domain,data,ui}` + `src/features` + `src/app` enforced by ESLint; published to GitHub Pages by `deploy-web.yml` on `web-v*` tags (ADR 0012, `web/README.md`) |
 | `config/` | Shared static-analysis config (`detekt/detekt.yml`, `spotless/copyright.kt`) for every Kotlin project |
 | `docs/` | ADRs and setup guides · `.github/`: CI (`ci.yml` + composite actions), Dependabot, templates |
 
@@ -126,6 +129,11 @@ All versions live in `mobile/gradle/libs.versions.toml`. Shared build logic live
 > `android.builtInKotlin`/`android.newDsl` opt-out flags (see ADR 0006).
 > Static analysis runs on Detekt 2 (`dev.detekt`, ADR 0008): config keys use `allowed*` semantics.
 
+**Web (`web/`)**: Node 24+ · TypeScript 5.9 strict · Svelte 5 (runes) · Vite 8 · vite-plugin-pwa
+(shell-only service worker) · Dexie (IndexedDB) · fflate (streamed ZIP) · Vitest + Testing Library ·
+Playwright (WebKit) · ESLint + Prettier + svelte-check · openapi-typescript (types from `api/openapi.yaml`).
+Exact versions in `web/package.json`, locked by `web/package-lock.json`.
+
 ## 5. Commands
 
 Run from `mobile/`. Use JDK 21 (Android Studio's JBR works): `export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"`.
@@ -143,6 +151,16 @@ Run from `mobile/`. Use JDK 21 (Android Studio's JBR works): `export JAVA_HOME="
 ```
 
 Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest test assembleDebug`.
+
+Web, from `web/` (Node via `.nvmrc`):
+
+```bash
+npm ci                 # install from the lockfile
+npm run dev            # http://127.0.0.1:5173/musicmania/
+npm run format         # Prettier + GPL headers (run before committing)
+npm run verify         # the web "green": lint, svelte-check, API contract, tests, build, WebKit e2e
+npm run api:types      # regenerate src/lib/data/cloud/schema.d.ts after changing api/openapi.yaml
+```
 
 ## 6. Conventions
 
@@ -174,6 +192,21 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
   destinations call `ProvideNavAnimatedScope { … }`.
 - Charts provide a `description` for TalkBack. Touch targets ≥ 48 dp. Text from `stringResource`.
 
+**Web (`web/`)**
+- Same architecture and naming as the app: `XxxViewModel` (`.svelte.ts`, `$state`) + stateless
+  `XxxScreen.svelte` (state + callbacks); composition only in `src/app` (`container.ts`, `App.svelte`).
+  ESLint `no-restricted-imports` enforces the layers (features never import `data`; the domain is
+  pure TypeScript).
+- Domain logic shared with the app (dedupe key, 30 s stream rule, streaks, Borda, periods, shared
+  aggregates) is a **port with the same test cases**; change both sides together.
+- Strings in `src/lib/ui/i18n/{en,es}.ts` (`es` is typed against `en`); plurals as `_one`/`_other`
+  pairs via `ui.tp()`.
+- In `.svelte.ts`, no TypeScript parameter properties or enums (Svelte strips types only); a prop or
+  variable named `state` breaks the `$state` rune in that component — rename it locally.
+- Every animation respects reduced motion; entrances use `entrances.shouldPlay(key)` (once per session).
+- Errors are typed (`DataResult`/`AppError` in `src/lib/model/result.ts`); user-facing messages never
+  include technical details.
+
 **ViewModels**
 - `@HiltViewModel`, expose `StateFlow<UiState>` via `stateIn(viewModelScope, WhileSubscribed(5_000), initial)`.
 - Persist user selections that matter across process death in `SavedStateHandle`.
@@ -203,6 +236,18 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
     (sharing is off by default, never from demo mode). Raw play history is never uploaded.
 11. New dependencies require justification in the PR (licence must be GPL-3.0 compatible,
     actively maintained). Prefer the platform/AndroidX.
+12. **Web app**:
+    - the access token lives in memory only, and the refresh token only through `TokenStore`
+      (AES-GCM, non-extractable WebCrypto key, IndexedDB); never `localStorage`;
+    - the bearer only goes to `api.spotify.com` and the configured API origin;
+    - the CSP (`web/csp.config.ts`) stays strict and tested: no inline scripts, `eval`, `{@html}` or
+      third-party scripts;
+    - the service worker never caches API responses;
+    - the e2e suite blocks service workers and every host except the local server and the mocks.
+13. **Ranking API**:
+    - identity is the Spotify user ID verified with Spotify, never request input;
+    - tokens are cached only as SHA-256 hashes and never logged;
+    - CORS only for origins in `CORS_ORIGINS` (ADR 0011).
 
 ## 8. Testing strategy
 
@@ -216,6 +261,9 @@ Definition of "green" before any commit: `spotlessCheck detekt testDebugUnitTest
 | Workers | `sync:work` | WorkManager testing + Robolectric |
 | Architecture | `mobile/app/src/test` | Konsist (layer rules, naming) |
 | Screenshots | `core:designsystem` | Roborazzi (Robolectric native graphics) |
+| Web logic, data, ViewModels, components | `web/src/**/*.test.ts` | Vitest, fake-indexeddb, Testing Library, `src/testing` fakes |
+| Web end-to-end | `web/e2e` | Playwright on WebKit (iPhone 15) against the production build, Spotify and API mocked |
+| API | `api/src/test` | JUnit 5, Ktor `testApplication`, embedded Postgres 17 with the real migrations, MockWebServer as Spotify |
 
 Rules: write tests **with** the change, not after. Prefer fakes over mocks. Construct
 ViewModels **inside** the test (after `MainDispatcherRule` installs Main). Use `TestData.fixedClock`.
@@ -268,3 +316,5 @@ Bug fix ⇒ first a failing test that reproduces it.
 - CI: `.github/workflows/ci.yml` — parallel jobs gated by one required check, `CI success` (ADR 0009)
 - Architecture decisions: `docs/adr/` · App Links / OAuth setup: `docs/setup/spotify-app-links.md`
 - Security policy and threat model: `SECURITY.md` · Contribution guide: `CONTRIBUTING.md`
+- Web app: `web/README.md` · deploy: `docs/setup/web-deploy.md` · iPhone user guide: `docs/guides/iphone-{en,es}.md`
+- Ranking backend: `docs/setup/cloud-deploy.md` · ADRs 0010 (database) and 0011 (auth)
