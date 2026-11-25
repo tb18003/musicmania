@@ -1,0 +1,185 @@
+/*
+ * MusicMania - open-source Spotify listening statistics for the web.
+ * Copyright (C) 2026 MusicMania contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/* Design tokens mirroring core:designsystem (Palette, DarkScheme/LightScheme, ExtendedColors). */
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/space-grotesk.ttf') format('truetype');
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+:root {
+  /* Palette */
+  --ink: #0a0a0f;
+  --ink-2: #111118;
+  --ink-3: #181822;
+  --ink-4: #22222e;
+  --ink-5: #2e2e3d;
+  --mist: #a3a3b8;
+  --snow: #f4f4f8;
+  --paper: #f7f7fa;
+  --volt: #c8ff4d;
+  --volt-deep: #4c7a00;
+  --aqua: #4de8ff;
+  --violet: #8b7cff;
+  --violet-deep: #5b4bff;
+  --coral: #ff7a6b;
+  --coral-deep: #d9483a;
+  --rose: #ff5c7a;
+  --mint: #4ade80;
+  --mint-deep: #15803d;
+
+  /* Typography, shape, spacing */
+  --font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --radius-s: 12px;
+  --radius-m: 20px;
+  --radius-l: 28px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --touch: 48px;
+
+  /* Motion (Motion tokens in core:designsystem) */
+  --duration-short: 150ms;
+  --duration-medium: 300ms;
+  --duration-long: 500ms;
+  --easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Dark scheme (default, like the app) */
+  --primary: var(--volt);
+  --on-primary: var(--ink);
+  --secondary: var(--violet);
+  --tertiary: var(--coral);
+  --background: var(--ink);
+  --on-background: var(--snow);
+  --surface: var(--ink-2);
+  --surface-high: var(--ink-3);
+  --surface-highest: var(--ink-4);
+  --on-surface: var(--snow);
+  --on-surface-variant: var(--mist);
+  --outline: var(--ink-5);
+  --positive: var(--mint);
+  --negative: var(--rose);
+  --brand-gradient: linear-gradient(120deg, var(--volt), var(--aqua), var(--violet));
+  color-scheme: dark;
+}
+
+/* Light scheme: chosen explicitly, or following the system when the theme is "system". */
+:root[data-theme='light'] {
+  --primary: var(--violet-deep);
+  --on-primary: #fff;
+  --secondary: var(--volt-deep);
+  --tertiary: var(--coral-deep);
+  --background: var(--paper);
+  --on-background: var(--ink);
+  --surface: #fff;
+  --surface-high: #efeff5;
+  --surface-highest: #e9e9f2;
+  --on-surface: var(--ink);
+  --on-surface-variant: #55556a;
+  --outline: #d4d4e0;
+  --positive: var(--mint-deep);
+  --negative: var(--coral-deep);
+  --brand-gradient: linear-gradient(120deg, var(--violet-deep), var(--violet), var(--coral));
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme='system'] {
+    --primary: var(--violet-deep);
+    --on-primary: #fff;
+    --secondary: var(--volt-deep);
+    --tertiary: var(--coral-deep);
+    --background: var(--paper);
+    --on-background: var(--ink);
+    --surface: #fff;
+    --surface-high: #efeff5;
+    --surface-highest: #e9e9f2;
+    --on-surface: var(--ink);
+    --on-surface-variant: #55556a;
+    --outline: #d4d4e0;
+    --positive: var(--mint-deep);
+    --negative: var(--coral-deep);
+    --brand-gradient: linear-gradient(120deg, var(--violet-deep), var(--violet), var(--coral));
+    color-scheme: light;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--background);
+  color: var(--on-background);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: 1.15;
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--primary);
+}
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-short: 0ms;
+    --duration-medium: 0ms;
+    --duration-long: 0ms;
+  }
+}
+
+:root[data-reduce-motion='true'] {
+  --duration-short: 0ms;
+  --duration-medium: 0ms;
+  --duration-long: 0ms;
+}

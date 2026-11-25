@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <!-- Same artwork as mobile/app/src/main/res/drawable/ic_launcher_foreground.xml -->
+  <rect width="108" height="108" fill="#0A0A0F"/>
+  <g fill="none" stroke-width="8" stroke-linecap="round">
+    <path d="M38 48V62" stroke="#8B7CFF"/>
+    <path d="M49.3 38V72" stroke="#4DE8FF"/>
+    <path d="M60.6 43V67" stroke="#C8FF4D"/>
+    <path d="M71.9 34V76" stroke="#C8FF4D"/>
+  </g>
+</svg>
