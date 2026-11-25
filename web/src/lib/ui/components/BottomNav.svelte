@@ -14,7 +14,8 @@
   interface Props {
     label: string
     items: readonly Item[]
-    current: T
+    /** null when the current screen is not a tab (e.g. Settings). */
+    current: T | null
     onselect: (value: T) => void
   }
 

@@ -19,9 +19,10 @@
     now: number
     onsync: () => void
     onimport: () => void
+    onsettings: () => void
   }
 
-  let { state, now, onsync, onimport }: Props = $props()
+  let { state, now, onsync, onimport, onsettings }: Props = $props()
   const ui = useUi()
   const play = !ui.reduceMotion && entrances.shouldPlay('home')
   const number = (value: number) => formatNumber(value, ui.locale)
@@ -29,6 +30,17 @@
 
 <main>
   <header use:entrance={{ play, index: 0 }}>
+    <button type="button" class="gear" aria-label={ui.t('home_settings')} onclick={onsettings}>
+      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+        <path
+          d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15l1.6 1-2 3.4-1.8-.7a7 7 0 0 1-2 1.2L15 22h-4l-.3-2.1a7 7 0 0 1-2-1.2l-1.8.7-2-3.4 1.6-1a7 7 0 0 1 0-2.4L4.9 11l2-3.4 1.8.7a7 7 0 0 1 2-1.2L11 5h4l.3 2.1a7 7 0 0 1 2 1.2l1.8-.7 2 3.4-1.6 1a7 7 0 0 1 0 2.4z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
     <h1>
       {state.profile?.displayName
         ? ui.t('home_greeting', { name: state.profile.displayName })
@@ -124,8 +136,26 @@
     flex-direction: column;
     gap: var(--space-4);
   }
+  header {
+    position: relative;
+    padding-right: var(--touch);
+  }
   h1 {
     font-size: 2rem;
+  }
+  .gear {
+    position: absolute;
+    top: 0;
+    right: calc(-1 * var(--space-2));
+    width: var(--touch);
+    height: var(--touch);
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--on-background);
+    cursor: pointer;
   }
   .sync,
   .muted,

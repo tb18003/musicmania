@@ -36,7 +36,7 @@ export interface EntranceOptions {
 }
 
 /** Staggered fade + rise, the web's staggeredEntrance. Does nothing when play is false. */
-export const entrance: Action<HTMLElement, EntranceOptions> = (node, options) => {
+export const entrance: Action<HTMLElement | SVGElement, EntranceOptions> = (node, options) => {
   if (!options.play || typeof node.animate !== 'function') return
   node.animate(
     [

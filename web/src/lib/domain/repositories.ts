@@ -25,6 +25,11 @@ export interface HistoryRepository {
   playsBetween(start: number, end: number): Promise<PlayEvent[]>
   /** The newest plays, newest first, strictly before `before` when given (for paging). */
   recent(limit: number, before?: number): Promise<PlayEvent[]>
+  /**
+   * Visits every play with start <= playedAt < end, oldest first, without loading them all into
+   * memory (years of imported history would not fit comfortably in an iPhone's Safari).
+   */
+  scan(start: number, end: number, visit: (play: PlayEvent) => void): Promise<void>
   /** Every play time (epoch millis), cheap: read from the index only. */
   playTimes(): Promise<number[]>
   count(): Promise<number>

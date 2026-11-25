@@ -41,6 +41,10 @@ export class InMemoryHistoryRepository implements HistoryRepository {
     return this.plays.filter((play) => play.playedAt >= start && play.playedAt < end)
   }
 
+  async scan(start: number, end: number, visit: (play: PlayEvent) => void): Promise<void> {
+    for (const play of this.plays) if (play.playedAt >= start && play.playedAt < end) visit(play)
+  }
+
   async recent(limit: number, before?: number): Promise<PlayEvent[]> {
     return this.plays
       .filter((play) => before === undefined || play.playedAt < before)

@@ -50,6 +50,8 @@ test('sign in with Spotify (PKCE), sync the last plays and see them, then sign o
   await expect(page.getByText('Night Drive')).toBeVisible()
 
   page.once('dialog', (dialog) => dialog.accept())
+  // Settings is the gear on Home (the tabs are Home · Top · History · Insights · Ranking).
+  await page.getByRole('button', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Settings' }).click()
   await page.getByRole('button', { name: 'Sign out' }).click()
   await expect(page.getByRole('button', { name: 'Sign in with Spotify' })).toBeVisible()

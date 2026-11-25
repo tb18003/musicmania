@@ -18,19 +18,45 @@ export function dedupeKeyOf(trackName: string, artistName: string, playedAtMs: n
   return `${trackName.trim().toLowerCase()}|${artistName.trim().toLowerCase()}|${Math.floor(playedAtMs / 1000)}`
 }
 
-/** The aggregates of PlayEventDao.observeSummary. */
-export function summarize(plays: readonly PlayEvent[]): ListeningSummary {
-  let listenedMs = 0
-  let streams = 0
-  const tracks = new Set<string>()
-  const artists = new Set<string>()
-  for (const play of plays) {
-    listenedMs += play.msPlayed
-    if (play.msPlayed >= STREAM_MS) streams++
-    tracks.add(`${play.trackName}|${play.artistName}`)
-    artists.add(play.artistName)
+/** Something fed one play at a time (from `HistoryRepository.scan`), then asked for its result. */
+export interface Accumulator<T> {
+  add(play: PlayEvent): void
+  result(): T
+}
+
+/** The aggregates of PlayEventDao.observeSummary, one play at a time. */
+export class SummaryAccumulator implements Accumulator<ListeningSummary> {
+  #listenedMs = 0
+  #streams = 0
+  readonly #tracks = new Set<string>()
+  readonly #artists = new Set<string>()
+
+  add(play: PlayEvent) {
+    this.#listenedMs += play.msPlayed
+    if (play.msPlayed >= STREAM_MS) this.#streams++
+    this.#tracks.add(`${play.trackName}|${play.artistName}`)
+    this.#artists.add(play.artistName)
   }
-  return { listenedMs, streams, uniqueTracks: tracks.size, uniqueArtists: artists.size }
+
+  result(): ListeningSummary {
+    return {
+      listenedMs: this.#listenedMs,
+      streams: this.#streams,
+      uniqueTracks: this.#tracks.size,
+      uniqueArtists: this.#artists.size,
+    }
+  }
+}
+
+/** Feeds every play to every accumulator (handy for arrays already in memory). */
+export function feed(plays: readonly PlayEvent[], ...accumulators: Accumulator<unknown>[]) {
+  for (const play of plays) for (const accumulator of accumulators) accumulator.add(play)
+}
+
+export function summarize(plays: readonly PlayEvent[]): ListeningSummary {
+  const summary = new SummaryAccumulator()
+  feed(plays, summary)
+  return summary.result()
 }
 
 /**

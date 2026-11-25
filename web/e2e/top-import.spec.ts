@@ -71,4 +71,11 @@ test('importing the Spotify ZIP fills history and the all-time top, in a worker,
   await page.getByText('All time').click()
   await expect(page.getByRole('listitem').first()).toContainText('Imported Anthem')
   await expect(page.getByRole('listitem').first()).toContainText('30 streams')
+
+  // Regression: on WebKit, reading index keys with a cursor stalled after an import.
+  await page.getByRole('button', { name: 'Insights' }).click()
+  await expect(page.getByRole('heading', { name: 'Your listening personality' })).toBeVisible()
+  await page.getByText('All time').click()
+  await expect(page.getByText('Skipped', { exact: true })).toHaveCount(0) // no skip data in this export
+  await expect(page.getByRole('heading', { name: 'Next goals' })).toBeVisible()
 })
