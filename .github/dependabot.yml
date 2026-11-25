@@ -21,6 +21,10 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    ignore:
+      # Integration tests must run the same Postgres major as production (Supabase: 17).
+      - dependency-name: "io.zonky.test.postgres:embedded-postgres-binaries-bom"
+        update-types: ["version-update:semver-major"]
     groups:
       api-dependencies:
         patterns: ["*"]
@@ -31,6 +35,10 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
+    ignore:
+      # Node types follow the Node version in use (web/.nvmrc), not the newest release.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       web-dependencies:
         patterns: ["*"]
@@ -40,6 +48,11 @@ updates:
     target-branch: develop
     schedule:
       interval: monthly
+    ignore:
+      # The build JDK matches the runtime image (distroless java21) and CLAUDE.md (JDK 21).
+      # Moving to Java 25 is a deliberate change of both, not a version bump.
+      - dependency-name: "eclipse-temurin"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     # Workflows plus the local composite actions they use.

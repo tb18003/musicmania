@@ -19,6 +19,7 @@ class AndroidTestConventionPlugin : Plugin<Project> {
 
             extensions.configure<TestExtension> {
                 compileSdk = libs.version("compileSdk").toInt()
+                compileSdkMinor = libs.version("compileSdkMinor").toInt()
                 defaultConfig.apply {
                     // Baseline profiles need API 28+ (API 33+ without root).
                     minSdk = MIN_SDK
