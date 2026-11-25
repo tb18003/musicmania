@@ -22,6 +22,7 @@ private const val MANAGED_DEVICE_API = 34
 internal fun Project.configureKotlinAndroid(commonExtension: CommonExtension) {
     commonExtension.apply {
         compileSdk = libs.version("compileSdk").toInt()
+        compileSdkMinor = libs.version("compileSdkMinor").toInt()
 
         defaultConfig.apply {
             minSdk = libs.version("minSdk").toInt()

@@ -1,9 +1,11 @@
 [versions]
 # Build
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
 ksp = "2.3.14"
 compileSdk = "37"
+# Minor API level: Compose 1.13 (BOM 2026.11) requires compiling against Android 37.1.
+compileSdkMinor = "1"
 minSdk = "26"
 targetSdk = "36"
 javaTarget = "17"
@@ -31,7 +33,7 @@ androidxTestServices = "1.6.0"
 androidxBenchmark = "1.5.0"
 androidxUiAutomator = "2.4.1"
 androidxProfileInstaller = "1.4.1"
-composeBom = "2025.12.00"
+composeBom = "2026.11.01"
 # DI
 hilt = "2.60.1"
 # Kotlin libs
@@ -49,12 +51,12 @@ appauth = "0.11.1"
 junit4 = "4.13.2"
 turbine = "1.2.1"
 mockk = "1.14.12"
-robolectric = "4.18"
+robolectric = "4.18.1"
 roborazzi = "1.79.0"
 konsist = "0.18.1"
 # Static analysis
 detekt = "2.0.0-alpha.6"
-spotless = "8.11.0"
+spotless = "8.12.0"
 ktlint = "1.7.1"
 kover = "0.9.11"
 
