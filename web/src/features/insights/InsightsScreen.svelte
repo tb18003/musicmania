@@ -180,7 +180,12 @@
         {/if}
       </Card>
 
-      <Card title={ui.t('insights_milestones')} {play} index={6}>
+      <Card title={ui.t('recap_open_title')} {play} index={6}>
+        <p class="muted">{ui.t('recap_open_body')}</p>
+        <a class="cta" href="#/recap">{ui.t('recap_open')}</a>
+      </Card>
+
+      <Card title={ui.t('insights_milestones')} {play} index={7}>
         <p class="muted">{ui.tp('insights_milestones_achieved', achieved)}</p>
         <ul class="goals">
           {#each goals as goal (goal.type)}
@@ -208,6 +213,18 @@
   }
   .cards[aria-busy='true'] {
     opacity: 0.6;
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding: 0 var(--space-5);
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-decoration: none;
   }
   .grid {
     display: grid;

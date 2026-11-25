@@ -133,6 +133,13 @@
     {/if}
   {/if}
 
+  {#if state.totalPlays > 0}
+    <Card title={ui.t('recap_open_title')} {play} index={6}>
+      <p class="muted">{ui.t('recap_open_body')}</p>
+      <div class="card-action"><a class="cta" href="#/recap">{ui.t('recap_open')}</a></div>
+    </Card>
+  {/if}
+
   <p class="hint">{ui.t('home_open_daily')}</p>
   <div class="actions">
     <Button variant="tonal" disabled={state.sync.running} onclick={onsync}>{ui.t('home_sync_now')}</Button>
@@ -215,5 +222,17 @@
   }
   .card-action {
     margin-top: var(--space-4);
+  }
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding: 0 var(--space-5);
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-decoration: none;
   }
 </style>
