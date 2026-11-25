@@ -9,8 +9,12 @@
   import { HistoryViewModel } from '$features/history/HistoryViewModel.svelte'
   import HomeScreen from '$features/home/HomeScreen.svelte'
   import { HomeViewModel } from '$features/home/HomeViewModel.svelte'
+  import ImportScreen from '$features/importer/ImportScreen.svelte'
+  import { ImportViewModel } from '$features/importer/ImportViewModel.svelte'
   import InstallGuide from '$features/install/InstallGuide.svelte'
   import SettingsScreen from '$features/settings/SettingsScreen.svelte'
+  import TopScreen from '$features/top/TopScreen.svelte'
+  import { TopViewModel } from '$features/top/TopViewModel.svelte'
   import WelcomeScreen from '$features/welcome/WelcomeScreen.svelte'
   import type { AppError } from '$lib/model/result'
   import BottomNav from '$lib/ui/components/BottomNav.svelte'
@@ -19,6 +23,7 @@
   import type { InstallPlatform } from '$lib/ui/platform'
   import { applyToDocument, type Preferences } from '$lib/ui/preferences.svelte'
   import type { Container } from './container'
+  import { exportHistory } from './export'
   import type { Route, Router } from './router.svelte'
 
   interface Props {
@@ -41,10 +46,26 @@
   let now = $state(Date.now())
 
   // svelte-ignore state_referenced_locally
-  const { auth, history, remote, sync, session: sessionRepository } = container
+  const { auth, history, remote, sync, top, importer, session: sessionRepository } = container
   // svelte-ignore state_referenced_locally
   const home = new HomeViewModel({ history, remote, sync, runSync, now: container.now })
   const historyVm = new HistoryViewModel(history)
+  const topVm = new TopViewModel(top)
+  let topLoaded = false
+  // After an import: every screen that reads local history recomputes.
+  const importVm = new ImportViewModel(importer, () => {
+    void home.load()
+    void historyVm.refresh()
+    if (topLoaded) void topVm.load()
+  })
+
+  // The top lists are loaded the first time the tab is opened (they may call Spotify).
+  $effect(() => {
+    if (session === 'signedIn' && router.current === '/top' && !topLoaded) {
+      topLoaded = true
+      void topVm.load()
+    }
+  })
 
   /** Every sync goes through here, so an expired session always lands back on the welcome screen. */
   async function runSync(force: boolean): Promise<AppError | null> {
@@ -102,9 +123,10 @@
     window.location.reload()
   }
 
-  type Tab = Extract<Route, '/' | '/history' | '/settings'>
+  type Tab = Extract<Route, '/' | '/top' | '/history' | '/settings'>
   const tabs = $derived<{ value: Tab; label: string; icon: string }[]>([
     { value: '/', label: preferences.t('nav_home'), icon: 'M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z' },
+    { value: '/top', label: preferences.t('nav_top'), icon: 'M6 20V11M12 20V4M18 20v-6' },
     { value: '/history', label: preferences.t('nav_history'), icon: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z' },
     {
       value: '/settings',
@@ -113,7 +135,7 @@
     },
   ])
   const currentTab = $derived<Tab>(
-    router.current === '/history' || router.current === '/settings' ? router.current : '/',
+    router.current === '/top' || router.current === '/history' || router.current === '/settings' ? router.current : '/',
   )
 </script>
 
@@ -136,16 +158,33 @@
         onsettings={() => router.navigate('/settings')}
       />
     {/if}
+  {:else if router.current === '/top'}
+    <TopScreen
+      state={topVm.state}
+      {now}
+      onkind={(kind) => topVm.select(kind)}
+      onrange={(range) => topVm.selectRange(range)}
+      onrefresh={() => topVm.refresh()}
+      onimport={() => router.navigate('/import')}
+    />
+  {:else if router.current === '/import'}
+    <ImportScreen state={importVm.state} onfiles={(files) => importVm.start(files)} onback={() => router.back()} />
   {:else if router.current === '/history'}
     <HistoryScreen state={historyVm.state} {now} onloadmore={() => historyVm.loadMore()} />
   {:else if router.current === '/settings'}
-    <SettingsScreen {version} account={{ displayName: home.state.profile?.displayName ?? null }} onsignout={signOut} />
+    <SettingsScreen
+      {version}
+      account={{ displayName: home.state.profile?.displayName ?? null }}
+      onsignout={signOut}
+      onimport={() => router.navigate('/import')}
+      onexport={() => exportHistory(history, Date.now())}
+    />
   {:else}
-    <HomeScreen state={home.state} {now} onsync={() => home.syncNow()} />
+    <HomeScreen state={home.state} {now} onsync={() => home.syncNow()} onimport={() => router.navigate('/import')} />
   {/if}
 </div>
 
-{#if session === 'signedIn' && router.current !== '/install'}
+{#if session === 'signedIn' && router.current !== '/install' && router.current !== '/import'}
   <BottomNav
     label={preferences.t('nav_label')}
     items={tabs}

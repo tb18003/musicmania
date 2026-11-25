@@ -7,6 +7,7 @@
 import type { AppStateRepository, HistoryRepository, SpotifyRemote } from '$lib/domain/repositories'
 import { dedupeKeyOf } from '$lib/domain/stats'
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
+import type { ApiTimeRange, TopArtist, TopTrack } from '$lib/model/top'
 import { success, type DataResult } from '$lib/model/result'
 
 /** Behavioural in-memory history (dedupes like the real one), like InMemoryHistoryRepository. */
@@ -64,8 +65,23 @@ export class FakeSpotifyRemote implements SpotifyRemote {
   profile: DataResult<UserProfile> = success({ id: 'me', displayName: 'Ana', imageUrl: null })
   playing: DataResult<NowPlaying | null> = success(null)
 
+  /** Queued answers per range for /me/top (an empty list once the queue is exhausted). */
+  readonly tracks: Partial<Record<ApiTimeRange, DataResult<TopTrack[]>[]>> = {}
+  readonly artists: Partial<Record<ApiTimeRange, DataResult<TopArtist[]>[]>> = {}
+  readonly topCalls: string[] = []
+
   me = async () => this.profile
   nowPlaying = async () => this.playing
+
+  async topTracks(range: ApiTimeRange): Promise<DataResult<TopTrack[]>> {
+    this.topCalls.push(`tracks:${range}`)
+    return this.tracks[range]?.shift() ?? success([])
+  }
+
+  async topArtists(range: ApiTimeRange): Promise<DataResult<TopArtist[]>> {
+    this.topCalls.push(`artists:${range}`)
+    return this.artists[range]?.shift() ?? success([])
+  }
 
   async recentlyPlayed(after: number | null): Promise<DataResult<RecentlyPlayedPage>> {
     this.calls.push(after)

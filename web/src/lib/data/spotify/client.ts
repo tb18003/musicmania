@@ -7,6 +7,13 @@
 import type { SpotifyRemote } from '$lib/domain/repositories'
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
 import { failure, success, type AppError, type DataResult } from '$lib/model/result'
+import type { ApiTimeRange, TopArtist, TopTrack } from '$lib/model/top'
+
+const TIME_RANGE: Record<ApiTimeRange, string> = {
+  FOUR_WEEKS: 'short_term',
+  SIX_MONTHS: 'medium_term',
+  ONE_YEAR: 'long_term',
+}
 
 /** The only host that ever receives the Spotify bearer token (security rule 5). */
 export const SPOTIFY_API_ORIGIN = 'https://api.spotify.com'
@@ -83,6 +90,32 @@ export function toPlayEvent(item: unknown): PlayEvent | null {
   }
 }
 
+export function toTopTrack(value: unknown): TopTrack | null {
+  const track = readTrack(value)
+  if (!track || !isObject(value)) return null
+  const album = isObject(value.album) ? value.album : {}
+  return {
+    id: track.id,
+    name: track.name,
+    artistName: track.artistName,
+    albumId: str(album.id),
+    albumName: track.albumName,
+    imageUrl: track.imageUrl,
+  }
+}
+
+export function toTopArtist(value: unknown): TopArtist | null {
+  if (!isObject(value)) return null
+  const name = str(value.name)
+  if (!name) return null
+  return {
+    id: str(value.id),
+    name,
+    imageUrl: pickImage(value.images),
+    genres: arr(value.genres).filter((genre): genre is string => typeof genre === 'string'),
+  }
+}
+
 // ---- client ----------------------------------------------------------------------------------------
 
 export class SpotifyApiClient implements SpotifyRemote {
@@ -129,6 +162,25 @@ export class SpotifyApiClient implements SpotifyRemote {
       progressMs: num(body.progress_ms) ?? 0,
       durationMs: track.durationMs,
     })
+  }
+
+  topTracks(range: ApiTimeRange): Promise<DataResult<TopTrack[]>> {
+    return this.#top('tracks', range, toTopTrack)
+  }
+
+  topArtists(range: ApiTimeRange): Promise<DataResult<TopArtist[]>> {
+    return this.#top('artists', range, toTopArtist)
+  }
+
+  async #top<T>(type: string, range: ApiTimeRange, map: (item: unknown) => T | null): Promise<DataResult<T[]>> {
+    const result = await this.#get(`/v1/me/top/${type}?time_range=${TIME_RANGE[range]}&limit=50`)
+    if (!result.ok) return result
+    const body = isObject(result.data) ? result.data : {}
+    return success(
+      arr(body.items)
+        .map(map)
+        .filter((item): item is T => item !== null),
+    )
   }
 
   /** GET with the bearer token; on 401 refreshes once and retries. 204 → null body. */

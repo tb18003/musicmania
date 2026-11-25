@@ -19,9 +19,11 @@
     /** Shown as a back button when the screen is reached from the welcome screen. */
     onback?: () => void
     onsignout?: () => void
+    onimport?: () => void
+    onexport?: () => void
   }
 
-  let { version, account, onback, onsignout }: Props = $props()
+  let { version, account, onback, onsignout, onimport, onexport }: Props = $props()
 
   const ui = useUi()
   const play = !ui.reduceMotion && entrances.shouldPlay('settings')
@@ -57,6 +59,12 @@
           <p>{ui.t('settings_signed_in_as', { name: account.displayName })}</p>
         {/if}
         <Button variant="tonal" onclick={signOut}>{ui.t('settings_sign_out')}</Button>
+      </Card>
+      <Card title={ui.t('settings_data')} {play} index={0}>
+        <div class="buttons">
+          <Button variant="tonal" onclick={() => onimport?.()}>{ui.t('settings_import')}</Button>
+          <Button variant="tonal" onclick={() => onexport?.()}>{ui.t('settings_export')}</Button>
+        </div>
       </Card>
     {/if}
     <Card title={ui.t('settings_appearance')} {play} index={1}>
@@ -95,6 +103,11 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
   p {
     margin: 0 0 var(--space-2);

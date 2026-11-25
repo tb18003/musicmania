@@ -18,9 +18,10 @@
     state: HomeState
     now: number
     onsync: () => void
+    onimport: () => void
   }
 
-  let { state, now, onsync }: Props = $props()
+  let { state, now, onsync, onimport }: Props = $props()
   const ui = useUi()
   const play = !ui.reduceMotion && entrances.shouldPlay('home')
   const number = (value: number) => formatNumber(value, ui.locale)
@@ -48,6 +49,7 @@
     <Notice tone="error">{ui.t(errorMessageKey(state.error))}</Notice>
   {:else if state.sync.possibleGap}
     <Notice tone="warning">{ui.t('home_gap_warning')}</Notice>
+    <Button variant="text" onclick={onimport}>{ui.t('home_import_action')}</Button>
   {/if}
 
   {#if state.nowPlaying}
@@ -65,6 +67,9 @@
   {#if !state.loading && state.totalPlays === 0}
     <Card title={ui.t('home_empty_title')} {play} index={2}>
       <p class="muted">{ui.t('home_empty_message')}</p>
+      <div class="card-action">
+        <Button variant="tonal" onclick={onimport}>{ui.t('home_import_action')}</Button>
+      </div>
     </Card>
   {:else}
     <div class="grid">
@@ -163,5 +168,8 @@
   .actions {
     display: flex;
     justify-content: center;
+  }
+  .card-action {
+    margin-top: var(--space-4);
   }
 </style>

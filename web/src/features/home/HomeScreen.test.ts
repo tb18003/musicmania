@@ -31,7 +31,7 @@ const state = (overrides: Partial<HomeState> = {}): HomeState => ({
 
 describe('HomeScreen', () => {
   it('shows today, the week and the streak with correct plurals and grouping', () => {
-    render(HomeScreen, { props: { state: state(), now: NOW, onsync: vi.fn() }, context: context() })
+    render(HomeScreen, { props: { state: state(), now: NOW, onsync: vi.fn(), onimport: vi.fn() }, context: context() })
     expect(screen.getByRole('heading', { name: 'Hi, Ana' })).toBeTruthy()
     expect(screen.getByText('Synced 5 minutes ago')).toBeTruthy()
     expect(screen.getByText('1 stream')).toBeTruthy()
@@ -44,7 +44,7 @@ describe('HomeScreen', () => {
 
   it('a brand-new history explains how it fills up', () => {
     render(HomeScreen, {
-      props: { state: state({ totalPlays: 0 }), now: NOW, onsync: vi.fn() },
+      props: { state: state({ totalPlays: 0 }), now: NOW, onsync: vi.fn(), onimport: vi.fn() },
       context: context('es'),
     })
     expect(screen.getByRole('heading', { name: 'Tu historial empieza ahora' })).toBeTruthy()
@@ -52,12 +52,15 @@ describe('HomeScreen', () => {
 
   it('warns about a possible gap, and errors take precedence', () => {
     const gap = state({ sync: { running: false, lastSuccess: NOW, possibleGap: true } })
-    const { unmount } = render(HomeScreen, { props: { state: gap, now: NOW, onsync: vi.fn() }, context: context() })
+    const { unmount } = render(HomeScreen, {
+      props: { state: gap, now: NOW, onsync: vi.fn(), onimport: vi.fn() },
+      context: context(),
+    })
     expect(screen.getByRole('status').textContent).toContain('more than 50 songs')
     unmount()
 
     render(HomeScreen, {
-      props: { state: { ...gap, error: { kind: 'forbidden' } }, now: NOW, onsync: vi.fn() },
+      props: { state: { ...gap, error: { kind: 'forbidden' } }, now: NOW, onsync: vi.fn(), onimport: vi.fn() },
       context: context(),
     })
     expect(screen.getByRole('alert').textContent).toContain('Spotify refused this account')
@@ -65,13 +68,16 @@ describe('HomeScreen', () => {
 
   it('"Sync now" is disabled while a sync runs', async () => {
     const onsync = vi.fn()
-    const { unmount } = render(HomeScreen, { props: { state: state(), now: NOW, onsync }, context: context() })
+    const { unmount } = render(HomeScreen, {
+      props: { state: state(), now: NOW, onsync, onimport: vi.fn() },
+      context: context(),
+    })
     await fireEvent.click(screen.getByRole('button', { name: 'Sync now' }))
     expect(onsync).toHaveBeenCalledOnce()
     unmount()
 
     const running = state({ sync: { running: true, lastSuccess: null, possibleGap: false } })
-    render(HomeScreen, { props: { state: running, now: NOW, onsync }, context: context() })
+    render(HomeScreen, { props: { state: running, now: NOW, onsync, onimport: vi.fn() }, context: context() })
     expect((screen.getByRole('button', { name: 'Sync now' }) as HTMLButtonElement).disabled).toBe(true)
     expect(screen.getByText('Syncing…')).toBeTruthy()
   })
