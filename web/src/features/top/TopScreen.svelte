@@ -12,6 +12,7 @@
   import SegmentedControl from '$lib/ui/components/SegmentedControl.svelte'
   import { useUi } from '$lib/ui/context'
   import { errorMessageKey, formatNumber, formatRelative } from '$lib/ui/format'
+  import { detailHref } from '$lib/ui/links'
   import type { TopState } from './TopViewModel.svelte'
 
   interface Props {
@@ -90,20 +91,22 @@
     {#each state.rows as row (row.key)}
       {@const badge = movement(row.ranked.movement)}
       <li>
-        <span class="rank" aria-label={ui.t('top_rank', { rank: row.ranked.rank })}>{row.ranked.rank}</span>
-        <Artwork imageUrl={row.imageUrl} title={row.title} size={48} round={state.kind === 'artists'} />
-        <div class="text">
-          <strong>{row.title}</strong>
-          {#if row.subtitle}<span>{row.subtitle}</span>{/if}
-          {#if row.ranked.streams !== null}
-            <span>
-              {ui.tp('home_streams', row.ranked.streams, { count: formatNumber(row.ranked.streams, ui.locale) })}
-            </span>
+        <a class="row" href={detailHref(row.detail)}>
+          <span class="rank" aria-label={ui.t('top_rank', { rank: row.ranked.rank })}>{row.ranked.rank}</span>
+          <Artwork imageUrl={row.imageUrl} title={row.title} size={48} round={state.kind === 'artists'} />
+          <div class="text">
+            <strong>{row.title}</strong>
+            {#if row.subtitle}<span>{row.subtitle}</span>{/if}
+            {#if row.ranked.streams !== null}
+              <span>
+                {ui.tp('home_streams', row.ranked.streams, { count: formatNumber(row.ranked.streams, ui.locale) })}
+              </span>
+            {/if}
+          </div>
+          {#if badge}
+            <span class="badge {badge.tone}" role="img" aria-label={badge.label}>{badge.text}</span>
           {/if}
-        </div>
-        {#if badge}
-          <span class="badge {badge.tone}" role="img" aria-label={badge.label}>{badge.text}</span>
-        {/if}
+        </a>
       </li>
     {/each}
   </ol>
@@ -133,11 +136,14 @@
   ol[aria-busy='true'] {
     opacity: 0.6;
   }
-  li {
+  .row {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     min-height: 56px;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--radius-s);
   }
   .rank {
     width: 2ch;

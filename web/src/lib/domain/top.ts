@@ -17,7 +17,7 @@ import {
   type TopTrack,
 } from '$lib/model/top'
 import type { HistoryRepository, TopItemsRepository } from './repositories'
-import { STREAM_MS } from './stats'
+import { feed, STREAM_MS, type Accumulator } from './stats'
 
 export const TOP_LIST_SIZE = 50
 
@@ -78,41 +78,49 @@ interface Count {
   ms: number
 }
 
-/** Groups streams (≥ 30 s) and ranks by streams, then listening time (the DAO's ORDER BY). */
-function rankByStreams<T>(
-  plays: readonly PlayEvent[],
-  group: (play: PlayEvent) => string | null,
-  build: (first: PlayEvent, count: Count) => T,
-  limit: number,
-): Ranked<T>[] {
-  const groups = new Map<string, { first: PlayEvent; count: Count }>()
-  for (const play of plays) {
-    if (play.msPlayed < STREAM_MS) continue
-    const key = group(play)
-    if (key === null) continue
-    const entry = groups.get(key) ?? { first: play, count: { streams: 0, ms: 0 } }
+/**
+ * Groups streams (≥ 30 s) and ranks by streams, then listening time (the DAO's ORDER BY), one
+ * play at a time. Only one play per group is kept in memory.
+ */
+export class StreamRanking<T> implements Accumulator<Ranked<T>[]> {
+  readonly #groups = new Map<string, { first: PlayEvent; count: Count }>()
+
+  constructor(
+    private readonly group: (play: PlayEvent) => string | null,
+    private readonly build: (first: PlayEvent, count: Count) => T,
+    private readonly limit: number,
+  ) {}
+
+  add(play: PlayEvent) {
+    if (play.msPlayed < STREAM_MS) return
+    const key = this.group(play)
+    if (key === null) return
+    const entry = this.#groups.get(key) ?? { first: play, count: { streams: 0, ms: 0 } }
     entry.count.streams++
     entry.count.ms += play.msPlayed
     if (!entry.first.imageUrl && play.imageUrl) entry.first = { ...entry.first, imageUrl: play.imageUrl }
-    groups.set(key, entry)
+    this.#groups.set(key, entry)
   }
-  return [...groups.entries()]
-    .sort(
-      ([keyA, a], [keyB, b]) => b.count.streams - a.count.streams || b.count.ms - a.count.ms || (keyA < keyB ? -1 : 1),
-    )
-    .slice(0, limit)
-    .map(([, { first, count }], index) => ({
-      rank: index + 1,
-      item: build(first, count),
-      movement: { kind: 'unknown' } as const,
-      streams: count.streams,
-      listenedMs: count.ms,
-    }))
+
+  result(): Ranked<T>[] {
+    return [...this.#groups.entries()]
+      .sort(
+        ([keyA, a], [keyB, b]) =>
+          b.count.streams - a.count.streams || b.count.ms - a.count.ms || (keyA < keyB ? -1 : 1),
+      )
+      .slice(0, this.limit)
+      .map(([, { first, count }], index) => ({
+        rank: index + 1,
+        item: this.build(first, count),
+        movement: { kind: 'unknown' } as const,
+        streams: count.streams,
+        listenedMs: count.ms,
+      }))
+  }
 }
 
-export const localTopTracks = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZE): Ranked<TopTrack>[] =>
-  rankByStreams(
-    plays,
+export const topTracksAccumulator = (limit = TOP_LIST_SIZE) =>
+  new StreamRanking<TopTrack>(
     (play) => `${play.trackName}|${play.artistName}`,
     (play) => ({
       id: play.trackId,
@@ -125,17 +133,15 @@ export const localTopTracks = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZ
     limit,
   )
 
-export const localTopArtists = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZE): Ranked<TopArtist>[] =>
-  rankByStreams(
-    plays,
+export const topArtistsAccumulator = (limit = TOP_LIST_SIZE) =>
+  new StreamRanking<TopArtist>(
     (play) => play.artistName,
     (play) => ({ id: null, name: play.artistName, imageUrl: play.imageUrl, genres: [] }),
     limit,
   )
 
-export const localTopAlbums = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZE): Ranked<TopAlbum>[] =>
-  rankByStreams(
-    plays,
+export const topAlbumsAccumulator = (limit = TOP_LIST_SIZE) =>
+  new StreamRanking<TopAlbum>(
     (play) => (play.albumName ? `${play.albumName}|${play.artistName}` : null),
     (play, count) => ({
       key: `${play.albumName ?? ''}|${play.artistName}`,
@@ -146,6 +152,18 @@ export const localTopAlbums = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZ
     }),
     limit,
   )
+
+const rankAll = <T>(plays: readonly PlayEvent[], accumulator: StreamRanking<T>) => {
+  feed(plays, accumulator)
+  return accumulator.result()
+}
+
+export const localTopTracks = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZE) =>
+  rankAll(plays, topTracksAccumulator(limit))
+export const localTopArtists = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZE) =>
+  rankAll(plays, topArtistsAccumulator(limit))
+export const localTopAlbums = (plays: readonly PlayEvent[], limit = TOP_LIST_SIZE) =>
+  rankAll(plays, topAlbumsAccumulator(limit))
 
 export interface TopResult<T> {
   readonly items: readonly Ranked<T>[]
@@ -162,25 +180,27 @@ export interface TopResult<T> {
 export class GetTopItems {
   constructor(private readonly deps: { top: TopItemsRepository; history: HistoryRepository; now: () => number }) {}
 
-  async #lifetime(): Promise<readonly PlayEvent[]> {
-    return this.deps.history.playsBetween(0, this.deps.now() + 60_000)
+  /** The all-time list, streamed over the whole history (never loaded into one array). */
+  async #lifetime<T>(accumulator: StreamRanking<T>): Promise<TopResult<T>> {
+    await this.deps.history.scan(0, this.deps.now() + 60_000, (play) => accumulator.add(play))
+    return { items: accumulator.result(), fetchedAt: null, error: null }
   }
 
   async tracks(range: TimeRange, refresh = false): Promise<TopResult<TopTrack>> {
-    if (!isApiBacked(range)) return { items: localTopTracks(await this.#lifetime()), fetchedAt: null, error: null }
+    if (!isApiBacked(range)) return this.#lifetime(topTracksAccumulator())
     const { list, error } = await this.deps.top.topTracks(range, { refresh })
     return { items: list ? rankList(list, trackKey) : [], fetchedAt: list?.fetchedAt ?? null, error }
   }
 
   async artists(range: TimeRange, refresh = false): Promise<TopResult<TopArtist>> {
-    if (!isApiBacked(range)) return { items: localTopArtists(await this.#lifetime()), fetchedAt: null, error: null }
+    if (!isApiBacked(range)) return this.#lifetime(topArtistsAccumulator())
     const { list, error } = await this.deps.top.topArtists(range, { refresh })
     return { items: list ? rankList(list, artistKey) : [], fetchedAt: list?.fetchedAt ?? null, error }
   }
 
   /** Albums are derived: Borda count over top tracks (API ranges) or streams (lifetime). */
   async albums(range: TimeRange, refresh = false): Promise<TopResult<TopAlbum>> {
-    if (!isApiBacked(range)) return { items: localTopAlbums(await this.#lifetime()), fetchedAt: null, error: null }
+    if (!isApiBacked(range)) return this.#lifetime(topAlbumsAccumulator())
     const { list, error } = await this.deps.top.topTracks(range, { refresh })
     const items = albumsFromTracks(list?.items ?? []).map((item, index) => ({
       rank: index + 1,

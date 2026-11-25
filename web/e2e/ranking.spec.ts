@@ -44,6 +44,7 @@ test('joining the ranking uploads aggregates only, then shows friends; it can be
   await page.getByRole('button', { name: 'Details of Ana' }).click()
   await expect(page.getByText('Friend Favourite')).toBeVisible()
 
+  await page.getByRole('button', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Settings' }).click()
   await expect(page.getByRole('switch', { name: /Share my stats/ })).toBeChecked()
   page.once('dialog', (dialog) => dialog.accept())

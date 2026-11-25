@@ -123,6 +123,21 @@ describe('SpotifyApiClient', () => {
     expect(new Set(requests.map((r) => new URL(r.url).origin))).toEqual(new Set(['https://api.spotify.com']))
   })
 
+  it('reads one artist (genres and picture), refusing ids that are not Spotify ids', async () => {
+    const { api, requests } = client(() =>
+      json({
+        id: 'a1',
+        name: 'Coral Echo',
+        genres: ['dream pop', 7],
+        images: [{ url: 'https://i.scdn.co/a', width: 320 }],
+      }),
+    )
+    expect(await api.artist('a1')).toEqual(success({ genres: ['dream pop'], imageUrl: 'https://i.scdn.co/a' }))
+    expect(requests[0]?.url).toBe('https://api.spotify.com/v1/artists/a1')
+    expect(await api.artist('../me')).toMatchObject({ ok: false, error: { kind: 'invalidData' } })
+    expect(requests).toHaveLength(1)
+  })
+
   it('network failures are typed', async () => {
     const api = new SpotifyApiClient(tokens(), (async () => {
       throw new TypeError('Failed to fetch')

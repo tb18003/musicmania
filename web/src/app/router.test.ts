@@ -9,11 +9,19 @@ import { parseHash, Router } from './router.svelte'
 
 describe('router', () => {
   it('maps hashes to known routes and sends anything else home', () => {
-    expect(parseHash('')).toBe('/')
-    expect(parseHash('#/settings')).toBe('/settings')
-    expect(parseHash('#/install')).toBe('/install')
-    expect(parseHash('#/does-not-exist')).toBe('/')
-    expect(parseHash('#javascript:alert(1)')).toBe('/')
+    expect(parseHash('').path).toBe('/')
+    expect(parseHash('#/settings').path).toBe('/settings')
+    expect(parseHash('#/install').path).toBe('/install')
+    expect(parseHash('#/does-not-exist')).toEqual({ path: '/', params: {} })
+    expect(parseHash('#javascript:alert(1)').path).toBe('/')
+  })
+
+  it('reads query parameters after the path, decoded', () => {
+    expect(parseHash('#/detail?kind=track&name=Low%20Tide&artist=Coral%20%26%20Echo')).toEqual({
+      path: '/detail',
+      params: { kind: 'track', name: 'Low Tide', artist: 'Coral & Echo' },
+    })
+    expect(parseHash('#/nope?kind=track').params).toEqual({})
   })
 
   it('follows hash changes and starts each screen at the top', () => {

@@ -5,12 +5,16 @@
 -->
 <script lang="ts">
   import { onMount } from 'svelte'
+  import DetailScreen from '$features/detail/DetailScreen.svelte'
+  import { DetailViewModel } from '$features/detail/DetailViewModel.svelte'
   import HistoryScreen from '$features/history/HistoryScreen.svelte'
   import { HistoryViewModel } from '$features/history/HistoryViewModel.svelte'
   import HomeScreen from '$features/home/HomeScreen.svelte'
   import { HomeViewModel } from '$features/home/HomeViewModel.svelte'
   import ImportScreen from '$features/importer/ImportScreen.svelte'
   import { ImportViewModel } from '$features/importer/ImportViewModel.svelte'
+  import InsightsScreen from '$features/insights/InsightsScreen.svelte'
+  import { InsightsViewModel } from '$features/insights/InsightsViewModel.svelte'
   import InstallGuide from '$features/install/InstallGuide.svelte'
   import LeaderboardScreen from '$features/leaderboard/LeaderboardScreen.svelte'
   import { LeaderboardViewModel } from '$features/leaderboard/LeaderboardViewModel.svelte'
@@ -22,6 +26,7 @@
   import type { AppError } from '$lib/model/result'
   import BottomNav from '$lib/ui/components/BottomNav.svelte'
   import { provideUi } from '$lib/ui/context'
+  import { detailHref, detailTarget } from '$lib/ui/links'
   import type { MessageKey } from '$lib/ui/i18n/en'
   import type { InstallPlatform } from '$lib/ui/platform'
   import { applyToDocument, type Preferences } from '$lib/ui/preferences.svelte'
@@ -55,6 +60,8 @@
     remote,
     sync,
     top,
+    insights,
+    detail,
     importer,
     cloud,
     leaderboard,
@@ -66,6 +73,10 @@
   const home = new HomeViewModel({ history, remote, sync, runSync, now: container.now })
   const historyVm = new HistoryViewModel(history)
   const topVm = new TopViewModel(top)
+  const insightsVm = new InsightsViewModel(insights)
+  const detailVm = new DetailViewModel(detail)
+  let openedDetail = ''
+  let insightsLoaded = false
   const rankingVm = new LeaderboardViewModel({ cloud, leaderboard, publish, spotifyUserId })
   const cloudSettingsVm = new CloudSettingsViewModel({ cloud, publish, spotifyUserId })
   let rankingLoaded = false
@@ -76,6 +87,22 @@
     void home.load()
     void historyVm.refresh()
     if (topLoaded) void topVm.load()
+    if (insightsLoaded) void insightsVm.load()
+  })
+
+  // The detail screen opens whatever the (validated) link says; a broken link goes home.
+  $effect(() => {
+    if (session !== 'signedIn' || router.current !== '/detail') return
+    const target = detailTarget(router.params)
+    if (!target) {
+      router.navigate('/')
+      return
+    }
+    const key = detailHref(target)
+    if (key !== openedDetail) {
+      openedDetail = key
+      void detailVm.open(target)
+    }
   })
 
   // Screens that call Spotify or the API load the first time they are opened.
@@ -84,6 +111,10 @@
     if (router.current === '/top' && !topLoaded) {
       topLoaded = true
       void topVm.load()
+    }
+    if (router.current === '/insights' && !insightsLoaded) {
+      insightsLoaded = true
+      void insightsVm.load()
     }
     if (router.current === '/ranking' && !rankingLoaded && cloud.enabled) {
       rankingLoaded = true
@@ -165,10 +196,17 @@
     window.location.reload()
   }
 
-  type Tab = Extract<Route, '/' | '/top' | '/ranking' | '/history' | '/settings'>
+  // Like the app: Home · Top · History · Insights · Ranking. Settings is the gear on Home.
+  type Tab = Extract<Route, '/' | '/top' | '/history' | '/insights' | '/ranking'>
   const tabs = $derived<{ value: Tab; label: string; icon: string }[]>([
     { value: '/', label: preferences.t('nav_home'), icon: 'M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z' },
     { value: '/top', label: preferences.t('nav_top'), icon: 'M6 20V11M12 20V4M18 20v-6' },
+    { value: '/history', label: preferences.t('nav_history'), icon: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z' },
+    {
+      value: '/insights',
+      label: preferences.t('nav_insights'),
+      icon: 'M12 3a9 9 0 1 0 9 9h-9zM15 3.5A9 9 0 0 1 20.5 9H15z',
+    },
     ...(cloud.enabled
       ? [
           {
@@ -178,20 +216,16 @@
           },
         ]
       : []),
-    { value: '/history', label: preferences.t('nav_history'), icon: 'M12 7v5l3 2M21 12a9 9 0 1 1-9-9 9 9 0 0 1 9 9z' },
-    {
-      value: '/settings',
-      label: preferences.t('nav_settings'),
-      icon: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15l1.6 1-2 3.4-1.8-.7a7 7 0 0 1-2 1.2L15 22h-4l-.3-2.1a7 7 0 0 1-2-1.2l-1.8.7-2-3.4 1.6-1a7 7 0 0 1 0-2.4L4.9 11l2-3.4 1.8.7a7 7 0 0 1 2-1.2L11 5h4l.3 2.1a7 7 0 0 1 2 1.2l1.8-.7 2 3.4-1.6 1a7 7 0 0 1 0 2.4z',
-    },
   ])
-  const currentTab = $derived<Tab>(
-    router.current === '/top' ||
-      router.current === '/ranking' ||
-      router.current === '/history' ||
-      router.current === '/settings'
-      ? router.current
-      : '/',
+  const currentTab = $derived<Tab | null>(
+    router.current === '/settings' || router.current === '/detail'
+      ? null
+      : router.current === '/top' ||
+          router.current === '/ranking' ||
+          router.current === '/history' ||
+          router.current === '/insights'
+        ? router.current
+        : '/',
   )
 </script>
 
@@ -233,6 +267,14 @@
       onretry={() => rankingVm.load()}
       oncopy={copy}
     />
+  {:else if router.current === '/detail'}
+    <DetailScreen state={detailVm.state} onback={() => router.back()} />
+  {:else if router.current === '/insights'}
+    <InsightsScreen
+      state={insightsVm.state}
+      onrange={(range) => insightsVm.selectRange(range)}
+      onimport={() => router.navigate('/import')}
+    />
   {:else if router.current === '/import'}
     <ImportScreen state={importVm.state} onfiles={(files) => importVm.start(files)} onback={() => router.back()} />
   {:else if router.current === '/history'}
@@ -241,6 +283,7 @@
     <SettingsScreen
       {version}
       account={{ displayName: home.state.profile?.displayName ?? null }}
+      onback={() => router.back()}
       onsignout={signOut}
       onimport={() => router.navigate('/import')}
       onexport={() => exportHistory(history, Date.now())}
@@ -250,7 +293,13 @@
       oncopy={copy}
     />
   {:else}
-    <HomeScreen state={home.state} {now} onsync={() => home.syncNow()} onimport={() => router.navigate('/import')} />
+    <HomeScreen
+      state={home.state}
+      {now}
+      onsync={() => home.syncNow()}
+      onimport={() => router.navigate('/import')}
+      onsettings={() => router.navigate('/settings')}
+    />
   {/if}
 </div>
 

@@ -10,6 +10,9 @@ import { dedupeKeyOf } from '$lib/domain/stats'
 import type { PlayEvent } from '$lib/model/music'
 import type { MusicManiaDatabase, PlayRow } from './database'
 
+/** Rows per batch read in `scan`. */
+export const SCAN_PAGE = 5_000
+
 /** Strips the storage-only fields. */
 const toPlay = ({ id, dedupeKey, ...play }: PlayRow): PlayEvent => play
 
@@ -37,6 +40,29 @@ export class DexieHistoryRepository implements HistoryRepository {
     return rows.map(toPlay)
   }
 
+  /**
+   * Reads the range in pages of SCAN_PAGE rows through the playedAt index: memory stays bounded and
+   * each page is one fast batch read (a cursor costs a round trip per row, slow on Safari). Rows
+   * sharing the boundary timestamp are tracked by id so none is visited twice or skipped.
+   */
+  async scan(start: number, end: number, visit: (play: PlayEvent) => void): Promise<void> {
+    let from = start
+    let seenAtFrom = new Set<number>()
+    for (;;) {
+      const limit = SCAN_PAGE + seenAtFrom.size
+      const rows = await this.db.plays.where('playedAt').between(from, end, true, false).limit(limit).toArray()
+      for (const row of rows) {
+        if (row.playedAt === from && row.id !== undefined && seenAtFrom.has(row.id)) continue
+        visit(toPlay(row))
+      }
+      const last = rows.at(-1)
+      if (rows.length < limit || !last) return
+      if (last.playedAt !== from) seenAtFrom = new Set()
+      for (const row of rows) if (row.playedAt === last.playedAt && row.id !== undefined) seenAtFrom.add(row.id)
+      from = last.playedAt
+    }
+  }
+
   async recent(limit: number, before?: number): Promise<PlayEvent[]> {
     const query =
       before === undefined
@@ -45,8 +71,14 @@ export class DexieHistoryRepository implements HistoryRepository {
     return (await query.limit(limit).toArray()).map(toPlay)
   }
 
+  /**
+   * Batch reads through `scan`, never an index cursor: WebKit advances cursors one IPC round trip
+   * per key, which stalled `orderBy('playedAt').keys()` on an imported history (seen in e2e).
+   */
   async playTimes(): Promise<number[]> {
-    return (await this.db.plays.orderBy('playedAt').keys()) as number[]
+    const times: number[] = []
+    await this.scan(0, Number.MAX_SAFE_INTEGER, (play) => times.push(play.playedAt))
+    return times
   }
 
   count(): Promise<number> {

@@ -7,6 +7,7 @@
 import type { SpotifyRemote } from '$lib/domain/repositories'
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
 import { failure, success, type AppError, type DataResult } from '$lib/model/result'
+import type { ArtistInfo } from '$lib/model/detail'
 import type { ApiTimeRange, TopArtist, TopTrack } from '$lib/model/top'
 
 const TIME_RANGE: Record<ApiTimeRange, string> = {
@@ -170,6 +171,16 @@ export class SpotifyApiClient implements SpotifyRemote {
 
   topArtists(range: ApiTimeRange): Promise<DataResult<TopArtist[]>> {
     return this.#top('artists', range, toTopArtist)
+  }
+
+  async artist(id: string): Promise<DataResult<ArtistInfo>> {
+    // The id becomes part of the path: only Spotify's base62 ids are accepted.
+    if (!/^[A-Za-z0-9]{1,64}$/.test(id)) return failure({ kind: 'invalidData', detail: 'artist id' })
+    const result = await this.#get(`/v1/artists/${id}`)
+    if (!result.ok) return result
+    const artist = toTopArtist(result.data)
+    if (!artist) return failure({ kind: 'invalidData', detail: 'artist' })
+    return success({ genres: artist.genres, imageUrl: artist.imageUrl })
   }
 
   async #top<T>(type: string, range: ApiTimeRange, map: (item: unknown) => T | null): Promise<DataResult<T[]>> {

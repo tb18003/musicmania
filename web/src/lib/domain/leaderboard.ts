@@ -15,8 +15,8 @@ import {
 import { success, type DataResult } from '$lib/model/result'
 import { addDays, localDateOf, startOfDay, weekStart, type LocalDate } from './dates'
 import type { CloudRepository, HistoryRepository } from './repositories'
-import { computeStreaks, summarize } from './stats'
-import { localTopArtists, localTopTracks } from './top'
+import { computeStreaks, SummaryAccumulator } from './stats'
+import { topArtistsAccumulator, topTracksAccumulator } from './top'
 
 export const ALL_TIME_START: LocalDate = '1970-01-01'
 const TOP_ITEMS = 10
@@ -61,31 +61,50 @@ const MAX_MINUTES: Record<LeaderboardPeriod, number> = {
   all_time: 100 * 366 * MINUTES_PER_DAY,
 }
 
-/** Port of BuildSharedStatsUseCase: one aggregate per calendar period, nothing else. */
+/**
+ * Port of BuildSharedStatsUseCase: one aggregate per calendar period, nothing else. A single
+ * streamed pass over the history feeds every period whose window contains the play.
+ */
 export async function buildSharedStats(history: HistoryRepository, now: number): Promise<SharedPeriodStats[]> {
   const today = localDateOf(now)
   const times = await history.playTimes()
   const streaks = computeStreaks(times.map(localDateOf), today)
-  return Promise.all(
-    LEADERBOARD_PERIODS.map(async (period) => {
-      const start = periodStart(period, today)
-      const end = periodEnd(period, start)
-      const plays = await history.playsBetween(startOfDay(start), end ? startOfDay(end) : now + 60_000)
-      const summary = summarize(plays)
-      return {
-        period,
-        start,
-        minutes: Math.min(Math.floor(summary.listenedMs / 60_000), MAX_MINUTES[period]),
-        streams: summary.streams,
-        uniqueArtists: summary.uniqueArtists,
-        uniqueTracks: summary.uniqueTracks,
-        currentStreak: streaks.current,
-        longestStreak: streaks.longest,
-        topArtists: localTopArtists(plays, TOP_ITEMS).map((r) => r.item.name.slice(0, MAX_NAME)),
-        topTracks: localTopTracks(plays, TOP_ITEMS).map((r) => r.item.name.slice(0, MAX_NAME)),
-      }
-    }),
-  )
+  const periods = LEADERBOARD_PERIODS.map((period) => {
+    const start = periodStart(period, today)
+    const end = periodEnd(period, start)
+    return {
+      period,
+      start,
+      from: startOfDay(start),
+      until: end ? startOfDay(end) : now + 60_000,
+      summary: new SummaryAccumulator(),
+      artists: topArtistsAccumulator(TOP_ITEMS),
+      tracks: topTracksAccumulator(TOP_ITEMS),
+    }
+  })
+  await history.scan(0, now + 60_000, (play) => {
+    for (const p of periods) {
+      if (play.playedAt < p.from || play.playedAt >= p.until) continue
+      p.summary.add(play)
+      p.artists.add(play)
+      p.tracks.add(play)
+    }
+  })
+  return periods.map((p) => {
+    const summary = p.summary.result()
+    return {
+      period: p.period,
+      start: p.start,
+      minutes: Math.min(Math.floor(summary.listenedMs / 60_000), MAX_MINUTES[p.period]),
+      streams: summary.streams,
+      uniqueArtists: summary.uniqueArtists,
+      uniqueTracks: summary.uniqueTracks,
+      currentStreak: streaks.current,
+      longestStreak: streaks.longest,
+      topArtists: p.artists.result().map((r) => r.item.name.slice(0, MAX_NAME)),
+      topTracks: p.tracks.result().map((r) => r.item.name.slice(0, MAX_NAME)),
+    }
+  })
 }
 
 /**

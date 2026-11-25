@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
 import { play } from '$testing/fixtures'
 import { DefaultSessionRepository } from '../session'
 import { testDatabase } from '../testing'
-import { DexieAppStateRepository, DexieHistoryRepository } from './repositories'
+import { DexieAppStateRepository, DexieHistoryRepository, SCAN_PAGE } from './repositories'
 
 describe('DexieHistoryRepository', () => {
   it('ignores plays already stored, from sync or import (same dedupe key)', async () => {
@@ -34,6 +34,30 @@ describe('DexieHistoryRepository', () => {
     expect(next.map((p) => p.playedAt)).toEqual([3_000_000, 2_000_000])
     expect(await history.playTimes()).toEqual([1, 2, 3, 4, 5].map((i) => i * 1_000_000))
   })
+
+  it('scan pages through the range in order, never repeating or skipping plays that share a timestamp', async () => {
+    const history = new DexieHistoryRepository(testDatabase())
+    // More plays at one instant than a page holds, around page boundaries.
+    const same = Array.from({ length: SCAN_PAGE + 10 }, (_, i) => play({ playedAt: 5_000_000, trackName: `Same ${i}` }))
+    const spread = Array.from({ length: SCAN_PAGE }, (_, i) =>
+      play({ playedAt: 6_000_000 + i * 1_000, trackName: `S${i}` }),
+    )
+    await history.addPlays([...same, ...spread, play({ playedAt: 1_000, trackName: 'Before' })])
+
+    const seen: string[] = []
+    let ordered = true
+    let last = -Infinity
+    await history.scan(2_000, Number.MAX_SAFE_INTEGER, (p) => {
+      seen.push(p.trackName)
+      if (p.playedAt < last) ordered = false
+      last = p.playedAt
+    })
+
+    expect(seen).toHaveLength(same.length + spread.length)
+    expect(new Set(seen).size).toBe(seen.length)
+    expect(seen).not.toContain('Before')
+    expect(ordered).toBe(true)
+  }, 60_000)
 
   it('returns plain plays, without storage fields', async () => {
     const history = new DexieHistoryRepository(testDatabase())
