@@ -12,6 +12,14 @@ export interface PlayRow extends PlayEvent {
   dedupeKey: string
 }
 
+/** One day's top list for a range, like the daily snapshots in Room. */
+export interface SnapshotRow {
+  /** `${kind}:${range}:${YYYY-MM-DD}`: sorts by date within a kind and range. */
+  id: string
+  fetchedAt: number
+  items: unknown[]
+}
+
 export interface KeyValue {
   key: string
   value: unknown
@@ -28,6 +36,7 @@ export class MusicManiaDatabase extends Dexie {
   plays!: Table<PlayRow, number>
   state!: Table<KeyValue, string>
   secrets!: Table<KeyValue, string>
+  snapshots!: Table<SnapshotRow, string>
 
   constructor(name = DATABASE_NAME) {
     super(name)
@@ -36,5 +45,6 @@ export class MusicManiaDatabase extends Dexie {
       state: 'key',
       secrets: 'key',
     })
+    this.version(2).stores({ snapshots: 'id' })
   }
 }

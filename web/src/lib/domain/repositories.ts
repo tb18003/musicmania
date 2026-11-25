@@ -5,7 +5,8 @@
  */
 
 import type { NowPlaying, PlayEvent, RecentlyPlayedPage, UserProfile } from '$lib/model/music'
-import type { DataResult } from '$lib/model/result'
+import type { AppError, DataResult } from '$lib/model/result'
+import type { ApiTimeRange, ImportProgress, TopArtist, TopList, TopTrack } from '$lib/model/top'
 
 /** Interfaces live in the domain; implementations in data (dependency inversion, like core:domain). */
 
@@ -33,6 +34,35 @@ export interface SpotifyRemote {
   me(): Promise<DataResult<UserProfile>>
   recentlyPlayed(after: number | null): Promise<DataResult<RecentlyPlayedPage>>
   nowPlaying(): Promise<DataResult<NowPlaying | null>>
+  topTracks(range: ApiTimeRange): Promise<DataResult<TopTrack[]>>
+  topArtists(range: ApiTimeRange): Promise<DataResult<TopArtist[]>>
+}
+
+/** What a cached read returns: the best list we have, and why it may be old. */
+export interface Cached<T> {
+  readonly list: TopList<T> | null
+  readonly error: AppError | null
+}
+
+/** Spotify's top lists, cached locally with daily snapshots (offline first, ▲▼ NEW). */
+export interface TopItemsRepository {
+  topTracks(range: ApiTimeRange, options?: { refresh?: boolean }): Promise<Cached<TopTrack>>
+  topArtists(range: ApiTimeRange, options?: { refresh?: boolean }): Promise<Cached<TopArtist>>
+}
+
+/** A user-picked file (a Blob with a name): the Spotify data export, ZIP or JSON. */
+export interface ImportFile {
+  readonly name: string
+  readonly size: number
+  stream(): ReadableStream<Uint8Array>
+  text(): Promise<string>
+}
+
+export interface StreamingHistoryImporter {
+  import(
+    files: readonly ImportFile[],
+    onProgress: (progress: ImportProgress) => void,
+  ): Promise<DataResult<ImportProgress>>
 }
 
 export interface AuthRepository {

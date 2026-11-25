@@ -4,11 +4,20 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import type { AuthRepository, HistoryRepository, SessionRepository, SpotifyRemote } from '$lib/domain/repositories'
+import type {
+  AuthRepository,
+  HistoryRepository,
+  SessionRepository,
+  SpotifyRemote,
+  StreamingHistoryImporter,
+} from '$lib/domain/repositories'
 import { HistorySync } from '$lib/domain/sync'
+import { GetTopItems } from '$lib/domain/top'
 import { spotifyConfigFrom } from '$lib/data/config'
 import { MusicManiaDatabase } from '$lib/data/db/database'
 import { DexieAppStateRepository, DexieHistoryRepository } from '$lib/data/db/repositories'
+import { CachedTopItemsRepository } from '$lib/data/db/top-items'
+import { WorkerStreamingHistoryImporter } from '$lib/data/importer/worker-importer'
 import { DefaultSessionRepository } from '$lib/data/session'
 import { SpotifyAuth } from '$lib/data/spotify/auth'
 import { SpotifyApiClient } from '$lib/data/spotify/client'
@@ -20,6 +29,8 @@ export interface Container {
   remote: SpotifyRemote
   history: HistoryRepository
   sync: HistorySync
+  top: GetTopItems
+  importer: StreamingHistoryImporter
   session: SessionRepository
   now: () => number
 }
@@ -44,6 +55,8 @@ export function createContainer(): Container {
     remote,
     history,
     sync: new HistorySync({ remote, history, appState: new DexieAppStateRepository(db), now }),
+    top: new GetTopItems({ top: new CachedTopItemsRepository(db, remote, now), history, now }),
+    importer: new WorkerStreamingHistoryImporter(),
     session: new DefaultSessionRepository(db, () => auth.forget()),
     now,
   }

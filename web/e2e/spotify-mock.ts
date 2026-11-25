@@ -34,6 +34,13 @@ const item = (name: string, artist: string, minutes: number) => ({
   },
 })
 
+/** Signs in through the mocked Spotify and waits for the first sync. */
+export async function signIn(page: Page) {
+  await page.goto('./')
+  await page.getByRole('button', { name: 'Sign in with Spotify' }).click()
+  await page.getByText('Synced', { exact: false }).waitFor()
+}
+
 /** A fake Spotify (accounts + Web API) good enough for the whole sign-in and sync flow. */
 export async function mockSpotify(page: Page): Promise<SpotifyMock> {
   const mock: SpotifyMock = { bearers: [], tokenRequests: [], authorizedHosts: new Set() }
@@ -44,7 +51,7 @@ export async function mockSpotify(page: Page): Promise<SpotifyMock> {
     const authorization = await request.headerValue('authorization')
     if (authorization) mock.authorizedHosts.add(url.host)
     // The app under test is served locally; nothing else may leave the machine.
-    if (url.hostname === '127.0.0.1') return route.continue()
+    if (url.hostname === '127.0.0.1' || url.protocol === 'blob:' || url.protocol === 'data:') return route.continue()
     if (url.host !== 'accounts.spotify.com' && url.host !== 'api.spotify.com') return route.abort()
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS })
 
@@ -84,6 +91,24 @@ export async function mockSpotify(page: Page): Promise<SpotifyMock> {
         })
       }
       if (url.pathname === '/v1/me/player/currently-playing') return route.fulfill({ status: 204, headers: CORS })
+      if (url.pathname === '/v1/me/top/tracks') {
+        const range = url.searchParams.get('time_range')
+        return route.fulfill({
+          headers: CORS,
+          json: {
+            items: [
+              { ...item(`Top ${range}`, 'Coral Echo', 0).track, album: { id: 'shore', name: 'Shoreline' } },
+              { ...item('Second Song', 'Nova Lights', 0).track, album: { id: 'night', name: 'Nightfall' } },
+            ],
+          },
+        })
+      }
+      if (url.pathname === '/v1/me/top/artists') {
+        return route.fulfill({
+          headers: CORS,
+          json: { items: [{ id: 'ce', name: 'Coral Echo', genres: ['dream pop'], images: [] }] },
+        })
+      }
     }
     return route.fulfill({ status: 404, headers: CORS })
   })
