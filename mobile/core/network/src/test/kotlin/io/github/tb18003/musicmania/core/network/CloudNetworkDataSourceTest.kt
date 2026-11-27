@@ -18,6 +18,7 @@ import io.github.tb18003.musicmania.core.network.auth.TokenAuthenticator
 import io.github.tb18003.musicmania.core.network.auth.TokenRefreshCoordinator
 import io.github.tb18003.musicmania.core.network.auth.TokenRefresher
 import io.github.tb18003.musicmania.core.network.di.cloudAllowedHost
+import io.github.tb18003.musicmania.core.network.model.CloudAppVersionDto
 import io.github.tb18003.musicmania.core.network.model.CloudPeriodStatsDto
 import io.github.tb18003.musicmania.core.network.model.CloudStatsUploadDto
 import io.github.tb18003.musicmania.core.network.model.CloudTopItemDto
@@ -83,6 +84,14 @@ class CloudNetworkDataSourceTest {
         val disabled = cloudAllowedHost(CloudConfig.Disabled)
         assertFalse(disabled.matches(CloudConfig.DISABLED_BASE_URL.toHttpUrl()))
         assertFalse(disabled.matches("https://evil.example/v1/me".toHttpUrl()))
+    }
+
+    @Test
+    fun `the latest app version comes from the public endpoint`() = runTest {
+        server.enqueue(MockResponse().setBody("""{"version":"0.4.0"}"""))
+
+        assertEquals(DataResult.Success(CloudAppVersionDto("0.4.0")), dataSource().appVersion())
+        assertEquals("/v1/app/version", server.takeRequest().path)
     }
 
     @Test

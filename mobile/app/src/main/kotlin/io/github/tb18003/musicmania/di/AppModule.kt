@@ -11,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.github.tb18003.musicmania.BuildConfig
+import io.github.tb18003.musicmania.core.common.config.AppInfo
 import io.github.tb18003.musicmania.core.common.config.CloudConfig
 import io.github.tb18003.musicmania.core.common.config.SpotifyConfig
 import javax.inject.Singleton
@@ -25,6 +26,10 @@ object AppModule {
         clientId = BuildConfig.SPOTIFY_CLIENT_ID,
         redirectUri = BuildConfig.SPOTIFY_REDIRECT_URI,
     )
+
+    @Provides
+    @Singleton
+    fun providesAppInfo(): AppInfo = AppInfo(versionName = BuildConfig.VERSION_NAME)
 
     @Provides
     @Singleton

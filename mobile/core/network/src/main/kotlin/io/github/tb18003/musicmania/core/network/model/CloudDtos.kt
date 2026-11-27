@@ -43,6 +43,9 @@ data class CloudPeriodStatsDto(
 )
 
 @Serializable
+data class CloudAppVersionDto(val version: String)
+
+@Serializable
 data class CloudTopItemDto(
     val name: String,
     val spotifyId: String? = null,

@@ -7,6 +7,7 @@
 package io.github.tb18003.musicmania.feature.settings
 
 import app.cash.turbine.test
+import io.github.tb18003.musicmania.core.common.config.AppInfo
 import io.github.tb18003.musicmania.core.common.result.AppError
 import io.github.tb18003.musicmania.core.domain.usecase.BuildSharedStatsUseCase
 import io.github.tb18003.musicmania.core.domain.usecase.PublishListeningStatsUseCase
@@ -56,6 +57,7 @@ class SettingsViewModelTest {
             PublishListeningStatsUseCase(cloud, session, BuildSharedStatsUseCase(history, TestData.fixedClock)),
             FakeUserRepository(),
             history,
+            AppInfo("0.3.0"),
         )
     }
 
@@ -68,6 +70,12 @@ class SettingsViewModelTest {
     fun `without a cloud API there is no ranking section`() = runTest {
         cloud.isEnabled = false
         assertNull(viewModel.uiState.value.cloud)
+    }
+
+    @Test
+    fun `the installed version is shown`() = runTest {
+        subscribe()
+        assertEquals("0.3.0", viewModel.uiState.value.appVersion)
     }
 
     @Test

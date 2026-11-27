@@ -9,6 +9,7 @@ package io.github.tb18003.musicmania.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.tb18003.musicmania.core.common.config.AppInfo
 import io.github.tb18003.musicmania.core.common.result.AppError
 import io.github.tb18003.musicmania.core.common.result.DataResult
 import io.github.tb18003.musicmania.core.domain.repository.CloudRepository
@@ -45,6 +46,8 @@ data class SettingsUiState(
     val playCount: Int = 0,
     /** Null when the optional cloud API is not configured (no ranking section). */
     val cloud: CloudSettings? = null,
+    /** The installed release (MAJOR.MINOR.PATCH), shown next to the open-source libraries. */
+    val appVersion: String = "",
 )
 
 /** Friends-leaderboard settings. [sharingEnabled] is null while unknown or when not allow-listed. */
@@ -76,6 +79,7 @@ class SettingsViewModel @Inject constructor(
     private val publishStats: PublishListeningStatsUseCase,
     userRepository: UserRepository,
     historyRepository: HistoryRepository,
+    appInfo: AppInfo,
 ) : ViewModel() {
     private val events = Channel<SettingsEvent>(Channel.BUFFERED)
     val eventFlow: Flow<SettingsEvent> = events.receiveAsFlow()
@@ -91,8 +95,12 @@ class SettingsViewModel @Inject constructor(
             historyRepository.observeEventCount(),
         ) { prefs, profile, sessionState, sync, count -> SettingsUiState(prefs, profile, sessionState, sync, count) },
         cloudSettings,
-    ) { state, cloudState -> state.copy(cloud = cloudState) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), SettingsUiState(cloud = cloudSettings.value))
+    ) { state, cloudState -> state.copy(cloud = cloudState, appVersion = appInfo.versionName) }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+            SettingsUiState(cloud = cloudSettings.value, appVersion = appInfo.versionName),
+        )
 
     init {
         if (cloud.isEnabled) refreshCloud()

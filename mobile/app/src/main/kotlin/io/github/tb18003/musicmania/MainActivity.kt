@@ -23,6 +23,7 @@ import io.github.tb18003.musicmania.core.designsystem.theme.MusicManiaTheme
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.core.model.ThemeMode
 import io.github.tb18003.musicmania.ui.MusicManiaApp
+import io.github.tb18003.musicmania.ui.UpdateDialog
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -55,6 +56,7 @@ class MainActivity : ComponentActivity() {
                 reduceMotion = state.preferences.reduceMotion,
             ) {
                 MusicManiaApp(session = state.session, cloudEnabled = viewModel.cloudEnabled)
+                state.update?.let { update -> UpdateDialog(update, onDismiss = viewModel::dismissUpdate) }
             }
         }
     }

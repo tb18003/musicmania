@@ -22,6 +22,9 @@ import java.time.LocalDate
 interface CloudRepository {
     val isEnabled: Boolean
 
+    /** The latest release announced by the API (MAJOR.MINOR.PATCH), signed in, signed out or in demo mode. */
+    suspend fun latestAppVersion(): DataResult<String>
+
     suspend fun me(): DataResult<CloudProfile>
 
     /** Opt in or out of appearing in the rankings (off by default). */

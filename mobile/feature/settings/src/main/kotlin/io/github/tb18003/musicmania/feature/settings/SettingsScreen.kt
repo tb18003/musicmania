@@ -39,6 +39,7 @@ import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.Gavel
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -69,6 +70,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.tb18003.musicmania.core.common.config.AppInfo
 import io.github.tb18003.musicmania.core.designsystem.component.Artwork
 import io.github.tb18003.musicmania.core.designsystem.component.SegmentedSelector
 import io.github.tb18003.musicmania.core.model.SessionState
@@ -271,6 +273,15 @@ fun SettingsScreen(state: SettingsUiState, actions: SettingsActions, modifier: M
             ) {
                 showLicenses =
                     true
+            }
+        }
+        item {
+            ActionRow(
+                Icons.Rounded.Info,
+                stringResource(R.string.feature_settings_version),
+                stringResource(R.string.feature_settings_version_body, state.appVersion),
+            ) {
+                actions.onOpenUrl(AppInfo.RELEASES_URL)
             }
         }
         item {
