@@ -20,6 +20,7 @@ import io.github.tb18003.musicmania.core.model.FriendStats
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
+import io.github.tb18003.musicmania.core.model.RankedItem
 import io.github.tb18003.musicmania.core.model.SharedPeriodStats
 import io.github.tb18003.musicmania.core.network.CloudNetworkDataSource
 import io.github.tb18003.musicmania.core.network.model.CloudLeaderboardEntryDto
@@ -110,8 +111,8 @@ internal fun CloudUserStatsDto.toModel() = FriendStats(
     streams = streams,
     uniqueArtists = uniqueArtists,
     currentStreak = currentStreak,
-    topArtists = topArtists.map { it.name },
-    topTracks = topTracks.map { it.name },
+    topArtists = topArtists.map { it.toModel() },
+    topTracks = topTracks.map { it.toModel() },
 )
 
 internal fun SharedPeriodStats.toDto() = CloudPeriodStatsDto(
@@ -123,6 +124,12 @@ internal fun SharedPeriodStats.toDto() = CloudPeriodStatsDto(
     uniqueTracks = uniqueTracks,
     currentStreak = currentStreak,
     longestStreak = longestStreak,
-    topArtists = topArtists.map(::CloudTopItemDto),
-    topTracks = topTracks.map(::CloudTopItemDto),
+    topArtists = topArtists.map { it.toDto() },
+    topTracks = topTracks.map { it.toDto() },
 )
+
+/** A friend's cover is kept only if it is HTTPS. */
+internal fun CloudTopItemDto.toModel() = RankedItem(name, RankedItem.safeImageUrl(imageUrl))
+
+/** Only an HTTPS cover is sent; the API rejects the whole upload otherwise. */
+internal fun RankedItem.toDto() = CloudTopItemDto(name = name, imageUrl = RankedItem.safeImageUrl(imageUrl))

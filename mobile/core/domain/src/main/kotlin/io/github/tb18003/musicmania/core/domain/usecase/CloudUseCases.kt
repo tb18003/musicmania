@@ -17,6 +17,7 @@ import io.github.tb18003.musicmania.core.model.FriendStats
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
+import io.github.tb18003.musicmania.core.model.RankedItem
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.core.model.SharedPeriodStats
 import io.github.tb18003.musicmania.core.model.TimeRange
@@ -51,8 +52,8 @@ class BuildSharedStatsUseCase @Inject constructor(
                 uniqueTracks = summary.uniqueTracks,
                 currentStreak = streaks.current,
                 longestStreak = streaks.longest,
-                topArtists = history.observeTopArtists(range, TOP_ITEMS).first().map { it.artistName.take(MAX_NAME) },
-                topTracks = history.observeTopTracks(range, TOP_ITEMS).first().map { it.trackName.take(MAX_NAME) },
+                topArtists = history.observeTopArtists(range, TOP_ITEMS).first().map { rankedItem(it.artistName, it.imageUrl) },
+                topTracks = history.observeTopTracks(range, TOP_ITEMS).first().map { rankedItem(it.trackName, it.imageUrl) },
             )
         }
     }
@@ -62,6 +63,8 @@ class BuildSharedStatsUseCase @Inject constructor(
             ?: clock.instant().plus(Duration.ofMinutes(1))
         return DateRange(start.atStartOfDay(clock.zone).toInstant(), end)
     }
+
+    private fun rankedItem(name: String, imageUrl: String?) = RankedItem(name.take(MAX_NAME), RankedItem.safeImageUrl(imageUrl))
 
     private companion object {
         const val TOP_ITEMS = 10

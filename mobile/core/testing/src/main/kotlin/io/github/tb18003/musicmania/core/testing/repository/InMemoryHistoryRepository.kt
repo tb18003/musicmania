@@ -70,7 +70,7 @@ class InMemoryHistoryRepository(private val zone: ZoneId = ZoneOffset.UTC) : His
                     key.first,
                     key.second,
                     plays.first().albumName,
-                    null,
+                    plays.firstNotNullOfOrNull { it.imageUrl },
                     plays.size,
                     plays.sumOf {
                         it.msPlayed
@@ -83,7 +83,9 @@ class InMemoryHistoryRepository(private val zone: ZoneId = ZoneOffset.UTC) : His
 
     override fun observeTopArtists(range: DateRange, limit: Int) = inRange(range).map { list ->
         list.groupBy { it.artistName }
-            .map { (name, plays) -> ArtistPlayCount(name, null, plays.size, plays.sumOf { it.msPlayed }) }
+            .map { (name, plays) ->
+                ArtistPlayCount(name, plays.firstNotNullOfOrNull { it.imageUrl }, plays.size, plays.sumOf { it.msPlayed })
+            }
             .sortedWith(compareByDescending<ArtistPlayCount> { it.streams }.thenByDescending { it.listenedMs })
             .take(limit)
     }

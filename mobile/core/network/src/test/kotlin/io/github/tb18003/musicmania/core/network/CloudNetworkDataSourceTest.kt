@@ -25,6 +25,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -118,7 +119,7 @@ class CloudNetworkDataSourceTest {
                     uniqueTracks = 70,
                     currentStreak = 3,
                     longestStreak = 10,
-                    topArtists = listOf(CloudTopItemDto("Nova Lights")),
+                    topArtists = listOf(CloudTopItemDto("Nova Lights", imageUrl = "https://i.scdn.co/image/nova")),
                 ),
             ),
         )
@@ -134,5 +135,8 @@ class CloudNetworkDataSourceTest {
         val allowed = required + setOf("currentStreak", "longestStreak", "topArtists", "topTracks")
         assertTrue(period.keys.containsAll(required), "missing: ${required - period.keys}")
         assertTrue(allowed.containsAll(period.keys), "unknown: ${period.keys - allowed}")
+        val artist = period["topArtists"]!!.jsonArray.single().jsonObject
+        assertEquals(setOf("name", "imageUrl"), artist.keys, "no null fields are sent")
+        assertEquals("https://i.scdn.co/image/nova", artist["imageUrl"]!!.jsonPrimitive.content)
     }
 }

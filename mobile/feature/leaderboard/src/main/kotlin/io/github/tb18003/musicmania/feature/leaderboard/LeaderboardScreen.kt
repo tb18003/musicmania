@@ -7,8 +7,6 @@
 package io.github.tb18003.musicmania.feature.leaderboard
 
 import android.content.ClipData
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +28,6 @@ import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.EmojiEvents
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -58,7 +55,6 @@ import io.github.tb18003.musicmania.core.designsystem.component.Artwork
 import io.github.tb18003.musicmania.core.designsystem.component.SegmentedSelector
 import io.github.tb18003.musicmania.core.designsystem.component.staggeredEntrance
 import io.github.tb18003.musicmania.core.designsystem.theme.MusicManiaTheme
-import io.github.tb18003.musicmania.core.model.FriendStats
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
@@ -77,7 +73,8 @@ fun LeaderboardRoute(modifier: Modifier = Modifier, viewModel: LeaderboardViewMo
             onMetric = viewModel::selectMetric,
             onPeriod = viewModel::selectPeriod,
             onEnableSharing = viewModel::enableSharing,
-            onFriendClick = viewModel::toggleFriend,
+            onFriendClick = viewModel::openFriend,
+            onFriendDismiss = viewModel::closeFriend,
             onRetry = viewModel::retry,
         ),
         modifier = modifier,
@@ -89,6 +86,7 @@ data class LeaderboardActions(
     val onPeriod: (LeaderboardPeriod) -> Unit = {},
     val onEnableSharing: () -> Unit = {},
     val onFriendClick: (String) -> Unit = {},
+    val onFriendDismiss: () -> Unit = {},
     val onRetry: () -> Unit = {},
 )
 
@@ -128,6 +126,10 @@ fun LeaderboardScreen(state: LeaderboardUiState, actions: LeaderboardActions, mo
             }
         }
     }
+    state.selected?.let { selected ->
+        val entry = (state.content as? LeaderboardContent.Ranking)?.entries?.firstOrNull { it.spotifyUserId == selected.spotifyUserId }
+        FriendDialog(selected, entry, state.metric, actions.onFriendDismiss)
+    }
 }
 
 @Composable
@@ -155,11 +157,9 @@ private fun Ranking(entries: List<LeaderboardEntry>, state: LeaderboardUiState, 
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         itemsIndexed(entries, key = { _, entry -> entry.spotifyUserId }) { index, entry ->
-            val expanded = state.expanded?.takeIf { it.spotifyUserId == entry.spotifyUserId }
             RankingRow(
                 entry = entry,
                 metric = state.metric,
-                expanded = expanded,
                 onClick = { onFriendClick(entry.spotifyUserId) },
                 modifier = Modifier.staggeredEntrance(index),
             )
@@ -168,40 +168,34 @@ private fun Ranking(entries: List<LeaderboardEntry>, state: LeaderboardUiState, 
 }
 
 @Composable
-private fun RankingRow(
-    entry: LeaderboardEntry,
-    metric: LeaderboardMetric,
-    expanded: ExpandedFriend?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun RankingRow(entry: LeaderboardEntry, metric: LeaderboardMetric, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val name = entry.displayName ?: entry.spotifyUserId
     Surface(
         shape = MaterialTheme.shapes.medium,
         color = if (entry.isMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
-        modifier = modifier.fillMaxWidth().animateContentSize(),
+        modifier = modifier.fillMaxWidth(),
     ) {
-        Column(Modifier.clickable(role = Role.Button, onClick = onClick).padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RankBadge(entry.rank)
-                Spacer(Modifier.width(12.dp))
-                Artwork(imageUrl = entry.avatarUrl, title = name, shape = CircleShape, modifier = Modifier.size(44.dp))
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (entry.isMe) {
-                        Text(
-                            stringResource(R.string.feature_leaderboard_you),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
+        Row(
+            Modifier
+                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.feature_leaderboard_details), onClick = onClick)
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RankBadge(entry.rank)
+            Spacer(Modifier.width(12.dp))
+            Artwork(imageUrl = entry.avatarUrl, title = name, shape = CircleShape, modifier = Modifier.size(44.dp))
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (entry.isMe) {
+                    Text(
+                        stringResource(R.string.feature_leaderboard_you),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
                 }
-                Text(formatValue(metric, entry.value), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
-            AnimatedVisibility(visible = expanded != null) {
-                FriendDetails(expanded?.stats)
-            }
+            Text(formatValue(metric, entry.value), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -223,24 +217,6 @@ private fun RankBadge(rank: Int) {
             modifier = Modifier.padding(top = 6.dp),
             textAlign = TextAlign.Center,
         )
-    }
-}
-
-@Composable
-private fun FriendDetails(stats: FriendStats?) {
-    Column(Modifier.padding(top = 12.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        if (stats == null) {
-            CircularProgressIndicator(Modifier.size(24.dp).align(Alignment.CenterHorizontally))
-            return@Column
-        }
-        if (stats.topArtists.isNotEmpty()) {
-            Text(stringResource(R.string.feature_leaderboard_top_artists), style = MaterialTheme.typography.labelLarge)
-            Text(stats.topArtists.take(TOP_SHOWN).joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
-        }
-        if (stats.topTracks.isNotEmpty()) {
-            Text(stringResource(R.string.feature_leaderboard_top_tracks), style = MaterialTheme.typography.labelLarge)
-            Text(stats.topTracks.take(TOP_SHOWN).joinToString(" · "), style = MaterialTheme.typography.bodyMedium)
-        }
     }
 }
 
@@ -275,7 +251,7 @@ private fun NotAllowlisted(spotifyUserId: String?) {
 }
 
 @Composable
-private fun formatValue(metric: LeaderboardMetric, value: Long): String = when (metric) {
+internal fun formatValue(metric: LeaderboardMetric, value: Long): String = when (metric) {
     LeaderboardMetric.MINUTES -> stringResource(R.string.feature_leaderboard_minutes_value, Formatters.number(value))
     LeaderboardMetric.STREAK -> pluralStringResource(R.plurals.feature_leaderboard_days, value.toInt(), value.toInt())
     LeaderboardMetric.STREAMS, LeaderboardMetric.UNIQUE_ARTISTS -> Formatters.number(value)
@@ -298,7 +274,6 @@ private val LeaderboardMetric.label: Int
     }
 
 private const val SKELETON_ROWS = 6
-private const val TOP_SHOWN = 3
 private const val GOLD = 0xFFFFD54F
 private const val SILVER = 0xFFCFD8DC
 private const val BRONZE = 0xFFD7A26B

@@ -16,6 +16,7 @@ import io.github.tb18003.musicmania.core.model.FriendStats
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
+import io.github.tb18003.musicmania.core.model.RankedItem
 import io.github.tb18003.musicmania.core.testing.MainDispatcherRule
 import io.github.tb18003.musicmania.core.testing.TestData
 import io.github.tb18003.musicmania.core.testing.repository.FakeCloudRepository
@@ -120,17 +121,41 @@ class LeaderboardViewModelTest {
     }
 
     @Test
-    fun `tapping a friend expands their details, tapping again collapses`() = runTest {
+    fun `tapping a friend opens their details with covers, closing clears them`() = runTest {
         cloud.profile = cloud.profile.copy(sharingEnabled = true)
         cloud.entries = entries
-        cloud.friends = mapOf("ana" to FriendStats("ana", "Ana", 1_510, 520, 33, 30, listOf("Coral Echo"), listOf("Low Tide")))
+        val coral = RankedItem("Coral Echo", "https://i.scdn.co/image/coral")
+        cloud.friends = mapOf("ana" to FriendStats("ana", "Ana", 1_510, 520, 33, 30, listOf(coral), listOf(RankedItem("Low Tide"))))
         val viewModel = viewModel()
 
-        viewModel.toggleFriend("ana")
-        assertEquals(listOf("Coral Echo"), viewModel.uiState.value.expanded?.stats?.topArtists)
+        viewModel.openFriend("ana")
+        val selected = viewModel.uiState.value.selected
+        assertEquals(false, selected?.isLoading)
+        assertEquals(listOf(coral), selected?.stats?.topArtists)
 
-        viewModel.toggleFriend("ana")
-        assertNull(viewModel.uiState.value.expanded)
+        viewModel.closeFriend()
+        assertNull(viewModel.uiState.value.selected)
+    }
+
+    @Test
+    fun `a friend whose stats cannot be loaded stops loading without stats`() = runTest {
+        cloud.profile = cloud.profile.copy(sharingEnabled = true)
+        cloud.entries = entries
+        val viewModel = viewModel()
+
+        viewModel.openFriend("nobody")
+        assertEquals(SelectedFriend("nobody", stats = null, isLoading = false), viewModel.uiState.value.selected)
+    }
+
+    @Test
+    fun `changing the period closes the dialog`() = runTest {
+        cloud.profile = cloud.profile.copy(sharingEnabled = true)
+        cloud.entries = entries
+        val viewModel = viewModel()
+
+        viewModel.openFriend("nobody")
+        viewModel.selectPeriod(LeaderboardPeriod.MONTH)
+        assertNull(viewModel.uiState.value.selected)
     }
 
     @Test

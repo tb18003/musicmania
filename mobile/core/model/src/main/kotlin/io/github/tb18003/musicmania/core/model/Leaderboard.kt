@@ -59,6 +59,21 @@ data class CloudProfile(
 )
 
 /** Aggregated statistics of one period, the only listening data that ever leaves the device. */
+
+/** One entry of a shared top-10 list: its name and public cover (Spotify CDN), if known. */
+data class RankedItem(
+    val name: String,
+    val imageUrl: String? = null,
+) {
+    companion object {
+        private const val MAX_IMAGE_URL = 2048
+        private const val HTTPS = "https://"
+
+        /** The cover URL if it is HTTPS and fits the API limit, otherwise null (never send or show anything else). */
+        fun safeImageUrl(url: String?): String? = url?.takeIf { it.startsWith(HTTPS) && it.length in (HTTPS.length + 1)..MAX_IMAGE_URL }
+    }
+}
+
 data class SharedPeriodStats(
     val period: LeaderboardPeriod,
     val start: LocalDate,
@@ -68,8 +83,8 @@ data class SharedPeriodStats(
     val uniqueTracks: Int,
     val currentStreak: Int,
     val longestStreak: Int,
-    val topArtists: List<String>,
-    val topTracks: List<String>,
+    val topArtists: List<RankedItem>,
+    val topTracks: List<RankedItem>,
 )
 
 /** A friend's statistics for one period, shown when their leaderboard row is expanded. */
@@ -80,6 +95,6 @@ data class FriendStats(
     val streams: Int,
     val uniqueArtists: Int,
     val currentStreak: Int,
-    val topArtists: List<String>,
-    val topTracks: List<String>,
+    val topArtists: List<RankedItem>,
+    val topTracks: List<RankedItem>,
 )
