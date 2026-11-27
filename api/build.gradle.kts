@@ -11,7 +11,34 @@ plugins {
 }
 
 group = "io.github.tb18003.musicmania"
-version = "0.1.0"
+
+// One release version for the whole repository: web/package.json. The Docker build only sees api/,
+// so it passes the version explicitly with -PappVersion (see Dockerfile and deploy-api.yml).
+val appVersion: Provider<String> = providers.gradleProperty("appVersion").orElse(
+    providers.fileContents(layout.projectDirectory.file("../web/package.json")).asText.map { json ->
+        Regex(""""version"\s*:\s*"([^"]+)"""").find(json)?.groupValues?.get(1) ?: error("No version in web/package.json")
+    },
+).map { value ->
+    require(value.matches(Regex("""\d+\.\d+\.\d+"""))) { "The app version must be MAJOR.MINOR.PATCH, got '$value'" }
+    value
+}
+version = appVersion.get()
+
+val generateBuildInfo by tasks.registering {
+    val output = layout.buildDirectory.dir("generated/build-info")
+    val versionValue = appVersion
+    inputs.property("version", versionValue)
+    outputs.dir(output)
+    doLast {
+        val file = output.get().file("musicmania-build.properties").asFile
+        file.parentFile.mkdirs()
+        file.writeText("version=${versionValue.get()}" + System.lineSeparator())
+    }
+}
+
+sourceSets.main {
+    resources.srcDir(generateBuildInfo)
+}
 
 application {
     mainClass.set("io.github.tb18003.musicmania.api.ApplicationKt")

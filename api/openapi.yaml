@@ -30,6 +30,20 @@ paths:
             application/json:
               schema: { type: object, properties: { status: { type: string, const: ok } } }
 
+  /v1/app/version:
+    get:
+      summary: Latest MusicMania release
+      description: >
+        The repository's release version (the same for the Android app and the web app). The Android app
+        compares it with its own version and offers the update when it is behind. Public, no token needed.
+      security: []
+      responses:
+        "200":
+          description: The version this API was released with.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AppVersion" }
+
   /v1/me:
     get:
       summary: My profile (created, private, on the first call)
@@ -168,6 +182,11 @@ components:
       type: string
       enum: [week, month, year, all_time]
       default: week
+    AppVersion:
+      type: object
+      required: [version]
+      properties:
+        version: { type: string, pattern: '^\d+\.\d+\.\d+$', examples: ['0.3.0'] }
     TopItem:
       type: object
       required: [name]

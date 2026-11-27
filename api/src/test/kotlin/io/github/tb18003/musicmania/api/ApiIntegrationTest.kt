@@ -112,9 +112,11 @@ class ApiIntegrationTest {
             spotifyApiBaseUrl = spotify.url("/").toString().trimEnd('/'),
             corsOrigins = corsOrigins,
         )
-        application { musicManiaApi(Dependencies.create(config, database, clock)) }
+        application { musicManiaApi(Dependencies.create(config, database, clock).copyWithVersion("9.8.7")) }
         test(client)
     }
+
+    private fun Dependencies.copyWithVersion(version: String) = Dependencies(authenticator, repositories, corsOrigins, clock, version)
 
     private suspend fun HttpClient.putJson(path: String, token: String, body: String) = put(path) {
         bearerAuth(token)
@@ -129,6 +131,17 @@ class ApiIntegrationTest {
            "currentStreak":2,"longestStreak":5,"topArtists":[{"name":"Nova Lights","imageUrl":"$cover"}],"topTracks":[{"name":"Glow"}]}]}"""
 
     // ---------------------------------------------------------------- authentication
+
+    @Test
+    fun `the latest app version is public, the routes next to it still need a token`() = api { client ->
+        val version = client.get("/v1/app/version")
+        assertEquals(HttpStatusCode.OK, version.status)
+        assertEquals("9.8.7", version.json()["version"]?.jsonPrimitive?.content)
+
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/v1/me").status)
+        assertEquals(HttpStatusCode.Unauthorized, client.get("/v1/leaderboards").status)
+        assertEquals(HttpStatusCode.NotFound, client.get("/v1/app/nothing-here") { bearerAuth("token-ana") }.status)
+    }
 
     @Test
     fun `health is public, everything else needs a valid token`() = api { client ->
