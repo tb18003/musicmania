@@ -138,11 +138,13 @@ class StatsRepository(private val db: Database) {
     private fun insertTopItems(c: Connection, spotifyUserId: String, period: PeriodStats, start: LocalDate) {
         c.prepareStatement(
             "insert into musicmania.top_items " +
-                "(spotify_user_id, period_kind, period_start, item_type, position, name, spotify_id) values (?, ?, ?, ?, ?, ?, ?)",
+                "(spotify_user_id, period_kind, period_start, item_type, position, name, spotify_id, image_url) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?)",
         ).use { st ->
             listOf("artist" to period.topArtists, "track" to period.topTracks).forEach { (type, items) ->
                 items.forEachIndexed { index, item ->
-                    st.bindAll(spotifyUserId, period.kind.dbValue, start, type, index + 1, item.name, item.spotifyId).addBatch()
+                    st.bindAll(spotifyUserId, period.kind.dbValue, start, type, index + 1, item.name, item.spotifyId, item.imageUrl)
+                        .addBatch()
                 }
             }
             st.executeBatch()
@@ -192,12 +194,14 @@ class LeaderboardRepository(private val db: Database) {
             requester,
         ) { rs -> rs.toStats(kind, start) } ?: return@transaction null
         val items = c.queryList(
-            "select item_type, name, spotify_id from musicmania.top_items " +
+            "select item_type, name, spotify_id, image_url from musicmania.top_items " +
                 "where spotify_user_id = ? and period_kind = ? and period_start = ? order by item_type, position",
             target,
             kind.dbValue,
             start,
-        ) { rs -> rs.getString("item_type") to TopItem(rs.getString("name"), rs.getString("spotify_id")) }
+        ) { rs ->
+            rs.getString("item_type") to TopItem(rs.getString("name"), rs.getString("spotify_id"), rs.getString("image_url"))
+        }
         stats.copy(
             topArtists = items.filter { it.first == "artist" }.map { it.second },
             topTracks = items.filter { it.first == "track" }.map { it.second },

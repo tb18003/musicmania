@@ -21,6 +21,8 @@ object StatsValidator {
     private const val MAX_STREAK_DAYS = 36_600
     private const val MAX_NAME_LENGTH = 200
     private val SPOTIFY_ITEM_ID = Regex("^[A-Za-z0-9]{1,64}$")
+    private const val MAX_IMAGE_URL_LENGTH = 2048
+    private const val HTTPS = "https://"
 
     fun validate(upload: StatsUpload) {
         val problems = buildList {
@@ -60,9 +62,15 @@ object StatsValidator {
             items.forEachIndexed { i, item ->
                 if (item.name.isBlank() || item.name.length > MAX_NAME_LENGTH) add("$name[$i].name must be 1-$MAX_NAME_LENGTH characters")
                 if (item.spotifyId != null && !SPOTIFY_ITEM_ID.matches(item.spotifyId)) add("$name[$i].spotifyId is not a Spotify id")
+                if (item.imageUrl != null && !isImageUrl(item.imageUrl)) {
+                    add("$name[$i].imageUrl must be an https URL of at most $MAX_IMAGE_URL_LENGTH characters")
+                }
             }
         }
     }
+
+    private fun isImageUrl(url: String): Boolean =
+        url.length <= MAX_IMAGE_URL_LENGTH && url.startsWith("https://") && url.length > "https://".length
 
     fun parseDate(value: String): LocalDate? = try {
         LocalDate.parse(value)

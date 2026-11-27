@@ -83,7 +83,7 @@ describe('LeaderboardViewModel (same cases as LeaderboardViewModelTest.kt)', () 
     expect(cloud.leaderboardRequests.at(-1)).toEqual(['streak', 'year', '2026-01-01'])
   })
 
-  it('tapping a friend expands their details, tapping again collapses', async () => {
+  it('tapping a friend opens their details with covers, closing clears them', async () => {
     const { cloud, vm } = setup()
     cloud.friends.set('ana', {
       spotifyUserId: 'ana',
@@ -92,13 +92,42 @@ describe('LeaderboardViewModel (same cases as LeaderboardViewModelTest.kt)', () 
       streams: 520,
       uniqueArtists: 33,
       currentStreak: 30,
-      topArtists: ['Coral Echo'],
-      topTracks: ['Low Tide'],
+      topArtists: [{ name: 'Coral Echo', imageUrl: 'https://i.scdn.co/image/coral' }],
+      topTracks: [{ name: 'Low Tide', imageUrl: null }],
     })
-    await vm.toggleFriend('ana')
-    expect(vm.state.expanded?.stats?.topArtists).toEqual(['Coral Echo'])
-    await vm.toggleFriend('ana')
-    expect(vm.state.expanded).toBeNull()
+    const opening = vm.openFriend('ana')
+    expect(vm.state.selected).toEqual({ spotifyUserId: 'ana', stats: null, loading: true })
+    await opening
+    expect(vm.state.selected?.loading).toBe(false)
+    expect(vm.state.selected?.stats?.topArtists).toEqual([
+      { name: 'Coral Echo', imageUrl: 'https://i.scdn.co/image/coral' },
+    ])
+    vm.closeFriend()
+    expect(vm.state.selected).toBeNull()
+  })
+
+  it('a friend whose stats cannot be loaded ends loading without stats', async () => {
+    const { vm } = setup()
+    await vm.openFriend('nobody')
+    expect(vm.state.selected).toEqual({ spotifyUserId: 'nobody', stats: null, loading: false })
+  })
+
+  it('closing before the stats arrive keeps the dialog closed', async () => {
+    const { cloud, vm } = setup()
+    cloud.friends.set('ana', {
+      spotifyUserId: 'ana',
+      displayName: 'Ana',
+      minutes: 1,
+      streams: 1,
+      uniqueArtists: 1,
+      currentStreak: 0,
+      topArtists: [],
+      topTracks: [],
+    })
+    const opening = vm.openFriend('ana')
+    vm.closeFriend()
+    await opening
+    expect(vm.state.selected).toBeNull()
   })
 
   it('server errors offer a retry', async () => {

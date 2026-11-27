@@ -10,6 +10,7 @@ import {
   type LeaderboardEntry,
   type LeaderboardMetric,
   type LeaderboardPeriod,
+  type RankedItem,
   type SharedPeriodStats,
 } from '$lib/model/leaderboard'
 import { success, type DataResult } from '$lib/model/result'
@@ -21,7 +22,20 @@ import { topArtistsAccumulator, topTracksAccumulator } from './top'
 export const ALL_TIME_START: LocalDate = '1970-01-01'
 const TOP_ITEMS = 10
 const MAX_NAME = 200
+const MAX_IMAGE_URL = 2048
+const HTTPS = 'https://'
 const MINUTES_PER_DAY = 24 * 60
+
+/** The cover URL if it is HTTPS and fits the API limit, otherwise null (never send or show anything else). */
+export function safeCoverUrl(url: string | null | undefined): string | null {
+  if (!url || url.length > MAX_IMAGE_URL || url.length <= HTTPS.length || !url.startsWith(HTTPS)) return null
+  return url
+}
+
+const rankedItem = (name: string, imageUrl: string | null): RankedItem => ({
+  name: name.slice(0, MAX_NAME),
+  imageUrl: safeCoverUrl(imageUrl),
+})
 
 /** First day of the period containing `today` (weeks start on Monday), like LeaderboardPeriod.startOf. */
 export function periodStart(period: LeaderboardPeriod, today: LocalDate): LocalDate {
@@ -101,8 +115,8 @@ export async function buildSharedStats(history: HistoryRepository, now: number):
       uniqueTracks: summary.uniqueTracks,
       currentStreak: streaks.current,
       longestStreak: streaks.longest,
-      topArtists: p.artists.result().map((r) => r.item.name.slice(0, MAX_NAME)),
-      topTracks: p.tracks.result().map((r) => r.item.name.slice(0, MAX_NAME)),
+      topArtists: p.artists.result().map((r) => rankedItem(r.item.name, r.item.imageUrl)),
+      topTracks: p.tracks.result().map((r) => rankedItem(r.item.name, r.item.imageUrl)),
     }
   })
 }

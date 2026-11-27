@@ -276,7 +276,8 @@
       onmetric={(metric) => rankingVm.selectMetric(metric)}
       onperiod={(period) => rankingVm.selectPeriod(period)}
       onenablesharing={() => rankingVm.enableSharing()}
-      onfriend={(id) => rankingVm.toggleFriend(id)}
+      onfriend={(id) => rankingVm.openFriend(id)}
+      onclosefriend={() => rankingVm.closeFriend()}
       onretry={() => rankingVm.load()}
       oncopy={copy}
     />

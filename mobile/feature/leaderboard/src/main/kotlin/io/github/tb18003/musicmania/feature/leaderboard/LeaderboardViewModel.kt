@@ -44,16 +44,18 @@ sealed interface LeaderboardContent {
     data class Error(val error: AppError) : LeaderboardContent
 }
 
-data class ExpandedFriend(
+/** The friend whose details dialog is open; [stats] stays null while loading or after a failure. */
+data class SelectedFriend(
     val spotifyUserId: String,
     val stats: FriendStats? = null,
+    val isLoading: Boolean = true,
 )
 
 data class LeaderboardUiState(
     val metric: LeaderboardMetric = LeaderboardMetric.MINUTES,
     val period: LeaderboardPeriod = LeaderboardPeriod.WEEK,
     val content: LeaderboardContent = LeaderboardContent.Loading,
-    val expanded: ExpandedFriend? = null,
+    val selected: SelectedFriend? = null,
     val isEnablingSharing: Boolean = false,
 )
 
@@ -85,13 +87,13 @@ class LeaderboardViewModel @Inject constructor(
 
     fun selectMetric(metric: LeaderboardMetric) {
         savedStateHandle[KEY_METRIC] = metric
-        state.update { it.copy(metric = metric, expanded = null) }
+        state.update { it.copy(metric = metric, selected = null) }
         load()
     }
 
     fun selectPeriod(period: LeaderboardPeriod) {
         savedStateHandle[KEY_PERIOD] = period
-        state.update { it.copy(period = period, expanded = null) }
+        state.update { it.copy(period = period, selected = null) }
         load()
     }
 
@@ -111,25 +113,22 @@ class LeaderboardViewModel @Inject constructor(
         }
     }
 
-    fun toggleFriend(spotifyUserId: String) {
-        if (state.value.expanded?.spotifyUserId == spotifyUserId) {
-            state.update { it.copy(expanded = null) }
-            return
-        }
-        state.update { it.copy(expanded = ExpandedFriend(spotifyUserId)) }
+    /** Opens a friend's details (a dialog) and loads their stats for the selected period. */
+    fun openFriend(spotifyUserId: String) {
+        state.update { it.copy(selected = SelectedFriend(spotifyUserId)) }
         viewModelScope.launch {
             val stats = (getFriendStats(spotifyUserId, state.value.period) as? DataResult.Success)?.data
             state.update { current ->
-                if (current.expanded?.spotifyUserId ==
-                    spotifyUserId
-                ) {
-                    current.copy(expanded = ExpandedFriend(spotifyUserId, stats))
+                if (current.selected?.spotifyUserId == spotifyUserId) {
+                    current.copy(selected = SelectedFriend(spotifyUserId, stats, isLoading = false))
                 } else {
                     current
                 }
             }
         }
     }
+
+    fun closeFriend() = state.update { it.copy(selected = null) }
 
     private fun load() {
         loadJob?.cancel()

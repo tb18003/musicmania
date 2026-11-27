@@ -10,6 +10,7 @@ import io.github.tb18003.musicmania.core.common.result.AppError
 import io.github.tb18003.musicmania.core.common.result.DataResult
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
+import io.github.tb18003.musicmania.core.model.RankedItem
 import io.github.tb18003.musicmania.core.model.SessionState
 import io.github.tb18003.musicmania.core.testing.TestData
 import io.github.tb18003.musicmania.core.testing.repository.FakeCloudRepository
@@ -20,6 +21,7 @@ import org.junit.Test
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CloudUseCasesTest {
@@ -59,9 +61,38 @@ class CloudUseCasesTest {
         assertEquals(LeaderboardPeriod.ALL_TIME_START, stats.getValue(LeaderboardPeriod.ALL_TIME).start)
 
         assertEquals(listOf(3L, 6L, 6L, 9L), LeaderboardPeriod.entries.map { stats.getValue(it).minutes })
-        assertEquals(listOf("Nova Lights"), stats.getValue(LeaderboardPeriod.WEEK).topArtists)
+        assertEquals(listOf("Nova Lights"), stats.getValue(LeaderboardPeriod.WEEK).topArtists.map { it.name })
         assertEquals(3, stats.getValue(LeaderboardPeriod.ALL_TIME).topTracks.size)
         assertTrue(stats.values.all { it.currentStreak <= it.longestStreak })
+    }
+
+    @Test
+    fun `top items carry their HTTPS cover, and anything else is dropped`() = runTest {
+        val covers = InMemoryHistoryRepository().apply {
+            setEvents(
+                listOf(
+                    TestData.play(track = "Lit", artist = "A", playedAt = TestData.NOW, imageUrl = "https://i.scdn.co/image/lit"),
+                    TestData.play(track = "Plain", artist = "B", playedAt = TestData.NOW, imageUrl = "http://example.com/plain"),
+                ),
+            )
+        }
+        val week = BuildSharedStatsUseCase(covers, TestData.fixedClock)().first { it.period == LeaderboardPeriod.WEEK }
+
+        assertEquals(
+            setOf(RankedItem("Lit", "https://i.scdn.co/image/lit"), RankedItem("Plain", null)),
+            week.topTracks.toSet(),
+        )
+        assertEquals("https://i.scdn.co/image/lit", week.topArtists.first { it.name == "A" }.imageUrl)
+    }
+
+    @Test
+    fun `cover URLs must be HTTPS and at most 2048 characters`() {
+        assertEquals("https://i.scdn.co/image/x", RankedItem.safeImageUrl("https://i.scdn.co/image/x"))
+        assertNull(RankedItem.safeImageUrl("http://i.scdn.co/image/x"))
+        assertNull(RankedItem.safeImageUrl("javascript:alert(1)"))
+        assertNull(RankedItem.safeImageUrl("https://"))
+        assertNull(RankedItem.safeImageUrl("https://" + "a".repeat(2041)))
+        assertNull(RankedItem.safeImageUrl(null))
     }
 
     @Test

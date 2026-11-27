@@ -12,6 +12,7 @@ import io.github.tb18003.musicmania.core.model.CloudProfile
 import io.github.tb18003.musicmania.core.model.FriendStats
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
+import io.github.tb18003.musicmania.core.model.RankedItem
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -83,8 +84,9 @@ internal class DemoLeaderboard @Inject constructor() {
                 friend.streams,
                 friend.artists,
                 friend.streak,
-                friend.topArtists,
-                friend.topTracks,
+                // Demo data has no covers: the generated artwork stands in for them.
+                friend.topArtists.map(::RankedItem),
+                friend.topTracks.map(::RankedItem),
             ),
         )
     }

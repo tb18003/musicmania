@@ -46,6 +46,8 @@ data class CloudPeriodStatsDto(
 data class CloudTopItemDto(
     val name: String,
     val spotifyId: String? = null,
+    /** Public HTTPS cover URL (Spotify CDN). */
+    val imageUrl: String? = null,
 )
 
 @Serializable

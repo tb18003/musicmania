@@ -18,6 +18,10 @@
     <string name="feature_leaderboard_you">Tú</string>
     <string name="feature_leaderboard_top_artists">Artistas top</string>
     <string name="feature_leaderboard_top_tracks">Canciones top</string>
+    <string name="feature_leaderboard_details">Ver detalles</string>
+    <string name="feature_leaderboard_close">Cerrar</string>
+    <string name="feature_leaderboard_friend_error">No se pudieron cargar sus estadísticas. Inténtalo más tarde.</string>
+    <string name="feature_leaderboard_friend_no_top">Todavía no hay nada que mostrar en este periodo.</string>
     <string name="feature_leaderboard_empty_title">Nadie comparte todavía</string>
     <string name="feature_leaderboard_empty_message">Cuando tus amigos activen compartir, aparecerán aquí.</string>
     <string name="feature_leaderboard_sharing_off_title">Únete al ranking</string>

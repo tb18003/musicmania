@@ -79,7 +79,8 @@ can compare their stats. Add the API URL to `mobile/local.properties`:
 MUSICMANIA_API_URL=https://your-api.run.app
 ```
 A **Ranking** tab appears. Sharing is opt-in (off by default) and only totals per week, month, year
-and all time are uploaded (minutes, streams, streaks, unique artists, top 10) — never your history.
+and all time are uploaded (minutes, streams, streaks, unique artists, top 10 with their public Spotify
+cover links) — never your history. Tap a friend to see their top artists and tracks with covers.
 You can stop sharing and delete your server data any time in *Settings → Friends ranking*.
 Without the URL, MusicMania stays 100 % local.
 

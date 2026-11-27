@@ -98,6 +98,8 @@ data class PeriodStats(
 data class TopItem(
     val name: String,
     val spotifyId: String? = null,
+    /** Public HTTPS cover URL (Spotify CDN), shown in the friends' ranking. */
+    val imageUrl: String? = null,
 )
 
 // ---------------------------------------------------------------- responses

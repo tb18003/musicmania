@@ -13,6 +13,7 @@
   import SegmentedControl from '$lib/ui/components/SegmentedControl.svelte'
   import { useUi } from '$lib/ui/context'
   import { formatNumber } from '$lib/ui/format'
+  import FriendDialog from './FriendDialog.svelte'
   import type { LeaderboardState } from './LeaderboardViewModel.svelte'
 
   interface Props {
@@ -21,12 +22,13 @@
     onperiod: (period: LeaderboardPeriod) => void
     onenablesharing: () => void
     onfriend: (spotifyUserId: string) => void
+    onclosefriend: () => void
     onretry: () => void
     oncopy: (text: string) => Promise<boolean>
   }
 
   // Renamed locally: a binding called `state` would turn the `$state` rune into a store read.
-  let { state: view, onmetric, onperiod, onenablesharing, onfriend, onretry, oncopy }: Props = $props()
+  let { state: view, onmetric, onperiod, onenablesharing, onfriend, onclosefriend, onretry, oncopy }: Props = $props()
   const ui = useUi()
   let copied = $state(false)
   const number = (value: number) => formatNumber(value, ui.locale)
@@ -55,6 +57,13 @@
       case 'unique_artists':
         return ui.tp('ranking_artists_value', entry.value, { count: number(entry.value) })
     }
+  }
+
+  const entries = $derived(view.content.kind === 'ranking' ? view.content.entries : [])
+  const selectedEntry = $derived(entries.find((entry) => entry.spotifyUserId === view.selected?.spotifyUserId) ?? null)
+
+  function nameOf(entry: LeaderboardEntry): string {
+    return entry.isMe ? ui.t('ranking_you') : (entry.displayName ?? entry.spotifyUserId)
   }
 
   async function copy(id: string) {
@@ -95,14 +104,13 @@
     {/if}
 
     <ol aria-busy={view.content.kind === 'loading'}>
-      {#each view.content.kind === 'ranking' ? view.content.entries : [] as entry (entry.spotifyUserId)}
-        {@const name = entry.isMe ? ui.t('ranking_you') : (entry.displayName ?? entry.spotifyUserId)}
-        {@const open = view.expanded?.spotifyUserId === entry.spotifyUserId}
+      {#each entries as entry (entry.spotifyUserId)}
+        {@const name = nameOf(entry)}
         <li class:me={entry.isMe}>
           <button
             type="button"
             class="row"
-            aria-expanded={open}
+            aria-haspopup="dialog"
             aria-label={ui.t('ranking_details', { name })}
             onclick={() => onfriend(entry.spotifyUserId)}
           >
@@ -111,32 +119,18 @@
             <span class="name">{name}</span>
             <span class="value">{value(entry)}</span>
           </button>
-          {#if open}
-            <div class="details">
-              {#if view.expanded?.stats}
-                {@const stats = view.expanded.stats}
-                <p>
-                  {ui.t('ranking_minutes_value', { value: number(stats.minutes) })} ·
-                  {ui.tp('home_streams', stats.streams, { count: number(stats.streams) })} ·
-                  {ui.tp('ranking_artists_value', stats.uniqueArtists, { count: number(stats.uniqueArtists) })}
-                </p>
-                {#if stats.topArtists.length > 0}
-                  <h3>{ui.t('ranking_top_artists')}</h3>
-                  <p class="muted">{stats.topArtists.slice(0, 5).join(' · ')}</p>
-                {/if}
-                {#if stats.topTracks.length > 0}
-                  <h3>{ui.t('ranking_top_tracks')}</h3>
-                  <p class="muted">{stats.topTracks.slice(0, 5).join(' · ')}</p>
-                {/if}
-              {:else}
-                <p class="muted" aria-busy="true">…</p>
-              {/if}
-            </div>
-          {/if}
         </li>
       {/each}
     </ol>
   {/if}
+
+  <FriendDialog
+    friend={view.selected}
+    entry={selectedEntry}
+    name={selectedEntry ? nameOf(selectedEntry) : (view.selected?.spotifyUserId ?? '')}
+    value={selectedEntry ? value(selectedEntry) : ''}
+    onclose={onclosefriend}
+  />
 </main>
 
 <style>
@@ -209,15 +203,5 @@
     font-variant-numeric: tabular-nums;
     color: var(--on-surface-variant);
     white-space: nowrap;
-  }
-  .details {
-    padding: 0 var(--space-4) var(--space-4);
-  }
-  .details p {
-    margin: 0 0 var(--space-2);
-  }
-  h3 {
-    font-size: 0.9rem;
-    margin: var(--space-2) 0 var(--space-1);
   }
 </style>

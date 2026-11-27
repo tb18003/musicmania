@@ -32,8 +32,8 @@ const WEEK: SharedPeriodStats = {
   uniqueTracks: 20,
   currentStreak: 3,
   longestStreak: 9,
-  topArtists: ['Coral Echo'],
-  topTracks: ['Low Tide'],
+  topArtists: [{ name: 'Coral Echo', imageUrl: 'https://i.scdn.co/image/coral' }],
+  topTracks: [{ name: 'Low Tide', imageUrl: 'http://insecure.example/low-tide' }],
 }
 
 describe('MusicManiaCloudClient', () => {
@@ -68,7 +68,8 @@ describe('MusicManiaCloudClient', () => {
           uniqueTracks: 20,
           currentStreak: 3,
           longestStreak: 9,
-          topArtists: [{ name: 'Coral Echo' }],
+          topArtists: [{ name: 'Coral Echo', imageUrl: 'https://i.scdn.co/image/coral' }],
+          // Only HTTPS covers are sent; the API would reject the whole upload otherwise.
           topTracks: [{ name: 'Low Tide' }],
         },
       ],
@@ -127,6 +128,30 @@ describe('MusicManiaCloudClient', () => {
       ['DELETE', 'Bearer token-1'],
       ['DELETE', 'Bearer token-2'],
     ])
+  })
+
+  it("reads a friend's top lists with HTTPS covers only", async () => {
+    const { cloud } = client(() =>
+      json({
+        spotifyUserId: 'ana',
+        displayName: 'Ana',
+        kind: 'week',
+        start: '2026-11-23',
+        minutes: 1_510,
+        streams: 520,
+        uniqueArtists: 33,
+        uniqueTracks: 200,
+        currentStreak: 30,
+        topArtists: [{ name: 'Coral Echo', imageUrl: 'https://i.scdn.co/image/coral' }, { name: 'No Cover' }],
+        topTracks: [{ name: 'Low Tide', imageUrl: 'javascript:alert(1)' }],
+      }),
+    )
+    const result = await cloud.friendStats('ana', 'week', '2026-11-23')
+    expect(result.ok && result.data.topArtists).toEqual([
+      { name: 'Coral Echo', imageUrl: 'https://i.scdn.co/image/coral' },
+      { name: 'No Cover', imageUrl: null },
+    ])
+    expect(result.ok && result.data.topTracks).toEqual([{ name: 'Low Tide', imageUrl: null }])
   })
 
   it('friend ids are URL-encoded', async () => {

@@ -18,6 +18,10 @@
     <string name="feature_leaderboard_you">You</string>
     <string name="feature_leaderboard_top_artists">Top artists</string>
     <string name="feature_leaderboard_top_tracks">Top tracks</string>
+    <string name="feature_leaderboard_details">See details</string>
+    <string name="feature_leaderboard_close">Close</string>
+    <string name="feature_leaderboard_friend_error">Their stats could not be loaded. Try again later.</string>
+    <string name="feature_leaderboard_friend_no_top">Nothing to show for this period yet.</string>
     <string name="feature_leaderboard_empty_title">Nobody is sharing yet</string>
     <string name="feature_leaderboard_empty_message">When your friends turn on sharing, they will show up here.</string>
     <string name="feature_leaderboard_sharing_off_title">Join the ranking</string>
