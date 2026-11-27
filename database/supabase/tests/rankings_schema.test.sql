@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = extensions, public;
 
-select plan(25);
+select plan(28);
 
 -- ---------------------------------------------------------------- structure
 select has_schema('musicmania');
@@ -73,6 +73,21 @@ select throws_ok(
     $$insert into musicmania.top_items (spotify_user_id, period_kind, period_start, item_type, position, name)
       values ('t_one', 'week', '2026-11-23', 'artist', 11, 'Too far')$$,
     '23514', null, 'top lists hold at most ten items'
+);
+select throws_ok(
+    $$insert into musicmania.top_items (spotify_user_id, period_kind, period_start, item_type, position, name, image_url)
+      values ('t_one', 'week', '2026-11-23', 'artist', 9, 'Plain link', 'http://i.scdn.co/image/x')$$,
+    '23514', null, 'cover URLs must use HTTPS'
+);
+select throws_ok(
+    format($$insert into musicmania.top_items (spotify_user_id, period_kind, period_start, item_type, position, name, image_url)
+      values ('t_one', 'week', '2026-11-23', 'artist', 9, 'Huge link', %L)$$, 'https://' || repeat('a', 2041)),
+    '23514', null, 'cover URLs hold at most 2048 characters'
+);
+select lives_ok(
+    $$insert into musicmania.top_items (spotify_user_id, period_kind, period_start, item_type, position, name, image_url)
+      values ('t_one', 'week', '2026-11-23', 'artist', 9, 'With cover', 'https://i.scdn.co/image/ab67616d0000b273')$$,
+    'an HTTPS cover URL is stored'
 );
 select throws_ok(
     $$insert into musicmania.allowlist (spotify_user_id, email) values ('x', 'not-an-email')$$,

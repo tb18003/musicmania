@@ -53,6 +53,14 @@ class StatsValidatorTest {
     }
 
     @Test
+    fun `cover URLs must be https and bounded`() {
+        StatsValidator.validate(StatsUpload(listOf(week(topArtists = listOf(TopItem("A", imageUrl = "https://i.scdn.co/image/abc"))))))
+        assertTrue(problemsOf(week(topArtists = listOf(TopItem("A", imageUrl = "http://i.scdn.co/image/abc")))).contains("imageUrl"))
+        assertTrue(problemsOf(week(topArtists = listOf(TopItem("A", imageUrl = "javascript:alert(1)")))).contains("imageUrl"))
+        assertTrue(problemsOf(week(topArtists = listOf(TopItem("A", imageUrl = "https://" + "a".repeat(2041))))).contains("imageUrl"))
+    }
+
+    @Test
     fun `uploads are bounded and free of duplicates`() {
         assertTrue(problemsOf(week(), week()).contains("duplicate"))
         assertTrue(problemsOf().contains("must not be empty"))

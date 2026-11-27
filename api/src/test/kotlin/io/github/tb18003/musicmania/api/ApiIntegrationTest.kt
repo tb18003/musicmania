@@ -62,6 +62,7 @@ class ApiIntegrationTest {
     /** Wednesday: the current week starts on Monday 2026-11-23. */
     private val clock = Clock.fixed(Instant.parse("2026-11-25T10:00:00Z"), ZoneOffset.UTC)
     private val week = "2026-11-23"
+    private val cover = "https://i.scdn.co/image/ab67616d0000b273cover"
 
     @BeforeAll
     fun startInfrastructure() {
@@ -125,7 +126,7 @@ class ApiIntegrationTest {
 
     private fun stats(minutes: Int, streams: Int = 100) =
         """{"periods":[{"kind":"week","start":"$week","minutes":$minutes,"streams":$streams,"uniqueArtists":10,"uniqueTracks":40,
-           "currentStreak":2,"longestStreak":5,"topArtists":[{"name":"Nova Lights"}]}]}"""
+           "currentStreak":2,"longestStreak":5,"topArtists":[{"name":"Nova Lights","imageUrl":"$cover"}],"topTracks":[{"name":"Glow"}]}]}"""
 
     // ---------------------------------------------------------------- authentication
 
@@ -219,6 +220,22 @@ class ApiIntegrationTest {
         val own = client.get("/v1/users/bruno/stats?period=week") { bearerAuth("token-bruno") }
         assertEquals(HttpStatusCode.OK, own.status)
         assertEquals("Nova Lights", own.json()["topArtists"]!!.jsonArray.single().jsonObject["name"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `top items keep their cover URL, and items without one stay without`() = api { client ->
+        client.putJson("/v1/me/stats", "token-bruno", stats(minutes = 500))
+        client.putJson("/v1/me/settings", "token-bruno", """{"sharingEnabled":true}""")
+
+        val stats = client.get("/v1/users/bruno/stats?period=week") { bearerAuth("token-ana") }.json()
+        assertEquals(cover, stats["topArtists"]!!.jsonArray.single().jsonObject["imageUrl"]?.jsonPrimitive?.content)
+        assertEquals(null, stats["topTracks"]!!.jsonArray.single().jsonObject["imageUrl"])
+    }
+
+    @Test
+    fun `a cover URL that is not https is rejected`() = api { client ->
+        val body = stats(minutes = 500).replace(cover, "http://i.scdn.co/image/abc")
+        assertEquals(HttpStatusCode.BadRequest, client.putJson("/v1/me/stats", "token-ana", body).status)
     }
 
     @Test

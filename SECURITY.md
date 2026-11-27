@@ -37,7 +37,7 @@ Background: [ADR 0010](docs/adr/0010-supabase-postgres-for-the-ranking.md), [ADR
 
 | Asset | Threat | Mitigation |
 |---|---|---|
-| Listening history | Over-sharing | Sharing is opt-in (off by default, never from demo mode); only per-period aggregates and top-10 names are uploaded, never plays. Users can delete their server data at any time |
+| Listening history | Over-sharing | Sharing is opt-in (off by default, never from demo mode); only per-period aggregates and the top 10 (names and public `https` Spotify CDN cover links, validated by both clients and the API) are uploaded, never plays. Users can delete their server data at any time |
 | API access | Strangers or forged identities | Every `/v1` route requires a Spotify token verified with Spotify (`GET /v1/me`); identity is the Spotify user ID from that answer, never the request body; manual allowlist (403 `not_allowlisted` otherwise) |
 | Tokens at the API | Leaks via logs or cache | Cache keyed by SHA-256 of the token (5 min valid / 30 s rejected); tokens and `Authorization` never logged |
 | Any valid Spotify token | `/me` does not reveal the issuing Client ID, so tokens from other apps are accepted | Accepted risk: using it requires that allow-listed user's own token |

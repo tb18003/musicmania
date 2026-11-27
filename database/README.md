@@ -19,7 +19,7 @@ database/
 | `musicmania.allowlist` | Who may use the API: Spotify user id + e-mail (label for the admin), role, enabled. **Managed by hand.** |
 | `musicmania.profiles` | Display name, avatar and the **opt-in** `sharing_enabled` flag (off by default). |
 | `musicmania.stat_periods` | Aggregates per calendar period (`week`, `month`, `year`, `all_time`): minutes, streams, unique artists/tracks, streaks. Never individual plays. |
-| `musicmania.top_items` | Top 10 artists and tracks per period (names only). |
+| `musicmania.top_items` | Top 10 artists and tracks per period: names and the public cover URL (Spotify CDN). |
 | `musicmania.leaderboard` (view) | Competition ranks (1, 1, 3) per metric, only for users who share and are enabled. |
 
 ## Access model
