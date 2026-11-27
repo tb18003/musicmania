@@ -32,7 +32,7 @@ test('the install guide and settings are reachable, and the language can change'
   await expect(page.getByRole('heading', { name: 'Install MusicMania' })).toBeVisible()
   await page.getByRole('button', { name: 'Back' }).click()
 
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByText('Español').click()
   await expect(page.getByRole('heading', { name: 'Ajustes' })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'es')

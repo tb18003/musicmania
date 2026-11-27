@@ -11,7 +11,7 @@ test('history and top rows open the detail screen; broken links go home', async 
   await mockSpotify(page)
   await signIn(page)
 
-  await page.getByRole('button', { name: 'History' }).click()
+  await page.getByRole('button', { name: 'History', exact: true }).click()
   await page.getByRole('link', { name: /Night Drive/ }).click()
   await expect(page.getByRole('heading', { name: 'Night Drive' })).toBeVisible()
   await expect(page.getByText('Nova Lights')).toBeVisible()
@@ -22,7 +22,7 @@ test('history and top rows open the detail screen; broken links go home', async 
   await page.getByRole('button', { name: 'Back' }).click()
   await expect(page.getByRole('heading', { name: 'History' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Top' }).click()
+  await page.getByRole('button', { name: 'Top', exact: true }).click()
   await page.getByText('Artists').click()
   await page.getByRole('link', { name: /Coral Echo/ }).click()
   await expect(page.getByRole('heading', { name: 'Coral Echo' })).toBeVisible()

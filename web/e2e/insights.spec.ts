@@ -16,7 +16,7 @@ test('Insights tab: personality, clock and heatmap from the synced plays; Settin
   const tabs = page.getByRole('navigation', { name: 'Main' }).getByRole('button')
   await expect(tabs).toHaveText(['Home', 'Top', 'History', 'Insights', 'Ranking'])
 
-  await page.getByRole('button', { name: 'Insights' }).click()
+  await page.getByRole('button', { name: 'Insights', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Your listening personality' })).toBeVisible()
   await expect(page.getByRole('img', { name: /Listening by hour of the day/ })).toBeVisible()
   await expect(page.getByRole('img', { name: /Listening by weekday and hour/ })).toBeVisible()
@@ -26,8 +26,8 @@ test('Insights tab: personality, clock and heatmap from the synced plays; Settin
   await page.getByText('All time').click()
   await expect(page.getByRole('heading', { name: 'Next goals' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Home' }).click()
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Home', exact: true }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   await page.getByRole('button', { name: 'Back' }).click()
   await expect(page.getByRole('heading', { name: /Hi, E2E Tester/ })).toBeVisible()
