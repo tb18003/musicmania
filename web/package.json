@@ -1,6 +1,6 @@
 {
   "name": "musicmania-web",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "MusicMania for the web: an installable PWA for iPhone and any modern browser.",
   "license": "GPL-3.0-or-later",
