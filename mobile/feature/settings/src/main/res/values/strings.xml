@@ -34,6 +34,8 @@
     <string name="feature_settings_license_body">GNU GPL v3.0 or later</string>
     <string name="feature_settings_oss">Open-source libraries</string>
     <string name="feature_settings_oss_body">Software that makes MusicMania possible</string>
+    <string name="feature_settings_version">Version</string>
+    <string name="feature_settings_version_body">MusicMania %1$s · see the releases</string>
     <string name="feature_settings_sign_out">Sign out</string>
     <string name="feature_settings_sign_out_body">Disconnect and wipe data from this device</string>
     <string name="feature_settings_sign_out_confirm">You will be signed out and all local data will be deleted from this device.</string>

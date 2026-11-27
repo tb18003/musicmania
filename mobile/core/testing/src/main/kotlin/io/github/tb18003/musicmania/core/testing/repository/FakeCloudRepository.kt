@@ -29,12 +29,18 @@ class FakeCloudRepository(override var isEnabled: Boolean = true) : CloudReposit
     var entries: List<LeaderboardEntry> = emptyList()
     var friends: Map<String, FriendStats> = emptyMap()
 
+    /** What the API announces as the latest release; null makes the call fail. */
+    var latestVersion: String? = "0.1.0"
+
     val published = mutableListOf<List<SharedPeriodStats>>()
     val leaderboardRequests = mutableListOf<Triple<LeaderboardMetric, LeaderboardPeriod, LocalDate>>()
     var deleted = false
         private set
 
     private fun <T> respond(value: () -> T): DataResult<T> = failure?.let { DataResult.Failure(it) } ?: DataResult.Success(value())
+
+    override suspend fun latestAppVersion(): DataResult<String> =
+        latestVersion?.let { DataResult.Success(it) } ?: DataResult.Failure(AppError.Network)
 
     override suspend fun me() = respond { profile }
 

@@ -41,7 +41,7 @@ jobs:
       - name: Build and push the image
         run: |
           gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
-          docker build --tag "$IMAGE" api
+          docker build --build-arg APP_VERSION="$(jq -r .version web/package.json)" --tag "$IMAGE" api
           docker push "$IMAGE"
 
       # Only the image changes: environment variables, secrets, limits and the service account set
@@ -52,4 +52,7 @@ jobs:
           echo "URL=$(gcloud run services describe musicmania-api --region="${{ vars.GCP_REGION }}" --format='value(status.url)')" >> "$GITHUB_ENV"
 
       - name: Smoke test
-        run: curl -fsS --retry 3 --retry-delay 5 "$URL/health"
+        run: |
+          curl -fsS --retry 3 --retry-delay 5 "$URL/health"
+          # The API announces the repository version to the Android app.
+          test "$(curl -fsS "$URL/v1/app/version" | jq -r .version)" = "$(jq -r .version web/package.json)"

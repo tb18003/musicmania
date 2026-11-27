@@ -8,6 +8,7 @@ package io.github.tb18003.musicmania.core.network
 
 import io.github.tb18003.musicmania.core.common.result.AppError
 import io.github.tb18003.musicmania.core.common.result.DataResult
+import io.github.tb18003.musicmania.core.network.model.CloudAppVersionDto
 import io.github.tb18003.musicmania.core.network.model.CloudLeaderboardDto
 import io.github.tb18003.musicmania.core.network.model.CloudMeDto
 import io.github.tb18003.musicmania.core.network.model.CloudSettingsDto
@@ -23,6 +24,10 @@ import javax.inject.Inject
 
 /** Retrofit description of the MusicMania cloud API (api/openapi.yaml). */
 interface MusicManiaCloudApi {
+    /** Public: the latest release, to tell the user when the app is out of date. */
+    @GET("v1/app/version")
+    suspend fun appVersion(): CloudAppVersionDto
+
     @GET("v1/me")
     suspend fun me(): CloudMeDto
 
@@ -52,6 +57,8 @@ interface MusicManiaCloudApi {
 
 /** Network boundary for the cloud API; faked in data-layer tests. */
 interface CloudNetworkDataSource {
+    suspend fun appVersion(): DataResult<CloudAppVersionDto>
+
     suspend fun me(): DataResult<CloudMeDto>
 
     suspend fun updateSettings(sharingEnabled: Boolean): DataResult<CloudMeDto>
@@ -66,6 +73,8 @@ interface CloudNetworkDataSource {
 }
 
 internal class RetrofitCloudNetworkDataSource @Inject constructor(private val api: MusicManiaCloudApi) : CloudNetworkDataSource {
+    override suspend fun appVersion() = cloudCall { api.appVersion() }
+
     override suspend fun me() = cloudCall { api.me() }
 
     override suspend fun updateSettings(sharingEnabled: Boolean) = cloudCall { api.updateSettings(CloudSettingsDto(sharingEnabled)) }

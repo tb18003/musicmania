@@ -107,6 +107,10 @@ data class TopItem(
 @Serializable
 data class Health(val status: String = "ok")
 
+/** The latest MusicMania release (the repository version, the same for the app and the web). */
+@Serializable
+data class AppVersionResponse(val version: String)
+
 @Serializable
 data class MeResponse(
     val spotifyUserId: String,

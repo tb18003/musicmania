@@ -53,10 +53,11 @@ jobs:
           printf 'Changed files:\n%s\n' "$changed"
           touched() { if printf '%s\n' "$changed" | grep -qE "$1"; then echo true; else echo false; fi; }
           # Shared config and CI changes affect every part.
-          echo "mobile=$(touched '^(mobile/|config/|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
+          # web/package.json holds the release version that the app and the API are built with.
+          echo "mobile=$(touched '^(mobile/|config/|\.github/|\.editorconfig$|web/package\.json$)')" >> "$GITHUB_OUTPUT"
           echo "database=$(touched '^(database/|\.github/)')" >> "$GITHUB_OUTPUT"
           # The API tests apply the database migrations, so schema changes re-run them too.
-          echo "api=$(touched '^(api/|database/|config/|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
+          echo "api=$(touched '^(api/|database/|config/|\.github/|\.editorconfig$|web/package\.json$)')" >> "$GITHUB_OUTPUT"
           # The web client's types are generated from the API contract, so openapi.yaml changes re-run it.
           echo "web=$(touched '^(web/|api/openapi\.yaml$|\.github/|\.editorconfig$)')" >> "$GITHUB_OUTPUT"
 
@@ -292,7 +293,7 @@ jobs:
         if: failure()
         run: python3 ../.github/scripts/report-test-failures.py .
       - name: Build the container image
-        run: docker build --tag musicmania-api:ci .
+        run: docker build --build-arg APP_VERSION="$(jq -r .version ../web/package.json)" --tag musicmania-api:ci .
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v7

@@ -28,6 +28,20 @@ val redirect: URI = URI(spotifyRedirectUri)
 // Optional friends leaderboard: empty keeps the app fully local (no ranking tab).
 val musicManiaApiUrl = secret("MUSICMANIA_API_URL")
 
+/*
+ * One release version for the whole repository: web/package.json (the web app, the API and this app).
+ * versionCode is derived from it (MAJOR * 10000 + MINOR * 100 + PATCH), so it grows with every release.
+ */
+val appVersionName: String = providers.fileContents(rootProject.layout.projectDirectory.file("../web/package.json")).asText
+    .map { json ->
+        Regex(""""version"\s*:\s*"(\d+)\.(\d+)\.(\d+)"""").find(json)?.destructured?.let { (major, minor, patch) -> "$major.$minor.$patch" }
+    }
+    .orNull ?: error("web/package.json must hold the release version as MAJOR.MINOR.PATCH")
+val appVersionCode: Int = appVersionName.split('.').map(String::toInt).let { (major, minor, patch) ->
+    require(minor < 100 && patch < 100) { "MINOR and PATCH must stay below 100 for versionCode" }
+    major * 10_000 + minor * 100 + patch
+}
+
 require(spotifyClientId.matches(Regex("[A-Za-z0-9]*"))) { "SPOTIFY_CLIENT_ID must be alphanumeric" }
 require(musicManiaApiUrl.isEmpty() || musicManiaApiUrl.startsWith("https://")) { "MUSICMANIA_API_URL must be empty or https://" }
 require(redirect.scheme == "https") { "SPOTIFY_REDIRECT_URI must be an https:// App Link (Spotify rejects custom schemes)" }
@@ -37,8 +51,8 @@ android {
 
     defaultConfig {
         applicationId = "io.github.tb18003.musicmania"
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         buildConfigField("String", "SPOTIFY_CLIENT_ID", "\"$spotifyClientId\"")
         buildConfigField("String", "SPOTIFY_REDIRECT_URI", "\"$spotifyRedirectUri\"")

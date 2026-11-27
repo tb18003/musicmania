@@ -17,6 +17,10 @@ feature/x       ●──●                   your work
 - Open a pull request **into `develop`**. CI must be green and one review is required.
 - Releases: `release/x.y.z` from `develop` → PR to `master` → tag `vx.y.z` → merge back to `develop`.
 - Hotfixes: `hotfix/x.y.z` from `master` → PR to `master` and `develop`.
+- Versions: `web/package.json` holds the one release version (Android's `versionName`/`versionCode` and the
+  API's announced version derive from it, [ADR 0013](docs/adr/0013-single-release-version-and-update-check.md)).
+  To release, bump it (`npm version <x.y.z> --no-git-tag-version` in `web/`), publish the APK on GitHub
+  Releases, then tag `web-vx.y.z` and `api-vx.y.z`. Android users are offered the update once the API is deployed.
 
 ## Commits
 

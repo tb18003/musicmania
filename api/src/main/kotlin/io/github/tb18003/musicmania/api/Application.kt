@@ -18,6 +18,7 @@ import io.github.tb18003.musicmania.api.db.ProfileRepository
 import io.github.tb18003.musicmania.api.db.StatsRepository
 import io.github.tb18003.musicmania.api.http.ApiException
 import io.github.tb18003.musicmania.api.http.Problem
+import io.github.tb18003.musicmania.api.model.AppVersionResponse
 import io.github.tb18003.musicmania.api.model.Health
 import io.github.tb18003.musicmania.api.routes.Repositories
 import io.github.tb18003.musicmania.api.routes.v1Routes
@@ -43,6 +44,10 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.RouteSelector
+import io.ktor.server.routing.RouteSelectorEvaluation
+import io.ktor.server.routing.RoutingResolveContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
@@ -68,6 +73,8 @@ class Dependencies(
     val repositories: Repositories,
     val corsOrigins: List<String>,
     val clock: Clock = Clock.systemUTC(),
+    /** The release this API was built for, announced to the apps (see [BuildInfo]). */
+    val appVersion: String = BuildInfo.version,
 ) {
     companion object {
         fun create(config: AppConfig, database: Database, clock: Clock = Clock.systemUTC()) = Dependencies(
@@ -121,11 +128,30 @@ fun Application.musicManiaApi(deps: Dependencies) {
         get("/health") { call.respond(Health()) }
         rateLimit(API_RATE_LIMIT) {
             route("/v1") {
-                install(SpotifyAuthentication) { authenticator = deps.authenticator }
-                v1Routes(deps.repositories, ApiJson, deps.clock)
+                // Public: the Android app asks whether it is out of date, signed in or not.
+                get("/app/version") { call.respond(AppVersionResponse(deps.appVersion)) }
+                authenticated(deps.authenticator) {
+                    v1Routes(deps.repositories, ApiJson, deps.clock)
+                }
             }
         }
     }
+}
+
+/**
+ * Routes that need a verified Spotify token. A transparent child route scopes the plugin to them, so public
+ * routes declared next to it under the same path (such as `/v1/app/version`) stay public.
+ */
+private fun Route.authenticated(authenticator: Authenticator, build: Route.() -> Unit) {
+    val child = createChild(AuthenticatedRouteSelector)
+    child.install(SpotifyAuthentication) { this.authenticator = authenticator }
+    child.build()
+}
+
+private object AuthenticatedRouteSelector : RouteSelector() {
+    override suspend fun evaluate(context: RoutingResolveContext, segmentIndex: Int) = RouteSelectorEvaluation.Transparent
+
+    override fun toString() = "(authenticated)"
 }
 
 private fun io.ktor.server.plugins.statuspages.StatusPagesConfig.configureProblems() {

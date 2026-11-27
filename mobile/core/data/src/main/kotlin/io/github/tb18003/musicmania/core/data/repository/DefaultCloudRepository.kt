@@ -45,6 +45,10 @@ internal class DefaultCloudRepository @Inject constructor(
 ) : CloudRepository {
     override val isEnabled: Boolean get() = config.isConfigured
 
+    // Not tied to an account (nor to demo data): anyone with the app configured can learn about updates.
+    override suspend fun latestAppVersion(): DataResult<String> =
+        if (config.isConfigured) network.appVersion().map { it.version } else DataResult.Failure(AppError.NotFound)
+
     override suspend fun me(): DataResult<CloudProfile> = route(demo::profile) { network.me().map { it.toModel() } }
 
     override suspend fun setSharing(enabled: Boolean): DataResult<CloudProfile> =

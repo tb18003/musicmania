@@ -43,6 +43,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/app/version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Latest MusicMania release
+         * @description The repository's release version (the same for the Android app and the web app). The Android app compares it with its own version and offers the update when it is behind. Public, no token needed.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The version this API was released with. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AppVersion"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -286,6 +325,10 @@ export interface components {
          * @enum {string}
          */
         PeriodKind: "week" | "month" | "year" | "all_time";
+        AppVersion: {
+            /** @example 0.3.0 */
+            version: string;
+        };
         TopItem: {
             name: string;
             spotifyId?: string;
