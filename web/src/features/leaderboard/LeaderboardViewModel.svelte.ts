@@ -18,11 +18,18 @@ export type LeaderboardContent =
   | { kind: 'ranking'; entries: LeaderboardEntry[] }
   | { kind: 'error'; error: AppError }
 
+export interface SelectedFriend {
+  spotifyUserId: string
+  stats: FriendStats | null
+  loading: boolean
+}
+
 export interface LeaderboardState {
   metric: LeaderboardMetric
   period: LeaderboardPeriod
   content: LeaderboardContent
-  expanded: { spotifyUserId: string; stats: FriendStats | null } | null
+  /** The friend whose details dialog is open; stats stay null while loading or after a failure. */
+  selected: SelectedFriend | null
   enablingSharing: boolean
 }
 
@@ -40,7 +47,7 @@ export class LeaderboardViewModel {
     metric: 'minutes',
     period: 'week',
     content: { kind: 'loading' },
-    expanded: null,
+    selected: null,
     enablingSharing: false,
   })
   readonly #deps: LeaderboardDependencies
@@ -54,13 +61,13 @@ export class LeaderboardViewModel {
 
   selectMetric(metric: LeaderboardMetric) {
     this.state.metric = metric
-    this.state.expanded = null
+    this.state.selected = null
     return this.load()
   }
 
   selectPeriod(period: LeaderboardPeriod) {
     this.state.period = period
-    this.state.expanded = null
+    this.state.selected = null
     return this.load()
   }
 
@@ -75,16 +82,17 @@ export class LeaderboardViewModel {
     else await this.load()
   }
 
-  async toggleFriend(spotifyUserId: string): Promise<void> {
-    if (this.state.expanded?.spotifyUserId === spotifyUserId) {
-      this.state.expanded = null
-      return
-    }
-    this.state.expanded = { spotifyUserId, stats: null }
+  /** Opens a friend's details (a dialog) and loads their stats for the selected period. */
+  async openFriend(spotifyUserId: string): Promise<void> {
+    this.state.selected = { spotifyUserId, stats: null, loading: true }
     const result = await this.#deps.leaderboard.friend(spotifyUserId, this.state.period)
-    if (this.state.expanded?.spotifyUserId === spotifyUserId) {
-      this.state.expanded = { spotifyUserId, stats: result.ok ? result.data : null }
+    if (this.state.selected?.spotifyUserId === spotifyUserId) {
+      this.state.selected = { spotifyUserId, stats: result.ok ? result.data : null, loading: false }
     }
+  }
+
+  closeFriend(): void {
+    this.state.selected = null
   }
 
   async load(): Promise<void> {

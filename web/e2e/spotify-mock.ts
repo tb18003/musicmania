@@ -143,7 +143,7 @@ const FRIEND = {
   uniqueTracks: 200,
   currentStreak: 30,
   longestStreak: 41,
-  topArtists: [{ name: 'Friend Favourite' }],
+  topArtists: [{ name: 'Friend Favourite', imageUrl: 'https://i.scdn.co/image/friend-favourite' }],
   topTracks: [{ name: 'Friend Anthem' }],
 }
 

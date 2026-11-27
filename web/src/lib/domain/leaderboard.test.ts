@@ -7,7 +7,14 @@
 import { describe, expect, it } from 'vitest'
 import { FakeCloudRepository, InMemoryHistoryRepository } from '$testing/fakes'
 import { play } from '$testing/fixtures'
-import { buildSharedStats, GetLeaderboard, periodEnd, periodStart, PublishListeningStats } from './leaderboard'
+import {
+  buildSharedStats,
+  GetLeaderboard,
+  periodEnd,
+  periodStart,
+  PublishListeningStats,
+  safeCoverUrl,
+} from './leaderboard'
 
 // Wednesday 25 November 2026, 18:00 local.
 const NOW = new Date(2026, 10, 25, 18).getTime()
@@ -31,10 +38,10 @@ describe('periods (LeaderboardPeriod)', () => {
 })
 
 describe('buildSharedStats (BuildSharedStatsUseCase)', () => {
-  it('one aggregate per calendar period, with streaks and the top 10 names', async () => {
+  it('one aggregate per calendar period, with streaks and the top 10 names and covers', async () => {
     const history = new InMemoryHistoryRepository()
     await history.addPlays([
-      play({ playedAt: at(11, 25), msPlayed: 600_000, trackName: 'This week' }),
+      play({ playedAt: at(11, 25), msPlayed: 600_000, trackName: 'This week', imageUrl: 'https://i.scdn.co/image/w' }),
       play({ playedAt: at(11, 24), msPlayed: 600_000, trackName: 'This week too' }),
       play({ playedAt: at(11, 3), msPlayed: 600_000, trackName: 'This month', artistName: 'Nova Lights' }),
       play({ playedAt: at(2, 1), msPlayed: 600_000, trackName: 'This year' }),
@@ -52,8 +59,11 @@ describe('buildSharedStats (BuildSharedStatsUseCase)', () => {
     expect(stats[1]?.uniqueArtists).toBe(2)
     expect(stats[0]?.currentStreak).toBe(2)
     // Same streams and time: ties are broken by name, so the order is stable.
-    expect(stats[0]?.topTracks).toEqual(['This week too', 'This week'])
-    expect(stats[1]?.topArtists).toEqual(['Coral Echo', 'Nova Lights'])
+    expect(stats[0]?.topTracks).toEqual([
+      { name: 'This week too', imageUrl: null },
+      { name: 'This week', imageUrl: 'https://i.scdn.co/image/w' },
+    ])
+    expect(stats[1]?.topArtists.map((artist) => artist.name)).toEqual(['Coral Echo', 'Nova Lights'])
   })
 
   it('never sends more than 10 names of at most 200 characters, nor more minutes than a period has', async () => {
@@ -65,8 +75,20 @@ describe('buildSharedStats (BuildSharedStatsUseCase)', () => {
     )
     const [week] = await buildSharedStats(history, NOW)
     expect(week?.topTracks).toHaveLength(10)
-    expect(week?.topTracks.every((name) => name.length === 200)).toBe(true)
+    expect(week?.topTracks.every((track) => track.name.length === 200)).toBe(true)
     expect(week?.minutes).toBe(7 * 24 * 60)
+  })
+})
+
+describe('safeCoverUrl', () => {
+  it('keeps HTTPS URLs up to 2048 characters and drops everything else', () => {
+    expect(safeCoverUrl('https://i.scdn.co/image/abc')).toBe('https://i.scdn.co/image/abc')
+    expect(safeCoverUrl('http://i.scdn.co/image/abc')).toBeNull()
+    expect(safeCoverUrl('javascript:alert(1)')).toBeNull()
+    expect(safeCoverUrl('https://')).toBeNull()
+    expect(safeCoverUrl(`https://${'a'.repeat(2041)}`)).toBeNull()
+    expect(safeCoverUrl(null)).toBeNull()
+    expect(safeCoverUrl(undefined)).toBeNull()
   })
 })
 

@@ -24,6 +24,12 @@ export interface CloudProfile {
   readonly sharingEnabled: boolean
 }
 
+/** One entry of a top-10 list: the name and its public cover (Spotify CDN), if known. */
+export interface RankedItem {
+  readonly name: string
+  readonly imageUrl: string | null
+}
+
 /** The only data that ever leaves the device, and only after opting in (security rule 10). */
 export interface SharedPeriodStats {
   readonly period: LeaderboardPeriod
@@ -35,8 +41,8 @@ export interface SharedPeriodStats {
   readonly uniqueTracks: number
   readonly currentStreak: number
   readonly longestStreak: number
-  readonly topArtists: readonly string[]
-  readonly topTracks: readonly string[]
+  readonly topArtists: readonly RankedItem[]
+  readonly topTracks: readonly RankedItem[]
 }
 
 export interface FriendStats {
@@ -46,6 +52,6 @@ export interface FriendStats {
   readonly streams: number
   readonly uniqueArtists: number
   readonly currentStreak: number
-  readonly topArtists: readonly string[]
-  readonly topTracks: readonly string[]
+  readonly topArtists: readonly RankedItem[]
+  readonly topTracks: readonly RankedItem[]
 }

@@ -5,12 +5,14 @@
  */
 
 import type { CloudRepository } from '$lib/domain/repositories'
+import { safeCoverUrl } from '$lib/domain/leaderboard'
 import type {
   CloudProfile,
   FriendStats,
   LeaderboardEntry,
   LeaderboardMetric,
   LeaderboardPeriod,
+  RankedItem,
   SharedPeriodStats,
 } from '$lib/model/leaderboard'
 import { failure, success, type AppError, type DataResult } from '$lib/model/result'
@@ -98,8 +100,8 @@ export class MusicManiaCloudClient implements CloudRepository {
       streams: stats.streams,
       uniqueArtists: stats.uniqueArtists,
       currentStreak: stats.currentStreak ?? 0,
-      topArtists: (stats.topArtists ?? []).map((item) => item.name),
-      topTracks: (stats.topTracks ?? []).map((item) => item.name),
+      topArtists: (stats.topArtists ?? []).map(fromItemDto),
+      topTracks: (stats.topTracks ?? []).map(fromItemDto),
     })
   }
 
@@ -178,6 +180,18 @@ const toDto = (stats: SharedPeriodStats): Schemas['PeriodStats'] => ({
   uniqueTracks: stats.uniqueTracks,
   currentStreak: stats.currentStreak,
   longestStreak: stats.longestStreak,
-  topArtists: stats.topArtists.map((name) => ({ name })),
-  topTracks: stats.topTracks.map((name) => ({ name })),
+  topArtists: stats.topArtists.map(toItemDto),
+  topTracks: stats.topTracks.map(toItemDto),
+})
+
+/** Only an HTTPS cover is sent; the API rejects anything else. */
+const toItemDto = (item: RankedItem): Schemas['TopItem'] => {
+  const imageUrl = safeCoverUrl(item.imageUrl)
+  return imageUrl ? { name: item.name, imageUrl } : { name: item.name }
+}
+
+/** A friend's cover is shown only if it is HTTPS (the CSP limits images to the Spotify CDN anyway). */
+const fromItemDto = (item: Schemas['TopItem']): RankedItem => ({
+  name: item.name,
+  imageUrl: safeCoverUrl(item.imageUrl),
 })

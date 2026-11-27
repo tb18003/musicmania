@@ -42,7 +42,12 @@ test('joining the ranking uploads aggregates only, then shows friends; it can be
   expect(JSON.stringify(upload)).not.toContain('playedAt')
 
   await page.getByRole('button', { name: 'Details of Ana' }).click()
-  await expect(page.getByText('Friend Favourite')).toBeVisible()
+  const dialog = page.getByRole('dialog', { name: 'Ana' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText('Friend Favourite')).toBeVisible()
+  await expect(dialog.getByText('Friend Anthem')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
 
   await page.getByRole('button', { name: 'Home' }).click()
   await page.getByRole('button', { name: 'Settings' }).click()

@@ -289,6 +289,11 @@ export interface components {
         TopItem: {
             name: string;
             spotifyId?: string;
+            /**
+             * Format: uri
+             * @description Public cover URL (Spotify CDN) shown in the friends' ranking.
+             */
+            imageUrl?: string;
         };
         PeriodStats: {
             kind: components["schemas"]["PeriodKind"];
