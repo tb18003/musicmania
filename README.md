@@ -45,6 +45,11 @@ The only server is the optional friends ranking, which receives opt-in totals, n
 | [`config/`](config) | Static-analysis configuration shared by every Kotlin project (Detekt, license header). |
 | [`docs/`](docs) | Architecture decisions (ADRs) and setup guides. |
 
+### Install the app
+Signed APKs are attached to each [GitHub release](https://github.com/tb18003/musicmania/releases)
+(`musicmania-X.Y.Z.apk`). The app tells you when a newer one is out. Maintainers: see
+[`docs/setup/android-release.md`](docs/setup/android-release.md).
+
 ### Build and run (demo mode)
 ```bash
 git clone https://github.com/tb18003/musicmania.git

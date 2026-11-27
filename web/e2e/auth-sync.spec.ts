@@ -32,7 +32,7 @@ test('sign in with Spotify (PKCE), sync the last plays and see them, then sign o
   await expect(page.getByText('3 streams').first()).toBeVisible()
   await expect(page.getByText('Coral Echo')).toBeVisible()
 
-  await page.getByRole('button', { name: 'History' }).click()
+  await page.getByRole('button', { name: 'History', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
   await expect(page.getByText('Night Drive')).toBeVisible()
 
@@ -51,8 +51,8 @@ test('sign in with Spotify (PKCE), sync the last plays and see them, then sign o
 
   page.once('dialog', (dialog) => dialog.accept())
   // Settings is the gear on Home (the tabs are Home · Top · History · Insights · Ranking).
-  await page.getByRole('button', { name: 'Home' }).click()
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Home', exact: true }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await page.getByRole('button', { name: 'Sign out' }).click()
   await expect(page.getByRole('button', { name: 'Sign in with Spotify' })).toBeVisible()
   // The database was deleted; the app may reopen it empty, but nothing of the session remains.

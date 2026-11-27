@@ -15,7 +15,7 @@ test('joining the ranking uploads aggregates only, then shows friends; it can be
   // Not sharing yet: nothing has been uploaded by the sync on sign-in.
   expect(spotify.cloud.uploads).toHaveLength(0)
 
-  await page.getByRole('button', { name: 'Ranking' }).click()
+  await page.getByRole('button', { name: 'Ranking', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Join the ranking' })).toBeVisible()
   await page.getByRole('button', { name: 'Share my stats' }).click()
 
@@ -49,8 +49,8 @@ test('joining the ranking uploads aggregates only, then shows friends; it can be
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
 
-  await page.getByRole('button', { name: 'Home' }).click()
-  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('button', { name: 'Home', exact: true }).click()
+  await page.getByRole('button', { name: 'Settings', exact: true }).click()
   await expect(page.getByRole('switch', { name: /Share my stats/ })).toBeChecked()
   page.once('dialog', (dialog) => dialog.accept())
   await page.getByRole('button', { name: 'Delete my data from the server' }).click()
