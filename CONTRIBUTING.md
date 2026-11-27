@@ -19,8 +19,9 @@ feature/x       ●──●                   your work
 - Hotfixes: `hotfix/x.y.z` from `master` → PR to `master` and `develop`.
 - Versions: `web/package.json` holds the one release version (Android's `versionName`/`versionCode` and the
   API's announced version derive from it, [ADR 0013](docs/adr/0013-single-release-version-and-update-check.md)).
-  To release, bump it (`npm version <x.y.z> --no-git-tag-version` in `web/`), publish the APK on GitHub
-  Releases, then tag `web-vx.y.z` and `api-vx.y.z`. Android users are offered the update once the API is deployed.
+  To release, bump it (`npm version <x.y.z> --no-git-tag-version` in `web/`), then tag `web-vx.y.z`: the web is
+  deployed and the signed APK is attached to the GitHub release ([setup](docs/setup/android-release.md)).
+  Then tag `api-vx.y.z`: Android users are offered the update once the API is deployed.
 
 ## Commits
 

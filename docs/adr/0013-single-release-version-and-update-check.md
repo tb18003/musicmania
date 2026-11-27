@@ -24,8 +24,10 @@ tell which build matched which release.
   version next to the open-source libraries.
 
 ## Consequences
-- Releasing means: bump `web/package.json` (and its lockfile), then tag `web-v*` and `api-v*`. The
-  deployed API is what announces a release, so publish the new APK before deploying the API.
+- Releasing means: bump `web/package.json` (and its lockfile), then tag `web-v*`. That tag deploys the
+  web and builds the signed APK into the GitHub release (`release-android.yml`, see
+  `docs/setup/android-release.md`). Then tag `api-v*`: the deployed API is what announces a release, so
+  it goes last.
 - The deploy workflow's smoke test checks that the API announces the version in `web/package.json`.
 - A store-distributed app would use the store's update mechanism instead; this endpoint would remain
   useful for sideloaded builds.
