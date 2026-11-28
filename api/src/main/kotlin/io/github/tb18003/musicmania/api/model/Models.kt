@@ -107,9 +107,22 @@ data class TopItem(
 @Serializable
 data class Health(val status: String = "ok")
 
-/** The latest MusicMania release (the repository version, the same for the app and the web). */
+/** What changed in one release, by language code ("en", "es"). */
 @Serializable
-data class AppVersionResponse(val version: String)
+data class ReleaseNotes(
+    val version: String,
+    val notes: Map<String, List<String>>,
+)
+
+/**
+ * The latest MusicMania release (the repository version, the same for the app and the web) and the notes
+ * of the releases up to it, newest first, so an outdated app can list what it is missing.
+ */
+@Serializable
+data class AppVersionResponse(
+    val version: String,
+    val releases: List<ReleaseNotes> = emptyList(),
+)
 
 @Serializable
 data class MeResponse(

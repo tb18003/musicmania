@@ -20,6 +20,7 @@ import io.github.tb18003.musicmania.core.network.auth.TokenRefresher
 import io.github.tb18003.musicmania.core.network.di.cloudAllowedHost
 import io.github.tb18003.musicmania.core.network.model.CloudAppVersionDto
 import io.github.tb18003.musicmania.core.network.model.CloudPeriodStatsDto
+import io.github.tb18003.musicmania.core.network.model.CloudReleaseNotesDto
 import io.github.tb18003.musicmania.core.network.model.CloudStatsUploadDto
 import io.github.tb18003.musicmania.core.network.model.CloudTopItemDto
 import kotlinx.coroutines.test.runTest
@@ -88,9 +89,12 @@ class CloudNetworkDataSourceTest {
 
     @Test
     fun `the latest app version comes from the public endpoint`() = runTest {
-        server.enqueue(MockResponse().setBody("""{"version":"0.4.0"}"""))
+        server.enqueue(
+            MockResponse().setBody("""{"version":"0.4.1","releases":[{"version":"0.4.1","notes":{"es":["Novedad"]}}]}"""),
+        )
 
-        assertEquals(DataResult.Success(CloudAppVersionDto("0.4.0")), dataSource().appVersion())
+        val expected = CloudAppVersionDto("0.4.1", listOf(CloudReleaseNotesDto("0.4.1", mapOf("es" to listOf("Novedad")))))
+        assertEquals(DataResult.Success(expected), dataSource().appVersion())
         assertEquals("/v1/app/version", server.takeRequest().path)
     }
 

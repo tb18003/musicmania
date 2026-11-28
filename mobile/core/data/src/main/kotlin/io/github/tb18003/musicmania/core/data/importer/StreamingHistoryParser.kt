@@ -8,12 +8,15 @@ package io.github.tb18003.musicmania.core.data.importer
 
 import io.github.tb18003.musicmania.core.model.PlayEvent
 import io.github.tb18003.musicmania.core.model.PlaySource
+import io.github.tb18003.musicmania.core.model.RankedItem
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.DecodeSequenceMode
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeToSequence
+import kotlinx.serialization.json.longOrNull
 import java.io.InputStream
 import java.time.Instant
 import java.time.LocalDateTime
@@ -22,9 +25,11 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
 /**
- * Union of both Spotify export formats:
+ * Union of both Spotify export formats and MusicMania's own export:
  *  - Extended streaming history (`Streaming_History_Audio_*.json`, legacy `endsong_*.json`)
  *  - Basic "account data" history (`StreamingHistory*.json`, `StreamingHistory_music_*.json`)
+ *  - MusicMania export (Settings → Export, to move to another device): `playedAt` is an ISO-8601
+ *    string from the Android app or epoch milliseconds from the web app
  *
  * Privacy: fields such as `ip_addr`, `conn_country` or `user_agent_decrypted` are
  * deliberately not mapped, so they are never read into memory or stored.
@@ -39,8 +44,14 @@ internal data class RawStreamingEntry(
     val trackName: String? = null,
     @SerialName("master_metadata_album_artist_name") val artistNameExtended: String? = null,
     val artistName: String? = null,
-    @SerialName("master_metadata_album_album_name") val albumName: String? = null,
+    @SerialName("master_metadata_album_album_name") val albumNameExtended: String? = null,
+    @SerialName("albumName") val albumName: String? = null,
     @SerialName("spotify_track_uri") val trackUri: String? = null,
+    val playedAt: JsonPrimitive? = null,
+    /** Track id in MusicMania exports: `spotifyTrackId` (Android) or `trackId` (web). */
+    val spotifyTrackId: String? = null,
+    val trackId: String? = null,
+    val imageUrl: String? = null,
     val platform: String? = null,
     val shuffle: Boolean? = null,
     val skipped: Boolean? = null,
@@ -55,6 +66,7 @@ internal object StreamingHistoryParser {
     }
     private val basicFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     private const val TRACK_URI_PREFIX = "spotify:track:"
+    private val TRACK_ID = Regex("[A-Za-z0-9]{1,64}")
 
     /** Lazily decodes a JSON array without loading the whole file into memory. */
     @OptIn(ExperimentalSerializationApi::class)
@@ -69,11 +81,11 @@ internal object StreamingHistoryParser {
         val msPlayed = entry.msPlayedExtended ?: entry.msPlayed
         if (track == null || artist == null || playedAt == null || msPlayed == null) return null
         return PlayEvent(
-            trackId = entry.trackUri?.takeIf { it.startsWith(TRACK_URI_PREFIX) }?.removePrefix(TRACK_URI_PREFIX),
+            trackId = trackIdOf(entry),
             trackName = track,
             artistName = artist,
-            albumName = entry.albumName,
-            imageUrl = null,
+            albumName = (entry.albumNameExtended ?: entry.albumName)?.takeIf { it.isNotBlank() },
+            imageUrl = RankedItem.safeImageUrl(entry.imageUrl),
             playedAt = playedAt,
             msPlayed = msPlayed.coerceAtLeast(0),
             source = PlaySource.IMPORT,
@@ -83,15 +95,30 @@ internal object StreamingHistoryParser {
         )
     }
 
+    private fun trackIdOf(entry: RawStreamingEntry): String? = (
+        entry.trackUri?.takeIf {
+            it.startsWith(TRACK_URI_PREFIX)
+        }?.removePrefix(TRACK_URI_PREFIX) ?: entry.spotifyTrackId ?: entry.trackId
+        )
+        ?.takeIf(TRACK_ID::matches)
+
     private fun parseInstant(entry: RawStreamingEntry): Instant? = try {
         when {
             entry.ts != null -> Instant.parse(entry.ts)
             // Basic export: UTC, minute precision
             entry.endTime != null -> LocalDateTime.parse(entry.endTime, basicFormat).toInstant(ZoneOffset.UTC)
+            entry.playedAt != null -> musicManiaInstant(entry.playedAt)
             else -> null
         }
     } catch (_: DateTimeParseException) {
         null
+    }
+
+    /** MusicMania export: ISO-8601 (Android) or epoch milliseconds (web). */
+    private fun musicManiaInstant(value: JsonPrimitive): Instant? = if (value.isString) {
+        Instant.parse(value.content)
+    } else {
+        value.longOrNull?.takeIf { it >= 0 }?.let(Instant::ofEpochMilli)
     }
 }
 

@@ -4,12 +4,15 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { safeCoverUrl } from '$lib/domain/leaderboard'
 import type { PlayEvent } from '$lib/model/music'
 
 /**
- * Port of StreamingHistoryParser. Handles both export formats:
+ * Port of StreamingHistoryParser. Handles both Spotify export formats and MusicMania's own export:
  *  - Extended streaming history (`Streaming_History_Audio_*.json`, legacy `endsong_*.json`)
  *  - Basic "account data" history (`StreamingHistory*.json`, `StreamingHistory_music_*.json`)
+ *  - MusicMania export (Settings → Export, to move devices): `playedAt` is epoch milliseconds from
+ *    this web app or an ISO-8601 string from the Android app
  *
  * Privacy: only the fields below are ever read. `ip_addr`, `conn_country`,
  * `user_agent_decrypted` and the like are never copied, so they are never stored.
@@ -24,7 +27,12 @@ interface RawEntry {
   master_metadata_album_artist_name?: unknown
   artistName?: unknown
   master_metadata_album_album_name?: unknown
+  albumName?: unknown
   spotify_track_uri?: unknown
+  playedAt?: unknown
+  trackId?: unknown
+  spotifyTrackId?: unknown
+  imageUrl?: unknown
   platform?: unknown
   shuffle?: unknown
   skipped?: unknown
@@ -32,6 +40,7 @@ interface RawEntry {
 }
 
 const TRACK_URI_PREFIX = 'spotify:track:'
+const TRACK_ID = /^[A-Za-z0-9]{1,64}$/
 
 const text = (value: unknown): string | null => (typeof value === 'string' && value.trim() !== '' ? value : null)
 const bool = (value: unknown): boolean | null => (typeof value === 'boolean' ? value : null)
@@ -52,10 +61,27 @@ function playedAt(entry: RawEntry): number | null {
     return Number.isNaN(parsed) ? null : parsed
   }
   const end = text(entry.endTime)
-  const match = end && /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(end)
-  if (!match) return null
-  const [, year, month, day, hour, minute] = match.map(Number)
-  return Date.UTC(year ?? 0, (month ?? 1) - 1, day, hour, minute)
+  if (end) {
+    const match = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(end)
+    if (!match) return null
+    const [, year, month, day, hour, minute] = match.map(Number)
+    return Date.UTC(year ?? 0, (month ?? 1) - 1, day, hour, minute)
+  }
+  // MusicMania export: epoch milliseconds (web) or ISO-8601 (Android).
+  const millis = int(entry.playedAt)
+  if (millis !== null) return millis >= 0 ? millis : null
+  const iso = text(entry.playedAt)
+  if (!iso) return null
+  const parsed = Date.parse(iso)
+  return Number.isNaN(parsed) ? null : parsed
+}
+
+function trackIdOf(entry: RawEntry): string | null {
+  const uri = text(entry.spotify_track_uri)
+  const id = uri?.startsWith(TRACK_URI_PREFIX)
+    ? uri.slice(TRACK_URI_PREFIX.length)
+    : (text(entry.spotifyTrackId) ?? text(entry.trackId))
+  return id && TRACK_ID.test(id) ? id : null
 }
 
 /** Maps an entry to a play, or null for podcasts, audiobooks and malformed rows. */
@@ -67,14 +93,13 @@ export function toPlayEvent(value: unknown): PlayEvent | null {
   const at = playedAt(entry)
   const msPlayed = int(entry.ms_played) ?? int(entry.msPlayed)
   if (!trackName || !artistName || at === null || msPlayed === null) return null
-  const uri = text(entry.spotify_track_uri)
   const reasonEnd = text(entry.reason_end)
   return {
-    trackId: uri?.startsWith(TRACK_URI_PREFIX) ? uri.slice(TRACK_URI_PREFIX.length) : null,
+    trackId: trackIdOf(entry),
     trackName,
     artistName,
-    albumName: text(entry.master_metadata_album_album_name),
-    imageUrl: null,
+    albumName: text(entry.master_metadata_album_album_name) ?? text(entry.albumName),
+    imageUrl: safeCoverUrl(text(entry.imageUrl)),
     playedAt: at,
     msPlayed: Math.max(0, msPlayed),
     source: 'IMPORT',

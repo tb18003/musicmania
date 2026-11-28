@@ -128,6 +128,73 @@ describe('importStreamingHistory', () => {
     expect(tooBig.result).toMatchObject({ ok: false, error: { detail: 'The export is too large' } })
   })
 
+  it('a MusicMania export from this web app imports on another device, nothing lost or doubled', async () => {
+    const plays: PlayEvent[] = [
+      {
+        trackId: 'NightDrive',
+        trackName: 'Night Drive',
+        artistName: 'Nova Lights',
+        albumName: 'Neon',
+        imageUrl: 'https://i.scdn.co/image/night',
+        playedAt: Date.UTC(2026, 5, 1, 20),
+        msPlayed: 180_000,
+        source: 'SYNC',
+        skipped: false,
+        shuffle: true,
+        platform: 'iOS',
+      },
+      {
+        trackId: null,
+        trackName: 'Low Tide',
+        artistName: 'Coral Echo',
+        albumName: null,
+        imageUrl: null,
+        playedAt: Date.UTC(2025, 0, 2, 8, 30),
+        msPlayed: 120_000,
+        source: 'IMPORT',
+        skipped: null,
+        shuffle: null,
+        platform: null,
+      },
+    ]
+    // Exactly what exportHistory writes: the plays as JSON.
+    const exported = json('musicmania-history-2026-11-28.json', plays)
+
+    const { result, history } = await run([exported])
+
+    expect(result).toMatchObject({ ok: true, data: { inserted: 2, skipped: 0 } })
+    expect(history.plays).toEqual(plays.map((play) => ({ ...play, source: 'IMPORT' })).reverse())
+    // Importing the same file again adds nothing (same dedupe key as the app).
+    expect(await history.addPlays(history.plays)).toBe(0)
+  })
+
+  it('reads the Android app export (ISO times, spotifyTrackId)', async () => {
+    const { result, history } = await run([
+      json('musicmania-history.json', [
+        {
+          playedAt: '2026-06-01T20:00:00Z',
+          trackName: 'Night Drive',
+          artistName: 'Nova Lights',
+          albumName: 'Neon',
+          imageUrl: 'http://insecure.example/x',
+          msPlayed: 180_000,
+          spotifyTrackId: 'NightDrive',
+          source: 'SYNC',
+          skipped: false,
+          shuffle: true,
+          platform: 'Android',
+        },
+        { playedAt: 'yesterday', trackName: 'A', artistName: 'B', msPlayed: 1 },
+        { playedAt: '2026-06-01T20:00:00Z', trackName: 'C', artistName: 'D', msPlayed: 1, trackId: '../../etc' },
+      ]),
+    ])
+    expect(result).toMatchObject({ ok: true, data: { inserted: 2, skipped: 1 } })
+    const night = history.plays.find((play) => play.trackName === 'Night Drive')
+    expect(night).toMatchObject({ playedAt: Date.UTC(2026, 5, 1, 20), trackId: 'NightDrive', albumName: 'Neon' })
+    expect(night?.imageUrl).toBeNull() // only https covers are kept
+    expect(history.plays.find((play) => play.trackName === 'C')?.trackId).toBeNull()
+  })
+
   it('rejects files that are not streaming history, and exports without any', async () => {
     expect((await run([file('Streaming_History_Audio_2023.json', '{not json')])).result).toMatchObject({
       ok: false,

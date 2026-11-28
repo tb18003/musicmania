@@ -9,6 +9,7 @@ package io.github.tb18003.musicmania.api
 import io.github.tb18003.musicmania.api.config.AppConfig
 import io.github.tb18003.musicmania.api.config.DatabaseConfig
 import io.github.tb18003.musicmania.api.db.Database
+import io.github.tb18003.musicmania.api.model.ReleaseNotes
 import io.ktor.client.HttpClient
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
@@ -116,7 +117,14 @@ class ApiIntegrationTest {
         test(client)
     }
 
-    private fun Dependencies.copyWithVersion(version: String) = Dependencies(authenticator, repositories, corsOrigins, clock, version)
+    private fun Dependencies.copyWithVersion(version: String) = Dependencies(
+        authenticator,
+        repositories,
+        corsOrigins,
+        clock,
+        version,
+        listOf(ReleaseNotes(version, mapOf("en" to listOf("Covers in the ranking"), "es" to listOf("Carátulas en el ranking")))),
+    )
 
     private suspend fun HttpClient.putJson(path: String, token: String, body: String) = put(path) {
         bearerAuth(token)
@@ -137,6 +145,9 @@ class ApiIntegrationTest {
         val version = client.get("/v1/app/version")
         assertEquals(HttpStatusCode.OK, version.status)
         assertEquals("9.8.7", version.json()["version"]?.jsonPrimitive?.content)
+        val release = version.json()["releases"]!!.jsonArray.single().jsonObject
+        assertEquals("9.8.7", release["version"]?.jsonPrimitive?.content)
+        assertEquals("Carátulas en el ranking", release["notes"]!!.jsonObject["es"]!!.jsonArray.single().jsonPrimitive.content)
 
         assertEquals(HttpStatusCode.Unauthorized, client.get("/v1/me").status)
         assertEquals(HttpStatusCode.Unauthorized, client.get("/v1/leaderboards").status)

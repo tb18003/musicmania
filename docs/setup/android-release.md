@@ -61,11 +61,17 @@ These go under *Settings → Secrets and variables → Actions → Variables*.
 
 ## Releasing
 
-1. On `develop`, bump the version: `npm version X.Y.Z --no-git-tag-version` in `web/`. Open a PR and
-   merge it.
-2. Tag the merge commit `web-vX.Y.Z` and push the tag. This deploys the web and, in parallel, builds
+1. On `develop`, bump the version with `npm version X.Y.Z --no-git-tag-version` in `web/`.
+2. Add the release notes for `X.Y.Z` at the top of
+   [`api/release-notes.json`](../../api/release-notes.json): a few short lines (140 characters at most)
+   in `en` and `es`.
+   - The update dialog shows them to people on an older version.
+   - They open the GitHub release text.
+   - The API tests fail if the current version has no notes.
+3. Open a PR with both changes and merge it.
+4. Tag the merge commit `web-vX.Y.Z` and push the tag. This deploys the web and, in parallel, builds
    and attaches the APK.
-3. When the APK is on the release, tag `api-vX.Y.Z` (or any new `api-v*`) so the API announces the
+5. When the APK is on the release, tag `api-vX.Y.Z` (or any new `api-v*`) so the API announces the
    version and older apps offer the update.
 
 To rebuild the APK of an existing release, go to *Actions → Release Android → Run workflow* and choose

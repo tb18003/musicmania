@@ -24,7 +24,13 @@ tell which build matched which release.
   version next to the open-source libraries.
 
 ## Consequences
-- Releasing means: bump `web/package.json` (and its lockfile), then tag `web-v*`. That tag deploys the
+- **Release notes** live in `api/release-notes.json`: a few short lines per release, in English and
+  Spanish.
+  - The API embeds the file and returns the notes of its release and the previous ones.
+  - The update dialog lists those of the releases the user is missing.
+  - `release-android.yml` opens the GitHub release with them.
+  - A test fails when the current version has no notes.
+- Releasing means: bump `web/package.json` (and its lockfile) and add its notes, then tag `web-v*`. That tag deploys the
   web and builds the signed APK into the GitHub release (`release-android.yml`, see
   `docs/setup/android-release.md`). Then tag `api-v*`: the deployed API is what announces a release, so
   it goes last.

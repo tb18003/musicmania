@@ -23,9 +23,12 @@ class CheckForAppUpdateUseCase @Inject constructor(
     private val appInfo: AppInfo,
 ) {
     suspend operator fun invoke(): AppUpdate? {
-        if (!cloud.isEnabled) return null
-        val current = AppVersion.parse(appInfo.versionName) ?: return null
-        val latest = (cloud.latestAppVersion() as? DataResult.Success)?.data?.let(AppVersion::parse) ?: return null
-        return AppUpdate(current, latest).takeIf { latest > current }
+        val current = AppVersion.parse(appInfo.versionName)?.takeIf { cloud.isEnabled } ?: return null
+        val release = (cloud.latestRelease() as? DataResult.Success)?.data ?: return null
+        return AppVersion.parse(release.version)?.takeIf { it > current }?.let { latest ->
+            // Only what the user is missing: the releases after theirs, up to the latest, newest first.
+            val missing = release.releases.filter { it.version > current && it.version <= latest }.sortedByDescending { it.version }
+            AppUpdate(current, latest, missing)
+        }
     }
 }

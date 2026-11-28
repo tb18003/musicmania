@@ -11,9 +11,11 @@ import io.github.tb18003.musicmania.core.common.result.DataResult
 import io.github.tb18003.musicmania.core.domain.repository.CloudRepository
 import io.github.tb18003.musicmania.core.model.CloudProfile
 import io.github.tb18003.musicmania.core.model.FriendStats
+import io.github.tb18003.musicmania.core.model.LatestRelease
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
+import io.github.tb18003.musicmania.core.model.ReleaseNotes
 import io.github.tb18003.musicmania.core.model.SharedPeriodStats
 import java.time.LocalDate
 
@@ -31,6 +33,7 @@ class FakeCloudRepository(override var isEnabled: Boolean = true) : CloudReposit
 
     /** What the API announces as the latest release; null makes the call fail. */
     var latestVersion: String? = "0.1.0"
+    var releaseNotes: List<ReleaseNotes> = emptyList()
 
     val published = mutableListOf<List<SharedPeriodStats>>()
     val leaderboardRequests = mutableListOf<Triple<LeaderboardMetric, LeaderboardPeriod, LocalDate>>()
@@ -39,8 +42,8 @@ class FakeCloudRepository(override var isEnabled: Boolean = true) : CloudReposit
 
     private fun <T> respond(value: () -> T): DataResult<T> = failure?.let { DataResult.Failure(it) } ?: DataResult.Success(value())
 
-    override suspend fun latestAppVersion(): DataResult<String> =
-        latestVersion?.let { DataResult.Success(it) } ?: DataResult.Failure(AppError.Network)
+    override suspend fun latestRelease(): DataResult<LatestRelease> =
+        latestVersion?.let { DataResult.Success(LatestRelease(it, releaseNotes)) } ?: DataResult.Failure(AppError.Network)
 
     override suspend fun me() = respond { profile }
 

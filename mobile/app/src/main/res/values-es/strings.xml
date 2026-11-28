@@ -7,6 +7,7 @@
     <string name="nav_leaderboard">Ranking</string>
     <string name="update_title">Nueva versión disponible</string>
     <string name="update_message">Ya está disponible MusicMania %1$s (tienes la %2$s). Descárgala desde las versiones publicadas del proyecto.</string>
+    <string name="update_whats_new">Novedades</string>
     <string name="update_download">Descargar</string>
     <string name="update_later">Más tarde</string>
 </resources>

@@ -15,14 +15,18 @@ import io.github.tb18003.musicmania.core.datastore.prefs.AppStateDataSource
 import io.github.tb18003.musicmania.core.domain.repository.CloudRepository
 import io.github.tb18003.musicmania.core.domain.repository.SyncObserver
 import io.github.tb18003.musicmania.core.domain.usecase.PublishListeningStatsUseCase
+import io.github.tb18003.musicmania.core.model.AppVersion
 import io.github.tb18003.musicmania.core.model.CloudProfile
 import io.github.tb18003.musicmania.core.model.FriendStats
+import io.github.tb18003.musicmania.core.model.LatestRelease
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
 import io.github.tb18003.musicmania.core.model.RankedItem
+import io.github.tb18003.musicmania.core.model.ReleaseNotes
 import io.github.tb18003.musicmania.core.model.SharedPeriodStats
 import io.github.tb18003.musicmania.core.network.CloudNetworkDataSource
+import io.github.tb18003.musicmania.core.network.model.CloudAppVersionDto
 import io.github.tb18003.musicmania.core.network.model.CloudLeaderboardEntryDto
 import io.github.tb18003.musicmania.core.network.model.CloudMeDto
 import io.github.tb18003.musicmania.core.network.model.CloudPeriodStatsDto
@@ -46,8 +50,8 @@ internal class DefaultCloudRepository @Inject constructor(
     override val isEnabled: Boolean get() = config.isConfigured
 
     // Not tied to an account (nor to demo data): anyone with the app configured can learn about updates.
-    override suspend fun latestAppVersion(): DataResult<String> =
-        if (config.isConfigured) network.appVersion().map { it.version } else DataResult.Failure(AppError.NotFound)
+    override suspend fun latestRelease(): DataResult<LatestRelease> =
+        if (config.isConfigured) network.appVersion().map { it.toModel() } else DataResult.Failure(AppError.NotFound)
 
     override suspend fun me(): DataResult<CloudProfile> = route(demo::profile) { network.me().map { it.toModel() } }
 
@@ -131,6 +135,25 @@ internal fun SharedPeriodStats.toDto() = CloudPeriodStatsDto(
     topArtists = topArtists.map { it.toDto() },
     topTracks = topTracks.map { it.toDto() },
 )
+
+/** Release notes come from our API but are still bounded: a few short lines per language and release. */
+internal fun CloudAppVersionDto.toModel() = LatestRelease(
+    version = version,
+    releases = releases.take(MAX_RELEASES).mapNotNull { release ->
+        AppVersion.parse(release.version)?.let { parsed ->
+            ReleaseNotes(
+                parsed,
+                release.notes.mapValues { (_, lines) ->
+                    lines.filter(String::isNotBlank).take(MAX_NOTE_LINES).map { it.take(MAX_NOTE_LENGTH) }
+                },
+            )
+        }
+    },
+)
+
+private const val MAX_RELEASES = 10
+private const val MAX_NOTE_LINES = 6
+private const val MAX_NOTE_LENGTH = 140
 
 /** A friend's cover is kept only if it is HTTPS. */
 internal fun CloudTopItemDto.toModel() = RankedItem(name, RankedItem.safeImageUrl(imageUrl))

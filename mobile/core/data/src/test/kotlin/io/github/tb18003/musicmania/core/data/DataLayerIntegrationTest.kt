@@ -12,6 +12,8 @@ import io.github.tb18003.musicmania.core.common.result.AppError
 import io.github.tb18003.musicmania.core.common.result.DataResult
 import io.github.tb18003.musicmania.core.data.importer.DefaultStreamingHistoryImporter
 import io.github.tb18003.musicmania.core.data.importer.ImportLimits
+import io.github.tb18003.musicmania.core.data.mapper.toEntity
+import io.github.tb18003.musicmania.core.data.repository.DefaultDataManagementRepository
 import io.github.tb18003.musicmania.core.data.repository.DefaultHistoryRepository
 import io.github.tb18003.musicmania.core.data.repository.OfflineFirstTopItemsRepository
 import io.github.tb18003.musicmania.core.database.MusicManiaDatabase
@@ -19,10 +21,12 @@ import io.github.tb18003.musicmania.core.datastore.prefs.AppStateDataSource
 import io.github.tb18003.musicmania.core.domain.repository.ImportException
 import io.github.tb18003.musicmania.core.domain.repository.ImportSource
 import io.github.tb18003.musicmania.core.model.ImportProgress
+import io.github.tb18003.musicmania.core.model.PlaySource
 import io.github.tb18003.musicmania.core.model.TimeRange
 import io.github.tb18003.musicmania.core.network.model.CursorPagingDto
 import io.github.tb18003.musicmania.core.network.model.CursorsDto
 import io.github.tb18003.musicmania.core.network.model.PlayHistoryDto
+import io.github.tb18003.musicmania.core.testing.TestData
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.toList
@@ -153,6 +157,36 @@ class DataLayerIntegrationTest {
         val again = importer().import(listOf(source("Streaming_History_Audio_2024_0.json", extended.toByteArray()))).last()
         assertEquals(0, (again as ImportProgress.Completed).result.eventsInserted)
         assertEquals(1, again.result.duplicates)
+    }
+
+    @Test
+    fun musicManiaExportsImportOnAnotherDevice() = runTest(dispatcher) {
+        val plays = listOf(
+            TestData.play(track = "Night Drive", artist = "Nova Lights", playedAt = Instant.parse("2026-06-01T20:00:00Z"))
+                .copy(trackId = "NightDrive", imageUrl = "https://i.scdn.co/image/night", source = PlaySource.SYNC),
+            TestData.play(track = "Low Tide", artist = "Coral Echo", playedAt = Instant.parse("2025-01-02T08:30:00Z"), skipped = true),
+        )
+        db.playEventDao().insertAll(plays.map { it.toEntity() })
+        val exported = ByteArrayOutputStream()
+        val export = DefaultDataManagementRepository(db, db.playEventDao(), appState, StandardTestDispatcher(testScheduler))
+        assertEquals(DataResult.Success(2), export.exportHistory(exported))
+
+        // The other phone: an empty database importing the file.
+        db.clearAllTables()
+        val result = importer().import(listOf(source("musicmania-history.json", exported.toByteArray()))).toList()
+            .let { assertIs<ImportProgress.Completed>(it.last()).result }
+
+        assertEquals(2, result.eventsInserted)
+        val restored = db.playEventDao().page(limit = 10, offset = 0).associateBy { it.trackName }
+        val night = restored.getValue("Night Drive")
+        assertEquals(Instant.parse("2026-06-01T20:00:00Z").toEpochMilli(), night.playedAt)
+        assertEquals("NightDrive", night.trackId)
+        assertEquals("https://i.scdn.co/image/night", night.imageUrl)
+        assertEquals("Album", night.albumName)
+        assertEquals(true, restored.getValue("Low Tide").skipped)
+
+        val again = importer().import(listOf(source("musicmania-history.json", exported.toByteArray()))).last()
+        assertEquals(0, assertIs<ImportProgress.Completed>(again).result.eventsInserted, "importing twice adds nothing")
     }
 
     @Test
