@@ -38,6 +38,47 @@ class StreamingHistoryParserTest {
     }
 
     @Test
+    fun `MusicMania exports from the app and from the web are read`() {
+        val android = parse(
+            """
+            [{"playedAt":"2026-06-01T20:00:00Z","trackName":"Night Drive","artistName":"Nova Lights","albumName":"Neon",
+              "imageUrl":"https://i.scdn.co/image/night","msPlayed":180000,"spotifyTrackId":"NightDrive","source":"SYNC",
+              "skipped":false,"shuffle":true,"platform":"Android"}]
+            """,
+        ).single().let { StreamingHistoryParser.toPlayEvent(it)!! }
+        assertEquals(Instant.parse("2026-06-01T20:00:00Z"), android.playedAt)
+        assertEquals("NightDrive", android.trackId)
+        assertEquals("Neon", android.albumName)
+        assertEquals("https://i.scdn.co/image/night", android.imageUrl)
+        assertEquals("Android", android.platform)
+
+        val web = parse(
+            """
+            [{"trackId":"LowTide","trackName":"Low Tide","artistName":"Coral Echo","albumName":null,"imageUrl":"http://insecure/x",
+              "playedAt":1748808000000,"msPlayed":120000,"source":"IMPORT","skipped":null,"shuffle":null,"platform":"Smart speaker"}]
+            """,
+        ).single().let { StreamingHistoryParser.toPlayEvent(it)!! }
+        assertEquals(Instant.ofEpochMilli(1_748_808_000_000), web.playedAt)
+        assertEquals("LowTide", web.trackId)
+        assertNull(web.imageUrl, "only https covers are kept")
+        assertEquals("Smart speaker", web.platform)
+    }
+
+    @Test
+    fun `MusicMania entries without a valid time or id are handled safely`() {
+        val entries = parse(
+            """
+            [{"playedAt":"yesterday","trackName":"A","artistName":"B","msPlayed":1},
+             {"playedAt":-5,"trackName":"A","artistName":"B","msPlayed":1},
+             {"playedAt":"2026-06-01T20:00:00Z","trackName":"A","artistName":"B","msPlayed":1,"trackId":"../../etc"}]
+            """,
+        )
+        assertNull(StreamingHistoryParser.toPlayEvent(entries[0]))
+        assertNull(StreamingHistoryParser.toPlayEvent(entries[1]))
+        assertNull(StreamingHistoryParser.toPlayEvent(entries[2])!!.trackId)
+    }
+
+    @Test
     fun `basic format is parsed as UTC`() {
         val entries = parse("""[{"endTime":"2023-01-02 03:04","artistName":"Band","trackName":"Song","msPlayed":1234}]""")
 
