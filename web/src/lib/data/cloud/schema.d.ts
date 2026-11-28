@@ -326,8 +326,17 @@ export interface components {
          */
         PeriodKind: "week" | "month" | "year" | "all_time";
         AppVersion: {
-            /** @example 0.3.0 */
+            /** @example 0.4.1 */
             version: string;
+            /** @description What changed in this release and the previous ones (at most 10), newest first. */
+            releases?: components["schemas"]["ReleaseNotes"][];
+        };
+        ReleaseNotes: {
+            version: string;
+            /** @description Short lines by language code (en, es). */
+            notes: {
+                [key: string]: string[];
+            };
         };
         TopItem: {
             name: string;

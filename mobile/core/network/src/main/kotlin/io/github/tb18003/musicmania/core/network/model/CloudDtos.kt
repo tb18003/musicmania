@@ -43,7 +43,16 @@ data class CloudPeriodStatsDto(
 )
 
 @Serializable
-data class CloudAppVersionDto(val version: String)
+data class CloudAppVersionDto(
+    val version: String,
+    val releases: List<CloudReleaseNotesDto> = emptyList(),
+)
+
+@Serializable
+data class CloudReleaseNotesDto(
+    val version: String,
+    val notes: Map<String, List<String>> = emptyMap(),
+)
 
 @Serializable
 data class CloudTopItemDto(

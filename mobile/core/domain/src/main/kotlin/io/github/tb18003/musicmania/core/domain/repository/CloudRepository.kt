@@ -9,6 +9,7 @@ package io.github.tb18003.musicmania.core.domain.repository
 import io.github.tb18003.musicmania.core.common.result.DataResult
 import io.github.tb18003.musicmania.core.model.CloudProfile
 import io.github.tb18003.musicmania.core.model.FriendStats
+import io.github.tb18003.musicmania.core.model.LatestRelease
 import io.github.tb18003.musicmania.core.model.LeaderboardEntry
 import io.github.tb18003.musicmania.core.model.LeaderboardMetric
 import io.github.tb18003.musicmania.core.model.LeaderboardPeriod
@@ -22,8 +23,8 @@ import java.time.LocalDate
 interface CloudRepository {
     val isEnabled: Boolean
 
-    /** The latest release announced by the API (MAJOR.MINOR.PATCH), signed in, signed out or in demo mode. */
-    suspend fun latestAppVersion(): DataResult<String>
+    /** The latest release announced by the API and its notes, signed in, signed out or in demo mode. */
+    suspend fun latestRelease(): DataResult<LatestRelease>
 
     suspend fun me(): DataResult<CloudProfile>
 

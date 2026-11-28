@@ -20,6 +20,7 @@ import io.github.tb18003.musicmania.api.http.ApiException
 import io.github.tb18003.musicmania.api.http.Problem
 import io.github.tb18003.musicmania.api.model.AppVersionResponse
 import io.github.tb18003.musicmania.api.model.Health
+import io.github.tb18003.musicmania.api.model.ReleaseNotes
 import io.github.tb18003.musicmania.api.routes.Repositories
 import io.github.tb18003.musicmania.api.routes.v1Routes
 import io.ktor.http.ContentType
@@ -75,6 +76,8 @@ class Dependencies(
     val clock: Clock = Clock.systemUTC(),
     /** The release this API was built for, announced to the apps (see [BuildInfo]). */
     val appVersion: String = BuildInfo.version,
+    /** Notes of this release and the previous ones, newest first. */
+    val releaseNotes: List<ReleaseNotes> = BuildInfo.releaseNotes,
 ) {
     companion object {
         fun create(config: AppConfig, database: Database, clock: Clock = Clock.systemUTC()) = Dependencies(
@@ -129,7 +132,7 @@ fun Application.musicManiaApi(deps: Dependencies) {
         rateLimit(API_RATE_LIMIT) {
             route("/v1") {
                 // Public: the Android app asks whether it is out of date, signed in or not.
-                get("/app/version") { call.respond(AppVersionResponse(deps.appVersion)) }
+                get("/app/version") { call.respond(AppVersionResponse(deps.appVersion, deps.releaseNotes)) }
                 authenticated(deps.authenticator) {
                     v1Routes(deps.repositories, ApiJson, deps.clock)
                 }

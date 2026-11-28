@@ -25,8 +25,28 @@ data class AppVersion(
     }
 }
 
-/** A newer release than the installed one. */
+/** What changed in one release: short lines by language code ("en", "es"). */
+data class ReleaseNotes(
+    val version: AppVersion,
+    val notes: Map<String, List<String>>,
+) {
+    /** The lines in [language], or in English when that language is missing. */
+    fun linesFor(language: String): List<String> = notes[language] ?: notes[FALLBACK_LANGUAGE].orEmpty()
+
+    private companion object {
+        const val FALLBACK_LANGUAGE = "en"
+    }
+}
+
+/** The latest release announced by the API, with the notes of the releases up to it. */
+data class LatestRelease(
+    val version: String,
+    val releases: List<ReleaseNotes> = emptyList(),
+)
+
+/** A newer release than the installed one, with the notes of every release the user is missing (newest first). */
 data class AppUpdate(
     val current: AppVersion,
     val latest: AppVersion,
+    val releases: List<ReleaseNotes> = emptyList(),
 )

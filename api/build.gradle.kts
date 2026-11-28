@@ -24,15 +24,20 @@ val appVersion: Provider<String> = providers.gradleProperty("appVersion").orElse
 }
 version = appVersion.get()
 
+// What changed in each release (English and Spanish), shown by the Android update dialog. It lives in
+// api/ because the Docker build only sees this directory; release-android.yml reads it too.
 val generateBuildInfo by tasks.registering {
     val output = layout.buildDirectory.dir("generated/build-info")
     val versionValue = appVersion
+    val releaseNotes = layout.projectDirectory.file("release-notes.json")
     inputs.property("version", versionValue)
+    inputs.file(releaseNotes).withPropertyName("releaseNotes").withPathSensitivity(PathSensitivity.NONE)
     outputs.dir(output)
     doLast {
-        val file = output.get().file("musicmania-build.properties").asFile
-        file.parentFile.mkdirs()
-        file.writeText("version=${versionValue.get()}" + System.lineSeparator())
+        val directory = output.get().asFile
+        directory.mkdirs()
+        directory.resolve("musicmania-build.properties").writeText("version=${versionValue.get()}" + System.lineSeparator())
+        releaseNotes.asFile.copyTo(directory.resolve("musicmania-release-notes.json"), overwrite = true)
     }
 }
 

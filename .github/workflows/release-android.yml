@@ -39,6 +39,21 @@ jobs:
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
 
+      # The same notes the API shows in the app's update dialog (api/release-notes.json).
+      - name: Release notes for this version
+        run: |
+          notes="$RUNNER_TEMP/release-notes.md"
+          jq -r --arg v "$VERSION" '
+            .[] | select(.version == $v) |
+            "### Novedades\n" + (.notes.es | map("- " + .) | join("\n")) +
+            "\n\n### What is new\n" + (.notes.en | map("- " + .) | join("\n"))
+          ' api/release-notes.json > "$notes"
+          if [ ! -s "$notes" ]; then
+            echo "::error::api/release-notes.json has no notes for $VERSION."
+            exit 1
+          fi
+          echo "NOTES_FILE=$notes" >> "$GITHUB_ENV"
+
       - uses: ./.github/actions/setup-mobile
 
       # The keystore exists only on the runner's temporary disk for the length of the job.
@@ -90,7 +105,8 @@ jobs:
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release upload "$TAG" "${files[@]}" --clobber
           else
-            gh release create "$TAG" "${files[@]}" --verify-tag --title "MusicMania v$VERSION" --generate-notes
+            # Our notes first, then GitHub's list of merged pull requests.
+            gh release create "$TAG" "${files[@]}" --verify-tag --title "MusicMania v$VERSION" --notes-file "$NOTES_FILE" --generate-notes
           fi
 
       - name: Remove the keystore

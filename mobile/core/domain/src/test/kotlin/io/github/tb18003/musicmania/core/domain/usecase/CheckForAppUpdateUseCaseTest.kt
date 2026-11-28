@@ -9,6 +9,7 @@ package io.github.tb18003.musicmania.core.domain.usecase
 import io.github.tb18003.musicmania.core.common.config.AppInfo
 import io.github.tb18003.musicmania.core.model.AppUpdate
 import io.github.tb18003.musicmania.core.model.AppVersion
+import io.github.tb18003.musicmania.core.model.ReleaseNotes
 import io.github.tb18003.musicmania.core.testing.repository.FakeCloudRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -29,6 +30,17 @@ class CheckForAppUpdateUseCaseTest {
         assertEquals(AppUpdate(AppVersion(0, 3, 0), AppVersion(0, 4, 0)), check("0.3.0", "0.4.0"))
         assertEquals(AppVersion(1, 0, 0), check("0.9.9", "1.0.0")?.latest)
         assertEquals(AppVersion(0, 3, 1), check("0.3.0", "0.3.1")?.latest)
+    }
+
+    @Test
+    fun `the notes cover only the releases the user is missing, newest first`() = runTest {
+        fun notes(version: String) = ReleaseNotes(AppVersion.parse(version)!!, mapOf("en" to listOf("Changes in $version")))
+        cloud.releaseNotes = listOf(notes("0.3.0"), notes("0.4.1"), notes("0.4.0"), notes("0.5.0"))
+
+        val update = check("0.3.0", "0.4.1")
+
+        assertEquals(listOf("0.4.1", "0.4.0"), update?.releases?.map { it.version.toString() })
+        assertEquals(listOf("Changes in 0.4.1"), update?.releases?.first()?.linesFor("es"), "English when the language is missing")
     }
 
     @Test
